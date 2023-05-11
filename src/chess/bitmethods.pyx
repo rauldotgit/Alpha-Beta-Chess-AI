@@ -1,7 +1,7 @@
 import cython 
 import numpy as np
 
-def intToBitarray(n):
+def intToBitArray(n):
     cdef int j = 0
     cdef unsigned long long x = n
     cdef unsigned long long i = 1
@@ -19,7 +19,7 @@ def intToBitarray(n):
 
     return bitarray
 
-def bitarrayToInt(bitarray):
+def bitArrayToInt(bitarray):
     ressi = 0
     for i, bit in enumerate(bitarray):
             ressi += bit*(2**i)
@@ -64,3 +64,18 @@ def getBit(bitmap, index):
         return False
     else:
         return True
+
+def getBitIndices(bitmap):
+    if bitmap == 0: return []
+
+    indexArray = []
+    cdef unsigned long long bit
+    cdef unsigned long long isection 
+    
+    for i in range(64):
+        bit = 1
+        bit <<= i
+        isection = bitmap & bit
+        if isection:
+            indexArray.append(i)
+    return indexArray

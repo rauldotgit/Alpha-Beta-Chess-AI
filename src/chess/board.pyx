@@ -7,6 +7,8 @@ import src.chess.movegen as mg
 
 ###########################################################
 # TODO: Change movegen functions to take the board and it's data as an input
+# TODO: Adjust tests for new functions in board 
+# TODO: Fix all variable names to follow a standard
 # TODO: Clean up file and module structure
 # TODO: Clean up move function
 # TODO: Initialize and check for enpassant

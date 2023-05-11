@@ -9,11 +9,10 @@ cdef unsigned long long NOT_FILE_GH = 4557430888798830399
 cdef unsigned long long NOT_FILE_AB = 18229723555195321596
 cdef unsigned long long NOT_FILE_A = 18374403900871474942
 
-cdef enum color:
-    white,
-    black
+cdef enum color_int:
+    white, black
 
-cdef enum field_i:
+cdef enum field_int:
     a8, b8, c8, d8, e8, f8, g8, h8,
     a7, b7, c7, d7, e7, f7, g7, h7,
     a6, b6, c6, d6, e6, f6, g6, h6,
@@ -23,12 +22,8 @@ cdef enum field_i:
     a2, b2, c2, d2, e2, f2, g2, h2,
     a1, b1, c1, d1, e1, f1, g1, h1
 
-CASTLE_OBJ = {
-    'wk': 1,
-    'wq': 2,
-    'bk': 4,
-    'bq': 8 
-}
+cdef enum castle_int:
+    wk, wq, bk, bq 
 
 #TODO: belongs on board
 cdef int noSquare = 64
@@ -296,8 +291,8 @@ def allLeaperAttacks(turn):
     cdef unsigned long long king_attacks[64]
 
     for field in range(64):
-        pawn_attacks[turn][field] = singlePawnAttacks(field, turn)
-        pawn_attacks[turn][field] = singlePawnAttacks(field, turn)
+        pawn_attacks[0][field] = singlePawnAttacks(field, 0)
+        pawn_attacks[1][field] = singlePawnAttacks(field, 1)
         knight_attacks[field] = singleKingAttacks(field)
         king_attacks[field] = singleKingAttacks(field)
         
@@ -333,7 +328,7 @@ def allSliderAttacks_blocked(blockMap):
 
     return [rook_attacks, bishop_attacks, queen_attacks]
 
-def allAttacks_blocked(turn, blockMap):
+def allAttacks_blocked(blockMap):
 
     cdef unsigned long long[2][64] pawn_attacks
     cdef unsigned long long[64] knight_attacks
@@ -344,8 +339,8 @@ def allAttacks_blocked(turn, blockMap):
     cdef unsigned long long[64] queen_attacks
 
     for field in range(64):
-        pawn_attacks[turn][field] = singlePawnAttacks(field, turn)
-        pawn_attacks[turn][field] = singlePawnAttacks(field, turn)
+        pawn_attacks[0][field] = singlePawnAttacks(field, 0)
+        pawn_attacks[1][field] = singlePawnAttacks(field, 1)
         knight_attacks[field] = singleKingAttacks(field)
         king_attacks[field] = singleKingAttacks(field)
 
@@ -357,10 +352,38 @@ def allAttacks_blocked(turn, blockMap):
     attack_maps = [pawn_attacks, rook_attacks, knight_attacks, bishop_attacks, queen_attacks, king_attacks]
     return attack_maps
 
-# blockMap should in this case be the full union of all pieces (occupancy)
-def printAllAttacked_blocked(turn, blockMap):
-    attackMaps = allAttacks_blocked(turn, blockMap)
-    return bit.fullUnion(attackMaps)
+# side refers to the attacking side (side == white, get if field is attacked by white)
+def isFieldAttacked(pieceMaps, attackMaps, blockMap, fieldIndex, side):
+
+    #TODO: take these variables from the board
+
+    # black is attacked by white pawn, if there's a pawn on the black pawn attack fields (damn)
+    isAttackingBlackPawn = attackMaps[0][1][fieldIndex] & pieceMaps[0]
+    if side == white and isAttackingBlackPawn: return True
+
+    isAttackingWhitePawn = attack_maps[0][0][fieldIndex] & pieceMaps[1]
+    if side == black and isAttackingWhitePawn: return True
+    
+    # TODO: Needs to change when rooks use magic bitboards instead of on the fly
+    rooksMap = pieceMaps[1] if side == white else pieceMaps[7]
+    if attack_maps[1][fieldIndex] & rooksMap: return True
+
+    # a field is attacked by knights, if there are nights around the field in the shape of night attacks (oof)
+    knightsMap = pieceMaps[2] if side == white else pieceMaps[8]
+    if attackMaps[2][fieldIndex] & knightsMap: return True
+
+    # TODO: Needs to change when bishops use magic bitboards instead of on the fly
+    bishopsMap = pieceMaps[3] if side == white else pieceMaps[9]
+    if attack_maps[3][fieldIndex] & bishopsMap: return True
+
+    # TODO: Needs to change when queen uses magic bitboards instead of on the fly
+    queensMap = pieceMaps[4] if side == white else pieceMaps[10]
+    if attack_maps[4][fieldIndex] & queensMap: return True
+
+    kingsMap = pieceMaps[5] if side == white else pieceMaps[11]
+    if attackMaps[5][fieldIndex] & kingsMap: return True
+
+    return False
 
 def generatePawnMoves(turn, pawnAttacksCopy, whiteUnion, blackUnion, bothUnion):
     while pawnAttacksCopy:
@@ -448,14 +471,16 @@ def generateMoves(pieceMaps, turn):
     cdef unsigned long long whiteUnion = sideUnion(pieceMaps, white)
     cdef unsigned long long blackUnion = sideUnion(pieceMaps, black)
     cdef unsigned long long bothUnion = whiteUnion | blackUnion
-    attacks = allAttacks_blocked(turn, bothUnion)
+    attacks = allAttacks_blocked(bothUnion)
 
     for index, bitmap in enumerate(pieceMaps):
         # creating a copy to use
         pieceMap = bitmap
 
         if turn == white:
+
             isWhitePawns = index == 0
+            isWhiteKing = index == 5
 
             if isWhitePawns:
                 while pieceMap:
@@ -505,6 +530,19 @@ def generateMoves(pieceMaps, turn):
                             print(f'pawn enpassant capture {maps.FIELD_ARRAY[start]}{maps.FIELD_ARRAY[targetEnpassant]}')
                     # pop the pawn, as we have calculated everything we need
                     pieceMap = bit.popBit(pieceMap, start)
+
+            elif isWhiteKing:
+                # king side castling 
+                if castling & wk:
+
+                    rankRightFree = not bit.getBit(bothUnion, f1) and not bit.getBit(bothUnion, g1)
+                    if rankRightFree:
+                        pass
+                        
+                
+                if castling & wq:
+                    pass
+
 
         else:
             isBlackPawns = index == 6

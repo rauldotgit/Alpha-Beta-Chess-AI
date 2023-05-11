@@ -306,79 +306,21 @@ ALL_ARRAYS = [
 	BLACK_KING_ARRAY,
 ]
 
-FIELD_OBJ = {
-		'a8': 0, 'b8': 1, 'c8': 2, 'd8': 3, 'e8': 4, 'f8': 5, 'g8': 6, 'h8': 7,
-		'a7': 8, 'b7': 9, 'c7': 10, 'd7': 11, 'e7': 12, 'f7': 13, 'g7': 14, 'h7': 15,
-		'a6': 16, 'b6': 17, 'c6': 18, 'd6': 19, 'e6': 20, 'f6': 21, 'g6': 22, 'h6': 23,
-		'a5': 24, 'b5': 25, 'c5': 26, 'd5': 27, 'e5': 28, 'f5': 29, 'g5': 30, 'h5': 31,
-		'a4': 32, 'b4': 33, 'c4': 34, 'd4': 35, 'e4': 36, 'f4': 37, 'g4': 38, 'h4': 39,
-		'a3': 40, 'b3': 41, 'c3': 42, 'd3': 43, 'e3': 44, 'f3': 45, 'g3': 46, 'h3': 47,
-		'a2': 48, 'b2': 49, 'c2': 50, 'd2': 51, 'e2': 52, 'f2': 54, 'g2': 54, 'h2': 55,
-		'a1': 56, 'b1': 57, 'c1': 58, 'd1': 59, 'e1': 60, 'f1': 62, 'g1': 62, 'h1': 63,
-}
-
-FIELD_ARRAY = [
-		'a8', 'b8', 'c8', 'd8', 'e8', 'f8', 'g8', 'h8',
-		'a7', 'b7', 'c7', 'd7', 'e7', 'f7', 'g7', 'h7',
-		'a6', 'b6', 'c6', 'd6', 'e6', 'f6', 'g6', 'h6',
-		'a5', 'b5', 'c5', 'd5', 'e5', 'f5', 'g5', 'h5',
-		'a4', 'b4', 'c4', 'd4', 'e4', 'f4', 'g4', 'h4',
-		'a3', 'b3', 'c3', 'd3', 'e3', 'f3', 'g3', 'h3',
-		'a2', 'b2', 'c2', 'd2', 'e2', 'f2', 'g2', 'h2',
-		'a1', 'b1', 'c1', 'd1', 'e1', 'f1', 'g1', 'h1',
-		]
-
-def printArray(bitarray):
-		numbit = np.array(bitarray)
-		print(
-			 f"\n"
-			 f"8 {numbit[0:8]} \n"
-			 f"7 {numbit[8:16]} \n"
-			 f"6 {numbit[16:24]} \n"
-			 f"5 {numbit[24:32]} \n"
-			 f"4 {numbit[32:40]} \n"
-			 f"3 {numbit[40:48]} \n"
-			 f"2 {numbit[48:56]} \n"
-			 f"1 {numbit[56:64]} \n"
-			 f"   a b c d e f g h \n"
-		)
-
-def printChessArray(bitarray):
-		numbit = np.array(bitarray)
-		print(
-			 f"\n"
-			 f"8 {''.join(str(e) + ' ' for e in numbit[0:8])} \n"
-			 f"7 {''.join(str(e) + ' ' for e in numbit[8:16])} \n"
-			 f"6 {''.join(str(e) + ' ' for e in numbit[16:24])} \n"
-			 f"5 {''.join(str(e) + ' ' for e in numbit[24:32])} \n"
-			 f"4 {''.join(str(e) + ' ' for e in numbit[32:40])} \n"
-			 f"3 {''.join(str(e) + ' ' for e in numbit[40:48])} \n"
-			 f"2 {''.join(str(e) + ' ' for e in numbit[48:56])} \n"
-			 f"1 {''.join(str(e) + ' ' for e in numbit[56:64])} \n"
-			 f"  a b c d e f g h \n"
-		)
-
-def printMap(map):
-	bitarray = bit.intToBitarray(map)
-	printArray(bitarray)
-
-
-DOT_UNICODE = "\u2219"
-WHITE_PAWN_UNICODE = "\u265F"
-WHITE_ROOK_UNICODE = "\u265C"
-WHITE_KNIGHT_UNICODE = "\u265E"
-WHITE_BISHOP_UNICODE = "\u265D"
-WHITE_QUEEN_UNICODE = "\u265B"
-WHITE_KING_UNICODE = "\u265A"
-BLACK_PAWN_UNICODE = "\u2659"
-BLACK_ROOK_UNICODE = "\u2656"
-BLACK_KNIGHT_UNICODE = "\u2658"
-BLACK_BISHOP_UNICODE = "\u2657"
-BLACK_QUEEN_UNICODE = "\u2655"
-BLACK_KING_UNICODE = "\u2654"
+DOT_UNICODE = '\u2219'
+WHITE_PAWN_UNICODE = '\u265F'
+WHITE_ROOK_UNICODE = '\u265C'
+WHITE_KNIGHT_UNICODE = '\u265E'
+WHITE_BISHOP_UNICODE = '\u265D'
+WHITE_QUEEN_UNICODE = '\u265B'
+WHITE_KING_UNICODE = '\u265A'
+BLACK_PAWN_UNICODE = '\u2659'
+BLACK_ROOK_UNICODE = '\u2656'
+BLACK_KNIGHT_UNICODE = '\u2658'
+BLACK_BISHOP_UNICODE = '\u2657'
+BLACK_QUEEN_UNICODE = '\u2655'
+BLACK_KING_UNICODE = '\u2654'
 
 ALL_UNICODES = [
-	DOT_UNICODE,
 	WHITE_PAWN_UNICODE,
 	WHITE_ROOK_UNICODE,
 	WHITE_KNIGHT_UNICODE,
@@ -414,79 +356,168 @@ BLACK_UNICODES = [
 ]
 
 ROLE_OBJ = {
-	"e": 0,
-	"P": 1,
-	"R": 2,
-	"N": 3,
-	"B": 4,
-	"Q": 5,
-	"K": 6,
-	"p": 7,
-	"r": 8,
-	"n": 9,
-	"b": 10,
-	"q": 11,
-	"k": 12
+	'P': 0,
+	'R': 1,
+	'N': 2,
+	'B': 3,
+	'Q': 4,
+	'K': 5,
+	'p': 6,
+	'r': 7,
+	'n': 8,
+	'b': 9,
+	'q': 10,
+	'k': 11
 }
 
 COLOR_OBJ = {
-	"white": 0,
-	"black": 1
+	'white': 0,
+	'black': 1
 }
 
+FIELD_OBJ = {
+		'a8': 0, 'b8': 1, 'c8': 2, 'd8': 3, 'e8': 4, 'f8': 5, 'g8': 6, 'h8': 7,
+		'a7': 8, 'b7': 9, 'c7': 10, 'd7': 11, 'e7': 12, 'f7': 13, 'g7': 14, 'h7': 15,
+		'a6': 16, 'b6': 17, 'c6': 18, 'd6': 19, 'e6': 20, 'f6': 21, 'g6': 22, 'h6': 23,
+		'a5': 24, 'b5': 25, 'c5': 26, 'd5': 27, 'e5': 28, 'f5': 29, 'g5': 30, 'h5': 31,
+		'a4': 32, 'b4': 33, 'c4': 34, 'd4': 35, 'e4': 36, 'f4': 37, 'g4': 38, 'h4': 39,
+		'a3': 40, 'b3': 41, 'c3': 42, 'd3': 43, 'e3': 44, 'f3': 45, 'g3': 46, 'h3': 47,
+		'a2': 48, 'b2': 49, 'c2': 50, 'd2': 51, 'e2': 52, 'f2': 54, 'g2': 54, 'h2': 55,
+		'a1': 56, 'b1': 57, 'c1': 58, 'd1': 59, 'e1': 60, 'f1': 62, 'g1': 62, 'h1': 63,
+}
 
-########################### BUGGY ###############################
-# mega buggy, needs to be sorted out
+FIELD_ARRAY = [
+		'a8', 'b8', 'c8', 'd8', 'e8', 'f8', 'g8', 'h8',
+		'a7', 'b7', 'c7', 'd7', 'e7', 'f7', 'g7', 'h7',
+		'a6', 'b6', 'c6', 'd6', 'e6', 'f6', 'g6', 'h6',
+		'a5', 'b5', 'c5', 'd5', 'e5', 'f5', 'g5', 'h5',
+		'a4', 'b4', 'c4', 'd4', 'e4', 'f4', 'g4', 'h4',
+		'a3', 'b3', 'c3', 'd3', 'e3', 'f3', 'g3', 'h3',
+		'a2', 'b2', 'c2', 'd2', 'e2', 'f2', 'g2', 'h2',
+		'a1', 'b1', 'c1', 'd1', 'e1', 'f1', 'g1', 'h1',
+		]
 
-# pieceArraysList must be in order [pawn, rook, knight, bishop, queen, king]
-def arraysToNumberedUnion(pieceArraysList):
-	numberedUnion = np.zeros(64, dtype=int)
-	for index, pieceArray in enumerate(pieceArraysList):
-		factored = np.array(pieceArray) * (index + 1)
-		np.add(factored, numberedUnion, numberedUnion)
-	return numberedUnion
+FEN_START = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR'
 
-# take roleIndex from unicode index in ALL UNICODES 
-def ppPieceArray(pieceArray, pieceName):
-	unicodeArray = np.empty(64, dtype=str)
-	roleIndex = ROLE_OBJ[pieceName]
-	for index, piece in enumerate(pieceArray):
-		if piece:
-			unicodeArray[index] = ALL_UNICODES[roleIndex]
+def printArray(bitarray):
+		numbit = np.array(bitarray)
+		print(
+			 f'\n'
+			 f'8 {numbit[0:8]} \n'
+			 f'7 {numbit[8:16]} \n'
+			 f'6 {numbit[16:24]} \n'
+			 f'5 {numbit[24:32]} \n'
+			 f'4 {numbit[32:40]} \n'
+			 f'3 {numbit[40:48]} \n'
+			 f'2 {numbit[48:56]} \n'
+			 f'1 {numbit[56:64]} \n'
+			 f'   a b c d e f g h \n'
+		)
+
+def printChessArray(bitarray):
+		numbit = np.array(bitarray)
+		print(
+			 f'\n'
+			 f'\n'
+			 f'8 {"".join(str(e) + " " for e in numbit[0:8])} \n'
+			 f'7 {"".join(str(e) + " " for e in numbit[8:16])} \n'
+			 f'6 {"".join(str(e) + " " for e in numbit[16:24])} \n'
+			 f'5 {"".join(str(e) + " " for e in numbit[24:32])} \n'
+			 f'4 {"".join(str(e) + " " for e in numbit[32:40])} \n'
+			 f'3 {"".join(str(e) + " " for e in numbit[40:48])} \n'
+			 f'2 {"".join(str(e) + " " for e in numbit[48:56])} \n'
+			 f'1 {"".join(str(e) + " " for e in numbit[56:64])} \n'
+			 f'  a b c d e f g h \n'
+		)
+
+def printMap(map):
+	bitarray = bit.intToBitArray(map)
+	printArray(bitarray)
+
+# def arraysToNumberedUnion(pieceArraysList):
+# 	numberedUnion = np.zeros(64, dtype=int)
+# 	for index, pieceArray in enumerate(pieceArraysList):
+# 		factored = np.array(pieceArray) * (index + 1)
+# 		np.add(factored, numberedUnion, numberedUnion)
+# 	return numberedUnion
+
+# returns piece bitarrays from fen string 
+def fenToBitArrays(fenString):
+
+	P = np.zeros(64, dtype=np.byte)
+	R = np.zeros(64, dtype=np.byte)
+	N = np.zeros(64, dtype=np.byte)
+	B = np.zeros(64, dtype=np.byte)
+	Q = np.zeros(64, dtype=np.byte)
+	K = np.zeros(64, dtype=np.byte)
+	p = np.zeros(64, dtype=np.byte)
+	r = np.zeros(64, dtype=np.byte)
+	n = np.zeros(64, dtype=np.byte)
+	b = np.zeros(64, dtype=np.byte)
+	q = np.zeros(64, dtype=np.byte)
+	k = np.zeros(64, dtype=np.byte)
+	bitarrays = [P, R, N, B, Q, K, p, r, n, b, q, k]
+	fieldIndex = 0
+
+	for char in fenString:
+		if char.isnumeric():
+			charInt = int(char)
+
+			if charInt < 1 or charInt > 8:
+				raise ValueError('Empty field range exceeds rank size.')
+				break
+
+			fieldIndex += charInt - 1
+
 		else:
-			unicodeArray[index] = ALL_UNICODES[0]
+			if char == '/': 
+				continue
+			elif char not in ROLE_OBJ:
+				raise ValueError('Incorrect character in fen string.')
+				break
+			else:
+				pieceIndex = ROLE_OBJ[char]
+				bitarrays[pieceIndex][fieldIndex] = 1
+		
+		fieldIndex += 1
+
+	return bitarrays
+
+# only god knows if the output bits are lossless
+# TODO: do this properly again with bitshifting
+def fenToBitMaps(fenString):
+
+	pieceArrays = fenToBitArrays(fenString)
+	pieceMaps = []
+
+	for pieceArray in pieceArrays:
+		pieceMap = bit.bitArrayToInt(pieceArray)
+		pieceMaps.append(pieceMap)
+
+	return pieceMaps
+
+# pieceArrays need to be sorted in PIECE_OBJ order 
+def ppBitArrays(pieceArrays):
+	ppArray = np.full(64, DOT_UNICODE)
+	# lame O(n^2) but it's for testing only
+	for i, pieceArray in enumerate(pieceArrays):
+		pieceUnicode = ALL_UNICODES[i]
+		for j, bit in enumerate(pieceArray):
+			if bit: ppArray[j] = pieceUnicode
+
+	printChessArray(ppArray)
+
+# pieceMaps need to be sorted in PIECE_OBJ order
+def ppBitMaps(pieceMaps):
+	pieceArrays = []
+
+	# disgusting but works 
+	for pieceMap in pieceMaps:
+		pieceArray = bit.intToBitArray(pieceMap)
+		pieceArrays.append(pieceArray)
+
+	ppBitArrays(pieceArrays)
+
+
+
 	
-	printChessArray(unicodeArray)
-
-def ppSideArrays(pieceArraysList, color):
-	numberedUnion = arraysToNumberedUnion(pieceArraysList)
-	UNICODES = WHITE_UNICODES if not color else BLACK_UNICODES
-	unicodeArray = [UNICODES[pieceNumber] for pieceNumber in numberedUnion]
-	printChessArray(unicodeArray) 
-
-def ppAllArrays(pieceArraysList):
-	numberedUnion = arraysToNumberedUnion(pieceArraysList)
-	unicodeArray = [ALL_UNICODES[pieceNumber] for pieceNumber in numberedUnion]
-	printChessArray(unicodeArray)
-
-# takes a 8x8 board representation filled with zero's or the piece name from ROLE_OBJ.
-# Example: [0, 0, b, 0, k, 0 ...] -> a black bishop and king in row a8
-# Returns the bitarray of each piece in order of the ROLE_OBJ. First one is empty. 
-def roleArrayToBitArrays(stateArray):
-	# first is the empty array 
-	roleArrays = np.zeros((13,64))
-
-	for index, field in enumerate(stateArray):
-		if not field == "":
-			roleIndex = ROLE_OBJ[field]
-			roleArrays[roleIndex][index] = 1
-	
-	return np.delete(roleArrays, (0), axis=0) #[empty, whitePawn, whiteRook, whiteKnight ... blackKing]
-
-# could be done faster with bit wise operations, but speed trivial for setup
-def roleArrayToBitMaps(stateArray):
-	roleArrays = roleArrayToBitArrays(stateArray)
-	cdef unsigned long long[12] stateMaps = [bit.bitarrayToInt(role) for role in roleArrays]
-	return stateMaps
-
-################################### BUGGY END ##############################

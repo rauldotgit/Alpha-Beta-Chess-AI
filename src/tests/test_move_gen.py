@@ -30,8 +30,8 @@ import numpy as np
 #         0, 0, 0, 0, 0, 0, 0, 0,
 #     ]
 
-#     test_map = bit.bitarrayToInt(test_array_1)
-#     result_map = gen.someMask(test_field, bit.bitarrayToInt(block_array_1))
+#     test_map = bit.bitArrayToInt(test_array_1)
+#     result_map = gen.someMask(test_field, bit.bitArrayToInt(block_array_1))
 #     assert test_map == result_map
 
 FIELD_OBJ = maps.FIELD_OBJ
@@ -62,7 +62,7 @@ def test_single_pawn_attacks():
         0, 0, 0, 0, 0, 0, 0, 0,
     ]
 
-    test_map =  bit.bitarrayToInt(test_array_1)
+    test_map =  bit.bitArrayToInt(test_array_1)
     result_map = gen.singlePawnAttacks(test_field, 0)
     assert  test_map == result_map 
 
@@ -79,7 +79,7 @@ def test_single_pawn_attacks():
         0, 0, 0, 0, 0, 0, 0, 0,
     ]
 
-    test_map = bit.bitarrayToInt(test_array_2)
+    test_map = bit.bitArrayToInt(test_array_2)
     result_map =gen.singlePawnAttacks(test_field, 0)
     assert test_map == result_map
 
@@ -96,7 +96,7 @@ def test_single_pawn_attacks():
         0, 0, 0, 0, 0, 0, 0, 0,
     ]
 
-    test_map = bit.bitarrayToInt(test_array_3)
+    test_map = bit.bitArrayToInt(test_array_3)
     result_map =gen.singlePawnAttacks(test_field, 0)
     assert test_map == result_map
 
@@ -113,7 +113,7 @@ def test_single_pawn_attacks():
         0, 0, 0, 0, 0, 0, 0, 0,
     ]
 
-    test_map = bit.bitarrayToInt(test_array_4)
+    test_map = bit.bitArrayToInt(test_array_4)
     result_map = gen.singlePawnAttacks(test_field, 1)
     assert test_map == result_map
 
@@ -130,7 +130,7 @@ def test_single_pawn_attacks():
         0, 0, 0, 0, 0, 0, 0, 0,
     ]
 
-    test_map = bit.bitarrayToInt(test_array_5)
+    test_map = bit.bitArrayToInt(test_array_5)
     result_map = gen.singlePawnAttacks(test_field, 1)
     assert test_map == result_map
 
@@ -147,7 +147,7 @@ def test_single_pawn_attacks():
         0, 0, 0, 0, 0, 0, 0, 0,
     ]
 
-    test_map = bit.bitarrayToInt(test_array_6)
+    test_map = bit.bitArrayToInt(test_array_6)
     result_map = gen.singlePawnAttacks(test_field, 1)
     assert test_map == result_map
 
@@ -166,7 +166,7 @@ def test_single_knight_attacks():
         0, 0, 0, 0, 0, 0, 0, 0,
     ]
     
-    test_map = bit.bitarrayToInt(test_array_1)
+    test_map = bit.bitArrayToInt(test_array_1)
     result_map = gen.singleKnightAttacks(test_field)
     assert test_map == result_map
 
@@ -183,7 +183,7 @@ def test_single_knight_attacks():
         0, 0, 0, 0, 0, 0, 0, 0,
     ]
 
-    test_map = bit.bitarrayToInt(test_array_2)
+    test_map = bit.bitArrayToInt(test_array_2)
     result_map = gen.singleKnightAttacks(test_field)
     assert test_map == result_map
 
@@ -202,7 +202,7 @@ def test_single_king_attacks():
         0, 0, 0, 0, 0, 0, 0, 0,
     ]
 
-    test_map = bit.bitarrayToInt(test_array_1)
+    test_map = bit.bitArrayToInt(test_array_1)
     result_map = gen.singleKingAttacks(test_field)
     assert test_map == result_map
 
@@ -219,7 +219,7 @@ def test_single_king_attacks():
         0, 0, 0, 0, 0, 0, 0, 0,
     ]
 
-    test_map = bit.bitarrayToInt(test_array_2)
+    test_map = bit.bitArrayToInt(test_array_2)
     result_map = gen.singleKingAttacks(test_field)
     assert test_map == result_map
     
@@ -239,7 +239,7 @@ def test_single_bishop_attacks():
         0, 0, 0, 0, 0, 0, 0, 0,
     ]
 
-    test_map = bit.bitarrayToInt(test_array_1)
+    test_map = bit.bitArrayToInt(test_array_1)
     result_map = gen.singleBishopAttacks(test_field)
     assert test_map == result_map
 
@@ -256,7 +256,7 @@ def test_single_bishop_attacks():
         0, 0, 0, 0, 0, 0, 0, 0,
     ]
 
-    test_map = bit.bitarrayToInt(test_array_2)
+    test_map = bit.bitArrayToInt(test_array_2)
     result_map = gen.singleBishopAttacks(test_field)
     assert test_map == result_map
 
@@ -286,8 +286,8 @@ def test_single_bishop_attacks_blocked():
         0, 0, 0, 0, 0, 0, 0, 0,
     ]
     
-    test_map = bit.bitarrayToInt(test_array_1)
-    result_map = gen.singleBishopAttacks_blocked(test_field, bit.bitarrayToInt(block_array_1))
+    test_map = bit.bitArrayToInt(test_array_1)
+    result_map = gen.singleBishopAttacks_blocked(test_field, bit.bitArrayToInt(block_array_1))
     assert test_map == result_map
 
 def test_single_rook_attacks():
@@ -305,7 +305,7 @@ def test_single_rook_attacks():
         0, 0, 0, 0, 0, 0, 0, 0,
     ]
 
-    test_map = bit.bitarrayToInt(test_array_1)
+    test_map = bit.bitArrayToInt(test_array_1)
     result_map = gen.singleRookAttacks(test_field)
     assert test_map == result_map
 
@@ -322,7 +322,7 @@ def test_single_rook_attacks():
         0, 0, 0, 0, 0, 0, 0, 0,
     ]
 
-    test_map = bit.bitarrayToInt(test_array_2)
+    test_map = bit.bitArrayToInt(test_array_2)
     result_map = gen.singleRookAttacks(test_field)
     assert test_map == result_map
 
@@ -339,7 +339,7 @@ def test_single_rook_attacks():
         0, 0, 0, 0, 0, 0, 0, 0,
     ]
 
-    test_map = bit.bitarrayToInt(test_array_3)
+    test_map = bit.bitArrayToInt(test_array_3)
     result_map = gen.singleRookAttacks(test_field)
     assert test_map == result_map
     
@@ -369,8 +369,8 @@ def test_single_rook_attacks_blocked():
         0, 0, 0, 0, 0, 1, 0, 0,
     ]
 
-    test_map = bit.bitarrayToInt(test_array_1)
-    result_map = gen.singleRookAttacks_blocked(test_field, bit.bitarrayToInt(block_array_1))
+    test_map = bit.bitArrayToInt(test_array_1)
+    result_map = gen.singleRookAttacks_blocked(test_field, bit.bitArrayToInt(block_array_1))
     assert test_map == result_map
 
     test_field = FIELD_OBJ['h8']
@@ -397,8 +397,8 @@ def test_single_rook_attacks_blocked():
         0, 0, 0, 0, 0, 0, 0, 0,
     ]
 
-    test_map = bit.bitarrayToInt(test_array_2)
-    result_map = gen.singleRookAttacks_blocked(test_field, bit.bitarrayToInt(block_array_2))
+    test_map = bit.bitArrayToInt(test_array_2)
+    result_map = gen.singleRookAttacks_blocked(test_field, bit.bitArrayToInt(block_array_2))
     assert test_map == result_map
 
 def test_single_queen_attacks_blocked():
@@ -427,8 +427,8 @@ def test_single_queen_attacks_blocked():
         0, 0, 0, 0, 0, 0, 0, 0,
     ]
 
-    test_map = bit.bitarrayToInt(test_array_1)
-    result_map = gen.singleQueenAttacks_blocked(test_field, bit.bitarrayToInt(block_array_1))
+    test_map = bit.bitArrayToInt(test_array_1)
+    result_map = gen.singleQueenAttacks_blocked(test_field, bit.bitArrayToInt(block_array_1))
     assert test_map == result_map
 
     test_field = FIELD_OBJ['a1']
@@ -455,8 +455,8 @@ def test_single_queen_attacks_blocked():
         0, 1, 1, 1, 1, 1, 1, 1,
     ]
 
-    test_map = bit.bitarrayToInt(test_array_2)
-    result_map = gen.singleQueenAttacks_blocked(test_field, bit.bitarrayToInt(block_array_2))
+    test_map = bit.bitArrayToInt(test_array_2)
+    result_map = gen.singleQueenAttacks_blocked(test_field, bit.bitArrayToInt(block_array_2))
     assert test_map == result_map
 
 # def test_all_attacks_blocked():
@@ -486,17 +486,6 @@ def test_single_queen_attacks_blocked():
 #             for field in pam:
 #                 maps.printMap(field)
 
-def test_generate_moves():
-    test_role_array = [
-        "r", "", "", "", "k", "", "", "r",
-        "p", "", "", "p", "q", "p", "b", "",
-        "b", "n", "", "", "p", "n", "p", "",
-        "", "", "p", "P", "N", "", "", "",
-        "", "p", "", "", "P", "", "", "",
-        "", "", "N", "", "", "Q", "", "p",
-        "P", "P", "P", "B", "B", "P", "P", "P",
-        "R", "", "", "", "K", "", "", "R",
-    ]
-    
-    test_bitmaps = maps.roleArrayToBitMaps(test_role_array)
-    gen.generateMoves(test_bitmaps, 0)
+# TODO: this
+def test_is_field_attacked():
+    pass
