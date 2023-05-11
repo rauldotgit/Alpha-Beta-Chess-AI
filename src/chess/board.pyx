@@ -235,9 +235,29 @@ class Board():
 
         return False
 
+    def printMove(self, move):
+        start, target, piece, promoted, capture, doublePush, enpassant, castling = move
+        print(
+            f'Move:\n'
+            f'{field(start)} -> {field(target)}\n'
+            f'Piece: {role(piece)}\n'
+            f'Promoted: {promoted}\n'
+            f'Capture: {capture}\n'
+            f'Double Push: {doublePush}\n'
+            f'Enpassant: {enpassant}\n'
+            f'Castling: {castling}\n'
+        )
+
+    def printLastMove(self):
+        if self.moveIndex == -1:
+            print("No moves in list.")
+        else:
+            lastMove = self.moveList[self.moveIndex]
+            self.printMove(lastMove)
+
     def printMoveList(self):
         for index, move in enumerate(self.moveList):
-            start, target,  piece, promoted, capture, doublePush, enpassant, castling = move
+            start, target, piece, promoted, capture, doublePush, enpassant, castling = move
             print(
                 f'Move {index}:\n'
                 f'{field(start)} -> {field(target)}\n'
