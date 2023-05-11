@@ -3,6 +3,7 @@ import cython
 import src.chess.maps as maps
 import src.chess.bitmethods as bit
 import src.chess.attacks as atk
+import src.chess.move_encoding as menc
 
 ###########################################################
 # TODO: Change movegen functions to take the board and it's data as an input
@@ -27,16 +28,25 @@ cdef enum field_int:
     a2, b2, c2, d2, e2, f2, g2, h2,
     a1, b1, c1, d1, e1, f1, g1, h1
 
-cdef enum piece_int:
+cdef enum role_int:
     P, R, N, B, Q, K, p, r, n, b, q, k
 
 cdef enum castle_int:
     wk, wq, bk, bq 
 
+ROLE_ARRAY = maps.ROLE_ARRAY
+FIELD_ARRAY = maps.FIELD_ARRAY
+
+cdef field(field_int):
+    return FIELD_ARRAY[field_int]
+
+cdef role(role_int):
+    return ROLE_ARRAY[role_int]
+
 ################### GLOBALS #########################
 
 class Board():
-
+    turn = white
     enpassant = noSquare
     castling = 0
 
@@ -110,11 +120,9 @@ class Board():
         kingAttacks
     ]
 
-    white_attack_union = 0
-    black_attack_union = 0
-
-    turn = white
-
+    moveList = []
+    moveIndex = -1
+    
     def __init__(self):
         self.setPieces()
 
@@ -142,6 +150,13 @@ class Board():
     def resetBoard(self):
         self.setPieces()
         self.turn = white
+
+        self.castling = 0
+        self.enpassant = noSquare
+
+        self.setBoardUnion()
+        self.setSideUnions()
+        self.generateAttackMaps_NOMAGIC()
 
     def setSideUnions(self):
         whiteNp = np.array(self.whiteMaps)
@@ -220,6 +235,27 @@ class Board():
 
         return False
 
+    def printMoveList(self):
+        for index, move in enumerate(self.moveList):
+            start, target,  piece, promoted, capture, doublePush, enpassant, castling = move
+            print(
+                f'Move {index}:\n'
+                f'{field(start)} -> {field(target)}\n'
+                f'Piece: {role(piece)}\n'
+                f'Promoted: {promoted}\n'
+                f'Capture: {capture}\n'
+                f'Double Push: {doublePush}\n'
+                f'Enpassant: {enpassant}\n'
+                f'Castling: {castling}\n'
+            )
+
+    def addMoveToList(self, start, target,  piece, promoted, capture, doublePush, enpassant, castling):
+        self.moveList.append([start, target,  piece, promoted, capture, doublePush, enpassant, castling])
+        self.moveIndex += 1
+
+    def resetMoveList(self):
+        self.moveList = []
+        self.moveIndex = -1
 
     def generateNonPawnMove(self, pieceMap, piece):
         atkMapsIndex = -1

@@ -370,6 +370,21 @@ ROLE_OBJ = {
 	'k': 11
 }
 
+ROLE_ARRAY = [
+	'P',
+	'R',
+	'N',
+	'B',
+	'Q',
+	'K',
+	'p',
+	'r',
+	'n',
+	'b',
+	'q',
+	'k',
+]
+
 COLOR_OBJ = {
 	'white': 0,
 	'black': 1
