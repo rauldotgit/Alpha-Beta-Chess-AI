@@ -238,35 +238,16 @@ class Board():
     def printMove(self, move):
         start, target, piece, promoted, capture, doublePush, enpassant, castling = move
         print(
-            f'Move:\n'
-            f'{fieldStr(start)} -> {fieldStr(target)}\n'
-            f'Piece: {roleStr(piece)}\n'
-            f'Promoted: {promoted}\n'
-            f'Capture: {capture}\n'
-            f'Double Push: {doublePush}\n'
-            f'Enpassant: {enpassant}\n'
-            f'Castling: {castling}\n'
+            f's -> t p + - e c\n'
+            f'{fieldStr(start)} -> {fieldStr(target)} {roleStr(piece)} {promoted} {capture} {doublePush} {enpassant} {castling}\n'
         )
 
-    def printLastMove(self):
-        if self.moveIndex == -1:
-            print("No moves in list.")
-        else:
-            lastMove = self.moveList[self.moveIndex]
-            self.printMove(lastMove)
-
     def printMoveList(self):
+        print(f's -> t p + - 2 e c\n')
         for index, move in enumerate(self.moveList):
             start, target, piece, promoted, capture, doublePush, enpassant, castling = move
             print(
-                f'Move {index}:\n'
-                f'{fieldStr(start)} -> {fieldStr(target)}\n'
-                f'Piece: {roleStr(piece)}\n'
-                f'Promoted: {promoted}\n'
-                f'Capture: {capture}\n'
-                f'Double Push: {doublePush}\n'
-                f'Enpassant: {enpassant}\n'
-                f'Castling: {castling}\n'
+                f'{fieldStr(start)} -> {fieldStr(target)} {roleStr(piece)} {promoted} {capture} {doublePush} {enpassant} {castling}\n'
             )
 
     def addMoveToList(self, start, target,  piece, promoted, capture, doublePush, enpassant, castling):
