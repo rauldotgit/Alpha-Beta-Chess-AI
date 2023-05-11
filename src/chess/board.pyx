@@ -37,10 +37,10 @@ cdef enum castle_int:
 ROLE_ARRAY = maps.ROLE_ARRAY
 FIELD_ARRAY = maps.FIELD_ARRAY
 
-cdef field(field_int):
+cdef fieldStr(field_int):
     return FIELD_ARRAY[field_int]
 
-cdef role(role_int):
+cdef roleStr(role_int):
     return ROLE_ARRAY[role_int]
 
 ################### GLOBALS #########################
@@ -239,8 +239,8 @@ class Board():
         start, target, piece, promoted, capture, doublePush, enpassant, castling = move
         print(
             f'Move:\n'
-            f'{field(start)} -> {field(target)}\n'
-            f'Piece: {role(piece)}\n'
+            f'{fieldStr(start)} -> {fieldStr(target)}\n'
+            f'Piece: {roleStr(piece)}\n'
             f'Promoted: {promoted}\n'
             f'Capture: {capture}\n'
             f'Double Push: {doublePush}\n'
@@ -260,8 +260,8 @@ class Board():
             start, target, piece, promoted, capture, doublePush, enpassant, castling = move
             print(
                 f'Move {index}:\n'
-                f'{field(start)} -> {field(target)}\n'
-                f'Piece: {role(piece)}\n'
+                f'{fieldStr(start)} -> {fieldStr(target)}\n'
+                f'Piece: {roleStr(piece)}\n'
                 f'Promoted: {promoted}\n'
                 f'Capture: {capture}\n'
                 f'Double Push: {doublePush}\n'
