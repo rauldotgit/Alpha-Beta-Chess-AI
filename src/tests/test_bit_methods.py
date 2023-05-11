@@ -217,3 +217,4 @@ def test_get_bit_indices():
     result_array = bit.getBitIndices(test_map)
 
     assert assumed_array == result_array
+

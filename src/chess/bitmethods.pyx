@@ -79,3 +79,15 @@ def getBitIndices(bitmap):
         if isection:
             indexArray.append(i)
     return indexArray
+
+def ONEULL():
+    cdef unsigned long long one = 1
+    return one
+
+def ZEROULL(): 
+    cdef unsigned long long zero = 0
+    return zero
+
+def setPiece(fieldIndex, bitmap):
+    cdef unsigned long long pieceUnshifted = 1
+    return (pieceUnshifted << fieldIndex) | bitmap 
