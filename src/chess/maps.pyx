@@ -412,7 +412,31 @@ FIELD_ARRAY = [
 		'a1', 'b1', 'c1', 'd1', 'e1', 'f1', 'g1', 'h1',
 		]
 
-FEN_START = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR'
+CASTLE_OBJ = {
+	'K': 1,
+	'Q': 2,
+	'k': 4,
+	'q': 8,
+}
+
+def parseCastle(castleString):
+	castleInt = 0
+	if castleString == '-': return castleInt
+
+	for char in castleString:
+		castleInt |= CASTLE_OBJ[char]
+
+	return castleInt
+
+STRING_BOARD = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR'
+
+FEN_EMPTY = '8/8/8/8/8/8/8/8 w - - '
+FEN_START = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1'
+FEN_SOME_MOVE = 'rnbqkbnr/pp1ppppp/8/2p5/4P3/8/PPPP1PPP/RNBQKBNR w KQkq c6 0 2'
+FEN_HARD = 'r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1'
+FEN_VERY_HARD = 'rnbqkb1r/pp1p1pPp/8/2p1pP2/1P1P4/3P3P/P1P1P3/RNBQKBNR w KQkq e6 0 1'
+FEN_CMK = 'r2q1rk1/ppp2ppp/2n1bn2/2b1p3/3pP3/3P1NPP/PPP1NPB1/R1BQ1RK1 b - - 0 9'
+
 
 def printArray(bitarray):
 		numbit = np.array(bitarray)
@@ -457,20 +481,21 @@ def printMap(map):
 # 	return numberedUnion
 
 # returns piece bitarrays from fen string 
-def fenToBitArrays(fenString):
+def fenBoardToBitArrays(fenString):
+	cdef unsigned long long one = 1
 
-	P = np.zeros(64, dtype=np.byte)
-	R = np.zeros(64, dtype=np.byte)
-	N = np.zeros(64, dtype=np.byte)
-	B = np.zeros(64, dtype=np.byte)
-	Q = np.zeros(64, dtype=np.byte)
-	K = np.zeros(64, dtype=np.byte)
-	p = np.zeros(64, dtype=np.byte)
-	r = np.zeros(64, dtype=np.byte)
-	n = np.zeros(64, dtype=np.byte)
-	b = np.zeros(64, dtype=np.byte)
-	q = np.zeros(64, dtype=np.byte)
-	k = np.zeros(64, dtype=np.byte)
+	P = np.zeros(64, dtype=np.uint64)
+	R = np.zeros(64, dtype=np.uint64)
+	N = np.zeros(64, dtype=np.uint64)
+	B = np.zeros(64, dtype=np.uint64)
+	Q = np.zeros(64, dtype=np.uint64)
+	K = np.zeros(64, dtype=np.uint64)
+	p = np.zeros(64, dtype=np.uint64)
+	r = np.zeros(64, dtype=np.uint64)
+	n = np.zeros(64, dtype=np.uint64)
+	b = np.zeros(64, dtype=np.uint64)
+	q = np.zeros(64, dtype=np.uint64)
+	k = np.zeros(64, dtype=np.uint64)
 	bitarrays = [P, R, N, B, Q, K, p, r, n, b, q, k]
 	fieldIndex = 0
 
@@ -480,7 +505,7 @@ def fenToBitArrays(fenString):
 
 			if charInt < 1 or charInt > 8:
 				raise ValueError('Empty field range exceeds rank size.')
-				break
+				return
 
 			fieldIndex += charInt - 1
 
@@ -488,11 +513,11 @@ def fenToBitArrays(fenString):
 			if char == '/': 
 				continue
 			elif char not in ROLE_OBJ:
-				raise ValueError('Incorrect character in fen string.')
-				break
+				raise ValueError('Incorrect character in fen board.')
+				return
 			else:
 				pieceIndex = ROLE_OBJ[char]
-				bitarrays[pieceIndex][fieldIndex] = 1
+				bitarrays[pieceIndex][fieldIndex] = one
 		
 		fieldIndex += 1
 
@@ -500,9 +525,9 @@ def fenToBitArrays(fenString):
 
 # only god knows if the output bits are lossless
 # TODO: do this properly again with bitshifting
-def fenToBitMaps(fenString):
+def fenBoardToBitMaps(fenString):
 
-	pieceArrays = fenToBitArrays(fenString)
+	pieceArrays = fenBoardToBitArrays(fenString)
 	pieceMaps = []
 
 	for pieceArray in pieceArrays:
@@ -510,6 +535,22 @@ def fenToBitMaps(fenString):
 		pieceMaps.append(pieceMap)
 
 	return pieceMaps
+
+def fenToBoardInfo(fenString):
+
+	fenArgs = fenString.split()
+	if len(fenArgs) != 6:
+		raise ValueError("FEN String is missing arguments.")
+
+	pieceMaps = fenBoardToBitMaps(fenArgs[0])
+	turn = 0 if fenArgs[1] == 'w' else 1
+	castling = parseCastle(fenArgs[2])
+	enpassant = 64 if fenArgs[3] == '-' else FIELD_OBJ[fenArgs[3]]
+	halfMoves = int(fenArgs[4])
+	fullMoves = int(fenArgs[5])
+
+	return [pieceMaps, turn, castling, enpassant, halfMoves, fullMoves]
+
 
 # pieceArrays need to be sorted in PIECE_OBJ order 
 def ppBitArrays(pieceArrays):

@@ -35,3 +35,15 @@ def test_set_pieces() -> None:
 #     newBoard = board.Board()
 #     startUnion = newBoard.fullUnion()
 #     assert (startUnion == maps.SET_BOARD_UNION).all()
+
+def test_move_gen():
+    newBoard = board.Board()
+    newBoard.fenGameSetup(maps.FEN_HARD)
+    newBoard.printBoard()
+
+    # maps.printMap(newBoard.board_union)
+    # maps.printMap(newBoard.white_board_union)
+    # maps.printMap(newBoard.black_board_union)
+
+    newBoard.printMoveList()
+    print(newBoard.castling & 1)

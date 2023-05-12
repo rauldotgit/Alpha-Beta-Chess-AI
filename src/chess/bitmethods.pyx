@@ -20,7 +20,7 @@ def intToBitArray(n):
     return bitarray
 
 def bitArrayToInt(bitarray):
-    ressi = 0
+    cdef unsigned long long ressi = 0
     for i, bit in enumerate(bitarray):
             ressi += bit*(2**i)
     return ressi
