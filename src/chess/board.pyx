@@ -71,9 +71,6 @@ class Board():
     black_queen = 0
     black_king = 0
 
-    # prev board state maps
-    previousMaps = []
-
     board_union = 0
     white_board_union = 0
     black_board_union = 0
@@ -90,6 +87,9 @@ class Board():
 
     moveList = []
     moveIndex = -1
+
+    # this will have all variables from turn ... moveIndex from the last turn
+    preState = []
     
     def __init__(self):
         self.setPieces()
@@ -100,6 +100,74 @@ class Board():
     def printBoard(self):
         maps.ppBitMaps(self.getAllMaps())
         print(f'T:{self.turn} C:{self.castling} E:{self.enpassant}')
+
+    def resetPrevState(self):
+        self.turn = prevState[0]
+        self.enpassant = prevState[1]
+        self.castling = prevState[2]
+        self.halfMoves = prevState[3]
+        self.fullMoves = prevState[4]
+
+        self.white_pawns = prevState[5]
+        self.white_rooks = prevState[6]
+        self.white_knights = prevState[7]
+        self.white_bishops = prevState[8]
+        self.white_queen = prevState[9]
+        self.white_king = prevState[10]
+
+        self.black_pawns = prevState[11]
+        self.black_rooks = prevState[12]
+        self.black_knights = prevState[13]
+        self.black_bishops = prevState[14]
+        self.black_queen = prevState[15]
+        self.black_king = prevState[16]
+        self.board_union = prevState[17]
+        self.white_board_union = prevState[18]
+        self.black_board_union = prevState[19]
+        self.pawnAttacks = prevState[20]
+        self.whitePawnAttacks = prevState[21]
+        self.blackPawnAttacks = prevState[22]
+        self.rookAttacks = prevState[23]
+        self.knightAttacks = prevState[24]
+        self.bishopAttacks = prevState[25]
+        self.queenAttacks = prevState[26]
+        self.kingAttacks = prevState[27]
+        self.moveList = prevState[28]
+        self.moveIndex = prevState[29]
+
+    def saveCurrentState(self):
+        self.prevState += [
+            self.turn,
+            self.enpassant,
+            self.castling,
+            self.halfMoves,
+            self.fullMoves,
+            self.white_pawns,
+            self.white_rooks,
+            self.white_knights,
+            self.white_bishops,
+            self.white_queen,
+            self.white_king,
+            self.black_pawns,
+            self.black_rooks,
+            self.black_knights,
+            self.black_bishops,
+            self.black_queen,
+            self.black_king,
+            self.board_union,
+            self.white_board_union,
+            self.black_board_union,
+            self.pawnAttacks,
+            self.whitePawnAttacks,
+            self.blackPawnAttacks,
+            self.rookAttacks,
+            self.knightAttacks,
+            self.bishopAttacks,
+            self.queenAttacks,
+            self.kingAttacks,
+            self.moveList,
+            self.moveIndex 
+        ]
 
     def setPieces(self):
         self.white_pawns = maps.WHITE_PAWNS_MAP
