@@ -47,7 +47,12 @@ Although its benefits mentioned before, some drawbacks, such as computational sp
 
 Using Python also opens up possibilites for further milestones, where the chess engine will have to communicate with a web server for matches and have a graphical user interface, both of which can be done with a rudimentary Django/React/HTML/CSS server implementation or as a client with a PyQt front-end.
 
-- More to come: Reason for choosing bitboard instead of mailbox. 
+After several research and team discussions, we came to the conclusion, to implement Bitboards in our Chess AI, instead of Mailbox (Arrays).
+We found out, that investigating, if the King is exposed into a check, after a move has been made, is a very time consuming task. 
+
+Mailbox uses a so called "if square attacked" function, to calculate the attacked squares of the chessboard. This process causes a significant loss in performance.
+
+Bitboards on the other hand, operate with "pre calculated attack tables". The "magic Index" is implemented to reference these pre calculated attack tables, in order to obtain the data, of the attacked sqaures on the chessboard. This leads to a significant increase in performance, as a simple lookup is used, instead of real time calculations. 
 
 ### Built with
 
