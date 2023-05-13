@@ -59,3 +59,7 @@ def test_input_move():
 
     newBoard = board.Board()
     newBoard.inputMove(1)
+
+def test_parse_command():
+    # TODO: THIS
+    pass

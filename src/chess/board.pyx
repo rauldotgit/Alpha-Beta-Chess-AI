@@ -51,6 +51,10 @@ cdef roleStr(role_int):
 cdef roleUnicode(role_int):
     return ALL_UNICODES[role_int]
 
+cdef forceGet(array, i):
+    length = len(array)
+    return None if i >= length else array[i]
+
 ################### GLOBALS #########################
 
 class Board():
@@ -814,5 +818,75 @@ class Board():
 
         # illegal
         return 0
+
+    # init start position
+    # position startpos
+    
+    # init start position and make the moves on chess board
+    # position startpos moves e2e4 e7e5
+    
+    # init position from FEN string
+    # position fen r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1 
+    
+    # init position from fen string and make moves on chess board
+    # position fen r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1 moves e2a6 e8g8
+
+
+    def parsePosition(self, commandString):
+        commandList = commandString.split()
+        cmdlen = len(commandList)
+        
+        # close your eyes here if you're a python dev
+
+        cmd0 = forceGet(commandList, 0) 
+        if cmd0 and cmd0 == 'position':
+            cmd1 = forceGet(commandList, 1)
+
+            if cmd1 and cmd1 == 'startpos':
+                self.fenGameSetup(maps.FEN_START)
+
+            elif cmd1 and cmd1 == 'fen':
+                fenBoard = forceGet(commandList, 2)
+                fenTurn = forceGet(commandList, 3)
+                fenCastle = forceGet(commandList, 4)
+                fenEnpass = forceGet(commandList, 5)
+                fenHalf = forceGet(commandList, 6)
+                fenFull = forceGet(commandList, 7)
+
+                if fenBoard != None and fenTurn != None and fenCastle != None and fenEnpass != None and fenHalf != None and fenFull != None: 
+                    # dumb but works
+                    self.fenGameSetup(fenBoard + ' ' + fenTurn + ' ' + fenCastle + ' ' + fenEnpass + ' ' + fenHalf + ' ' + fenFull)
+
+                    hasMoves = forceGet(commandList, 8)
+                    if hasMoves:
+                        moveList = commandList[8:]
+
+                        # TODO: execute list of commands
+                        for moveString in moveList:
+                            legalMove = self.inputMove(0, moveString)
+
+                            print('made move: ' + legalMove)
+
+                            if not legalMove: break
+
+                            self.makeMove(legalMove, 0)
+                else:
+                    print('insufficient fen arguments - will setup start board')
+                    self.fenGameSetup(maps.FEN_START)
+            else:
+                print('unknown command')
+            #change this if needed TODO
+        else:
+            print('unknown command')
+
+
+
+
+
+
+
+        
+        
+
 
 
