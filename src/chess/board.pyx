@@ -9,6 +9,7 @@ import src.chess.move_encoding as menc
 # TODO: Fix all variable names to follow a standard
 # TODO: Clean up move function
 # TODO: Initialize and check for enpassant
+# TODO: change all references of allmaps or piecemaps
 
 cdef int noSquare = 64
 
@@ -57,19 +58,21 @@ class Board():
     halfMoves = 0
     fullMoves = 0
 
-    white_pawns = 0
-    white_rooks = 0
-    white_knights = 0
-    white_bishops = 0
-    white_queen = 0
-    white_king = 0
-
-    black_pawns = 0
-    black_rooks = 0
-    black_knights = 0
-    black_bishops = 0
-    black_queen = 0
-    black_king = 0
+    # indexed by role_int enum further up
+    pieceMaps = [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+    ]
 
     board_union = 0
     white_board_union = 0
@@ -89,7 +92,7 @@ class Board():
     moveIndex = -1
 
     # this will have all variables from turn ... moveIndex from the last turn
-    preState = []
+    prevState = []
     
     def __init__(self):
         self.setPieces()
@@ -98,32 +101,34 @@ class Board():
         self.turn = black if self.turn == white else white
 
     def printBoard(self):
-        maps.ppBitMaps(self.getAllMaps())
+        maps.ppBitMaps(self.getPieceMaps())
         print(f'T:{self.turn} C:{self.castling} E:{self.enpassant}')
 
-    def resetPrevState(self):
+    def loadPrevState(self):
         self.turn = self.prevState[0]
         self.enpassant = self.prevState[1]
         self.castling = self.prevState[2]
         self.halfMoves = self.prevState[3]
         self.fullMoves = self.prevState[4]
 
-        self.white_pawns = self.prevState[5]
-        self.white_rooks = self.prevState[6]
-        self.white_knights = self.prevState[7]
-        self.white_bishops = self.prevState[8]
-        self.white_queen = self.prevState[9]
-        self.white_king = self.prevState[10]
+        self.pieceMaps[P] = self.prevState[5]
+        self.pieceMaps[R] = self.prevState[6]
+        self.pieceMaps[N] = self.prevState[7]
+        self.pieceMaps[B] = self.prevState[8]
+        self.pieceMaps[Q] = self.prevState[9]
+        self.pieceMaps[K] = self.prevState[10]
 
-        self.black_pawns = self.prevState[11]
-        self.black_rooks = self.prevState[12]
-        self.black_knights = self.prevState[13]
-        self.black_bishops = self.prevState[14]
-        self.black_queen = self.prevState[15]
-        self.black_king = self.prevState[16]
+        self.pieceMaps[p] = self.prevState[11]
+        self.pieceMaps[r] = self.prevState[12]
+        self.pieceMaps[n] = self.prevState[13]
+        self.pieceMaps[b] = self.prevState[14]
+        self.pieceMaps[q] = self.prevState[15]
+        self.pieceMaps[k] = self.prevState[16]
+
         self.board_union = self.prevState[17]
         self.white_board_union = self.prevState[18]
         self.black_board_union = self.prevState[19]
+
         self.pawnAttacks = self.prevState[20]
         self.whitePawnAttacks = self.prevState[21]
         self.blackPawnAttacks = self.prevState[22]
@@ -142,21 +147,24 @@ class Board():
             self.castling,
             self.halfMoves,
             self.fullMoves,
-            self.white_pawns,
-            self.white_rooks,
-            self.white_knights,
-            self.white_bishops,
-            self.white_queen,
-            self.white_king,
-            self.black_pawns,
-            self.black_rooks,
-            self.black_knights,
-            self.black_bishops,
-            self.black_queen,
-            self.black_king,
+
+            self.pieceMaps[P],
+            self.pieceMaps[R],
+            self.pieceMaps[N],
+            self.pieceMaps[B],
+            self.pieceMaps[Q],
+            self.pieceMaps[K],
+            self.pieceMaps[p],
+            self.pieceMaps[r],
+            self.pieceMaps[n],
+            self.pieceMaps[b],
+            self.pieceMaps[q],
+            self.pieceMaps[k],
+
             self.board_union,
             self.white_board_union,
             self.black_board_union,
+
             self.pawnAttacks,
             self.whitePawnAttacks,
             self.blackPawnAttacks,
@@ -165,60 +173,34 @@ class Board():
             self.bishopAttacks,
             self.queenAttacks,
             self.kingAttacks,
+            
             self.moveList,
             self.moveIndex 
         ]
 
     def setPieces(self):
-        self.white_pawns = maps.WHITE_PAWNS_MAP
-        self.white_rooks = maps.WHITE_ROOKS_MAP
-        self.white_knights = maps.WHITE_KNIGHTS_MAP
-        self.white_bishops = maps.WHITE_BISHOPS_MAP
-        self.white_queen = maps.WHITE_QUEEN_MAP
-        self.white_king = maps.WHITE_KING_MAP
+        self.pieceMaps[P] = maps.WHITE_PAWNS_MAP
+        self.pieceMaps[R] = maps.WHITE_ROOKS_MAP
+        self.pieceMaps[N] = maps.WHITE_KNIGHTS_MAP
+        self.pieceMaps[B] = maps.WHITE_BISHOPS_MAP
+        self.pieceMaps[Q] = maps.WHITE_QUEEN_MAP
+        self.pieceMaps[K] = maps.WHITE_KING_MAP
 
-        self.black_pawns = maps.BLACK_PAWNS_MAP
-        self.black_rooks = maps.BLACK_ROOKS_MAP
-        self.black_knights = maps.BLACK_KNIGHTS_MAP
-        self.black_bishops = maps.BLACK_BISHOPS_MAP
-        self.black_queen = maps.BLACK_QUEEN_MAP
-        self.black_king = maps.BLACK_KING_MAP
+        self.pieceMaps[p]= maps.BLACK_PAWNS_MAP
+        self.pieceMaps[r]= maps.BLACK_ROOKS_MAP
+        self.pieceMaps[n]= maps.BLACK_KNIGHTS_MAP
+        self.pieceMaps[b]= maps.BLACK_BISHOPS_MAP
+        self.pieceMaps[q]= maps.BLACK_QUEEN_MAP
+        self.pieceMaps[k]= maps.BLACK_KING_MAP
 
     def getWhiteMaps(self):
-        return [
-            self.white_pawns,
-            self.white_rooks,
-            self.white_knights,
-            self.white_bishops,
-            self.white_queen,
-            self.white_king
-        ]
+        return self.pieceMaps[0:6]
 
     def getBlackMaps(self):
-        return [
-            self.black_pawns,
-            self.black_rooks,
-            self.black_knights,
-            self.black_bishops,
-            self.black_queen,
-            self.black_king
-        ]
+        return self.pieceMaps[6:]
 
-    def getAllMaps(self):
-        return [
-            self.white_pawns,
-            self.white_rooks,
-            self.white_knights,
-            self.white_bishops,
-            self.white_queen,
-            self.white_king,
-            self.black_pawns,
-            self.black_rooks,
-            self.black_knights,
-            self.black_bishops,
-            self.black_queen,
-            self.black_king
-        ]
+    def getPieceMaps(self):
+        return self.pieceMaps
 
     def getAttackMaps(self):
         return [
@@ -248,7 +230,7 @@ class Board():
         self.black_board_union = bit.fullUnion(self.getBlackMaps())
 
     def setBoardUnion(self):
-        self.board_union = bit.fullUnion(self.getAllMaps())
+        self.board_union = bit.fullUnion(self.getPieceMaps())
 
     # make sure bord union is up to date
     def generateAttackMaps_NOMAGIC(self):
@@ -266,19 +248,19 @@ class Board():
     def fenGameSetup(self, fenString):
         pieceMaps, turn, castle, enpassant, halfMoves, fullMoves = maps.fenToBoardInfo(fenString)
 
-        self.white_pawns = pieceMaps[0]
-        self.white_rooks = pieceMaps[1]
-        self.white_knights = pieceMaps[2]
-        self.white_bishops = pieceMaps[3]
-        self.white_queen = pieceMaps[4]
-        self.white_king = pieceMaps[5]
+        self.pieceMaps[P] = pieceMaps[0]
+        self.pieceMaps[R] = pieceMaps[1]
+        self.pieceMaps[N] = pieceMaps[2]
+        self.pieceMaps[B] = pieceMaps[3]
+        self.pieceMaps[Q] = pieceMaps[4]
+        self.pieceMaps[K] = pieceMaps[5]
 
-        self.black_pawns = pieceMaps[6]
-        self.black_rooks = pieceMaps[7]
-        self.black_knights = pieceMaps[8]
-        self.black_bishops = pieceMaps[9]
-        self.black_queen = pieceMaps[10]
-        self.black_king = pieceMaps[11]
+        self.pieceMaps[p] = pieceMaps[6]
+        self.pieceMaps[r] = pieceMaps[7]
+        self.pieceMaps[n] = pieceMaps[8]
+        self.pieceMaps[b] = pieceMaps[9]
+        self.pieceMaps[q] = pieceMaps[10]
+        self.pieceMaps[k] = pieceMaps[11]
 
         self.turn = turn
         self.castling = castle
@@ -296,26 +278,26 @@ class Board():
     def isFieldAttacked(self, fieldIndex, side):
         
         # black is attacked by white pawn, if there's a pawn on the black pawn attack fields (damn)
-        isAttackingBlackPawn = self.blackPawnAttacks[fieldIndex] & self.white_pawns
+        isAttackingBlackPawn = self.blackPawnAttacks[fieldIndex] & self.pieceMaps[0]
         if side == white and isAttackingBlackPawn: return True
 
-        isAttackingWhitePawn = self.whitePawnAttacks[fieldIndex] & self.black_pawns
+        isAttackingWhitePawn = self.whitePawnAttacks[fieldIndex] & self.pieceMaps[6]
         if side == black and isAttackingWhitePawn: return True
         
-        rooksMap = self.white_rooks if side == white else self.black_rooks
+        rooksMap = self.pieceMaps[1] if side == white else self.pieceMaps[7]
         if self.rookAttacks[fieldIndex] & rooksMap: return True
 
         # a field is attacked by knights, if there are nights around the field in the shape of night attacks (oof)
-        knightsMap = self.white_knights if side == white else self.black_knights
+        knightsMap = self.pieceMaps[2] if side == white else self.pieceMaps[8]
         if self.knightAttacks[fieldIndex] & knightsMap: return True
 
-        bishopsMap = self.white_bishops if side == white else self.black_bishops
+        bishopsMap = self.pieceMaps[3] if side == white else self.pieceMaps[9]
         if self.bishopAttacks[fieldIndex] & bishopsMap: return True
 
-        queensMap = self.white_queen if side == white else self.black_queen
+        queensMap = self.pieceMaps[4] if side == white else self.pieceMaps[10]
         if self.queenAttacks[fieldIndex] & queensMap: return True
 
-        kingsMap = self.white_king if side == white else self.black_king
+        kingsMap = self.pieceMaps[5] if side == white else self.pieceMaps[11]
         if self.kingAttacks[fieldIndex] & kingsMap: return True
 
         return False
@@ -384,7 +366,7 @@ class Board():
     def generateMoves(self,turn):
         cdef int start, target
 
-        for piece, bitmap in enumerate(self.getAllMaps()):
+        for piece, bitmap in enumerate(self.getPieceMaps()):
             # creating a copy to use
             pieceMap = bitmap
 
@@ -671,3 +653,43 @@ class Board():
                         knightAttackMoves = bit.popBit(knightAttackMoves, target)
                     
                     pieceMap = bit.popBit(pieceMap, start)
+
+    def makeMove(self, move, flag):
+        # 0 all, 1 captures only
+
+        if flag == 0:
+            
+            # make sure this does what it should
+            start, target, piece, promoted, capture, double, enpassant, castle = move
+            self.saveCurrentState()
+
+            bit.popBit(self.pieceMaps[piece], start)
+            bit.setBit(self.pieceMaps[piece], target)
+
+            if capture:
+                startPiece, endPiece = None
+                
+                if self.turn == white:
+                    startPiece = p
+                    endPiece = k
+                else:
+                    startPiece = P
+                    endPiece = K
+
+                boardPieceIndex = startPiece
+                while boardPieceIndex <= endPiece:
+
+                    if bit.getBit(self.pieceMaps[piece], target):
+                        bit.popBit(self.pieceMaps[piece], target)
+                        break
+                        
+                    boardPiece += 1
+
+        else:
+            capture = move[4]
+            if capture: 
+                self.make_move(move, 0)
+            else:
+                return 0
+
+            

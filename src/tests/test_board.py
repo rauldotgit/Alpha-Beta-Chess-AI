@@ -13,28 +13,29 @@ def test_next_turn() -> None:
 
 def test_set_pieces() -> None:
     newBoard = board.Board()
-    assert (newBoard.white_pawns == maps.WHITE_PAWNS_MAP)
-    assert (newBoard.black_pawns == maps.BLACK_PAWNS_MAP)
+    assert (newBoard.pieceMaps[0] == maps.WHITE_PAWNS_MAP)
+    assert (newBoard.pieceMaps[1] == maps.WHITE_ROOKS_MAP)
+    assert (newBoard.pieceMaps[2] == maps.WHITE_KNIGHTS_MAP)
+    assert (newBoard.pieceMaps[3] == maps.WHITE_BISHOPS_MAP)
+    assert (newBoard.pieceMaps[4] == maps.WHITE_QUEEN_MAP)
+    assert (newBoard.pieceMaps[5] == maps.WHITE_KING_MAP)
 
-    assert (newBoard.white_rooks == maps.WHITE_ROOKS_MAP)
-    assert (newBoard.black_rooks == maps.BLACK_ROOKS_MAP)
-
-    assert (newBoard.white_knights == maps.WHITE_KNIGHTS_MAP)
-    assert (newBoard.black_knights == maps.BLACK_KNIGHTS_MAP)
-
-    assert (newBoard.white_bishops == maps.WHITE_BISHOPS_MAP)
-    assert (newBoard.black_bishops == maps.BLACK_BISHOPS_MAP)
-
-    assert (newBoard.white_queen == maps.WHITE_QUEEN_MAP)
-    assert (newBoard.black_queen == maps.BLACK_QUEEN_MAP)
-
-    assert (newBoard.white_king == maps.WHITE_KING_MAP)
-    assert (newBoard.black_king == maps.BLACK_KING_MAP)
+    assert (newBoard.pieceMaps[6] == maps.BLACK_PAWNS_MAP)
+    assert (newBoard.pieceMaps[7] == maps.BLACK_ROOKS_MAP)
+    assert (newBoard.pieceMaps[8] == maps.BLACK_KNIGHTS_MAP)
+    assert (newBoard.pieceMaps[9] == maps.BLACK_BISHOPS_MAP)
+    assert (newBoard.pieceMaps[10] == maps.BLACK_QUEEN_MAP)
+    assert (newBoard.pieceMaps[11] == maps.BLACK_KING_MAP)
 
 # def test_full_union_map() -> None:
 #     newBoard = board.Board()
 #     startUnion = newBoard.fullUnion()
 #     assert (startUnion == maps.SET_BOARD_UNION).all()
+
+def test_get_piece_map():
+    newBoard = board.Board()
+    whitePawnMap = newBoard.pieceMaps[0]
+    assert whitePawnMap == maps.WHITE_PAWNS_MAP
 
 def test_move_gen():
     newBoard = board.Board()
@@ -47,3 +48,9 @@ def test_move_gen():
 
     newBoard.printMoveList()
     print(newBoard.castling & 1)
+
+def test_save_current_state():
+    newBoard = board.Board()
+    newBoard.saveCurrentState()
+
+    # print(newBoard.prevState)

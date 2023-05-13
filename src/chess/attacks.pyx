@@ -10,7 +10,7 @@ def singlePawnAttacks(fieldIndex, turn):
     cdef unsigned long long attacks = 0
     cdef unsigned long long bitmap = 0
 
-    bitmap = bit.setPiece(fieldIndex, bitmap)
+    bitmap = bit.setBit(fieldIndex, bitmap)
 
     if not turn:
         if ((bitmap >> 7 & NOT_FILE_A)):
@@ -30,7 +30,7 @@ def singleKnightAttacks(fieldIndex):
     cdef unsigned long long attacks = 0
     cdef unsigned long long bitmap = 0
 
-    bitmap = bit.setPiece(fieldIndex, bitmap)
+    bitmap = bit.setBit(fieldIndex, bitmap)
 
     if (bitmap >> 17) & NOT_FILE_H:
         attacks |= (bitmap >> 17)
@@ -57,7 +57,7 @@ def singleKingAttacks(fieldIndex):
     cdef unsigned long long attacks = 0
     cdef unsigned long long bitmap = 0
 
-    bitmap = bit.setPiece(fieldIndex, bitmap)
+    bitmap = bit.setBit(fieldIndex, bitmap)
 
     if bitmap >> 8:
         attacks |= (bitmap >> 8)

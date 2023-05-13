@@ -88,6 +88,6 @@ def ZEROULL():
     cdef unsigned long long zero = 0
     return zero
 
-def setPiece(fieldIndex, bitmap):
+def setBit(fieldIndex, bitmap):
     cdef unsigned long long pieceUnshifted = 1
     return (pieceUnshifted << fieldIndex) | bitmap 
