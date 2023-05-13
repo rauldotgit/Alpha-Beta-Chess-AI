@@ -765,7 +765,7 @@ class Board():
     
     # a2b3 e.g.
     # mode 0, require movestring, mode 1, wait for user input
-    def inputMove(self, mode, moveString=None):
+    def parseMove(self, mode, moveString=None):
         
         if mode:
             moveString = input('Input next move.\n')
@@ -861,9 +861,8 @@ class Board():
                     if hasMoves:
                         moveList = commandList[8:]
 
-                        # TODO: execute list of commands
                         for moveString in moveList:
-                            legalMove = self.inputMove(0, moveString)
+                            legalMove = self.parseMove(0, moveString)
 
                             print('made move: ' + legalMove)
 
@@ -879,6 +878,24 @@ class Board():
         else:
             print('unknown command')
 
+    # uci parsego
+    # go depth 64
+    def parseGo(self, command):
+        cmdList = command.split()
+        depth = -1
+
+        cmdDepth = forceGet(cmdList, 2)
+
+        if cmdDepth and cmdDepth.isnumeric():
+            depth = int(cmdDepth)
+
+        # TODO: Time controls 
+        else:
+            depth = 6
+
+        # TODO: search position
+
+        return 
 
 
 
