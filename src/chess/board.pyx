@@ -36,7 +36,9 @@ cdef enum castle_int:
     bq = 8
 
 ROLE_ARRAY = maps.ROLE_ARRAY
+ROLE_OBJ = maps.ROLE_OBJ
 FIELD_ARRAY = maps.FIELD_ARRAY
+FIELD_OBJ = maps.FIELD_OBJ
 ALL_UNICODES = maps.ALL_UNICODES 
 CASTLING_RIGHTS = maps.CASTLING_RIGHTS
 
@@ -694,7 +696,7 @@ class Board():
 
             if promoted:
                 # erase pawn from target
-                pawnPiece = P if self.turn == True else p
+                pawnPiece = P if self.turn == white else p
                 bit.popBit(self.pieceMaps[pawnPiece], target)
 
                 bit.setBit(self.pieceMaps[promoted], target)
@@ -739,9 +741,11 @@ class Board():
 
             self.nextTurn()
 
+            # TODO: Delete move from List
+
             # check if king from previous move would be in check when moving
             # if yes, go back to last move
-            if self.isCheck(1 if not self.turn else 0):
+            if self.isCheck(1 if self.turn == white else 0):
                 # illegal
                 self.loadPrevState()
                 return 0
@@ -756,5 +760,59 @@ class Board():
                 return 0
     
     # a2b3 e.g.
-    def inputMove(startTargetString):
-        pass
+    # mode 0, require movestring, mode 1, wait for user input
+    def inputMove(mode, moveString=None):
+        
+        if mode:
+            moveString = input('Input next move.\n')
+
+        if len(moveString) < 4 or len(moveString) > 5:
+            return 0
+
+        startString = moveString[0:2]
+        targetString = moveString[2:4]
+
+        if not startString in FIELD_OBJ or not targetString in FIELD_OBJ:
+            return 0 
+        
+        inputPromotion = None
+        inputStart = FIELD_OBJ[startString]
+        inputTarget = FIELD_OBJ[targetString] 
+
+        if len(moveString) == 5:
+            inputPromotion = moveString[4].lower()
+
+            if promoString not in ROLE_OBJ:
+                return 0
+
+
+        # print(f'Start: {startString} Target: {targetString} Promotion: {promoString}')
+
+        # TODO: make sure moves are generated ahead of time
+        self.generateMoves(self.turn)
+
+        for move in self.moveList:
+            start, target, piece, promoted, capture, double, enpassant, castle = move
+
+            correctCoordinates = inputStart == start and inputTarget == target
+            if correctCoordinates:
+
+                if promoted:
+                    
+                    if (promoted == R or promoted == r) and inputPromotion == 'r':
+                        return move
+                    if (promoted == N or promoted == n) and inputPromotion == 'n':
+                        return move
+                    if (promoted == B or promoted == b) and inputPromotion == 'n':
+                        return move
+                    if (promoted == Q or promoted == q) and inputPromotion == 'q':
+                        return move
+                    
+                    continue
+
+            return move 
+
+        # illegal
+        return 0
+
+

@@ -54,3 +54,8 @@ def test_save_current_state():
     newBoard.saveCurrentState()
 
     # print(newBoard.prevState)
+
+def test_input_move():
+
+    newBoard = board.Board()
+    newBoard.inputMove(1)
