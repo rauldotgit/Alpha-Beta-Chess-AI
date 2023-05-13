@@ -38,6 +38,7 @@ cdef enum castle_int:
 ROLE_ARRAY = maps.ROLE_ARRAY
 FIELD_ARRAY = maps.FIELD_ARRAY
 ALL_UNICODES = maps.ALL_UNICODES 
+CASTLING_RIGHTS = maps.CASTLING_RIGHTS
 
 cdef fieldStr(field_int):
     return FIELD_ARRAY[field_int]
@@ -301,6 +302,12 @@ class Board():
         if self.kingAttacks[fieldIndex] & kingsMap: return True
 
         return False
+
+    def isCheck(self, turn):
+        opponent = black if turn == white else white
+        whosKing = K if turn == white else k
+        kingIndex = bit.getLsbIndex(self.pieceMaps[whosKing])
+        return self.isFieldAttacked(kingIndex, opponent)
 
     def printMove(self, move):
         start, target, piece, promoted, capture, doublePush, enpassant, castling = move
@@ -685,11 +692,69 @@ class Board():
                         
                     boardPiece += 1
 
+            if promoted:
+                # erase pawn from target
+                pawnPiece = P if self.turn == True else p
+                bit.popBit(self.pieceMaps[pawnPiece], target)
+
+                bit.setBit(self.pieceMaps[promoted], target)
+
+            if enpassant:
+
+                if self.turn == white:
+                    bit.popBit(self.pieceMaps[p], target + 8)
+                else:
+                    bit.popBirt(self.pieceMaps[P], target - 8)
+                
+            self.enpassant = noSquare
+
+            if double:
+
+                if self.turn == white:
+                    self.enpassant = target + 8
+                else:
+                    self.enpassant = target - 8
+
+            if castle:
+
+                if target == g1:
+                    bit.popBit(self.pieceMaps[R], h1)
+                    bit.setBit(self.pieceMaps[R], f1)
+                elif target == c1:
+                    bit.popBit(self.pieceMaps[R], a1)
+                    bit.setBit(self.pieceMaps[R], d1)
+                elif target == g8:
+                    bit.popBit(self.pieceMaps[r], h8)
+                    bit.setBit(self.pieceMaps[r], f8)
+                elif target == c8:
+                    bit.popBit(self.pieceMaps[r], a8)
+                    bit.setBit(self.pieceMaps[r], d8)
+
+            self.castling &= CASTLING_RIGHTS[start]
+            self.castling &= CASTLING_RIGHTS[target]
+
+            self.setBoardUnion()
+            self.setSideUnions()
+            self.generateAttackMaps_NOMAGIC()
+
+            self.nextTurn()
+
+            # check if king from previous move would be in check when moving
+            # if yes, go back to last move
+            if self.isCheck(1 if not self.turn else 0):
+                # illegal
+                self.loadPrevState()
+                return 0
+            else:
+                return 1
+
         else:
             capture = move[4]
             if capture: 
                 self.make_move(move, 0)
             else:
                 return 0
-
-            
+    
+    # a2b3 e.g.
+    def inputMove(startTargetString):
+        pass

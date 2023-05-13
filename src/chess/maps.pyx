@@ -273,6 +273,19 @@ SET_BOARD_UNION = np.array([
 	1, 1, 1, 1, 1, 1, 1, 1,
 ], dtype=np.byte)
 
+
+# used to bitwise and castling rights in case a piece of importance moves
+CASTLING_RIGHTS = [
+	 7, 15, 15, 15,  3, 15, 15, 11,
+	15, 15, 15, 15, 15, 15, 15, 15,
+	15, 15, 15, 15, 15, 15, 15, 15,
+	15, 15, 15, 15, 15, 15, 15, 15,
+	15, 15, 15, 15, 15, 15, 15, 15,
+	15, 15, 15, 15, 15, 15, 15, 15,
+	15, 15, 15, 15, 15, 15, 15, 15,
+	13, 15, 15, 15, 12, 15, 15, 14,
+]
+
 WHITE_ARRAYS = [
 	WHITE_PAWNS_ARRAY,
 	WHITE_ROOKS_ARRAY,
