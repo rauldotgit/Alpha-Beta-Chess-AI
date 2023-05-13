@@ -761,7 +761,7 @@ class Board():
     
     # a2b3 e.g.
     # mode 0, require movestring, mode 1, wait for user input
-    def inputMove(mode, moveString=None):
+    def inputMove(self, mode, moveString=None):
         
         if mode:
             moveString = input('Input next move.\n')
@@ -782,7 +782,7 @@ class Board():
         if len(moveString) == 5:
             inputPromotion = moveString[4].lower()
 
-            if promoString not in ROLE_OBJ:
+            if inputPromotion not in ROLE_OBJ:
                 return 0
 
 
