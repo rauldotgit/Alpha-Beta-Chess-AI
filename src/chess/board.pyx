@@ -109,8 +109,42 @@ class Board():
         self.turn = black if self.turn == white else white
 
     def printBoard(self):
-        maps.ppBitMaps(self.getPieceMaps())
+        maps.ppBitMaps(self.pieceMaps)
         print(f'T:{self.turn} C:{self.castling} E:{self.enpassant}')
+
+    def loadSaveState(self, saveState):
+        self.turn = saveState[0]
+        self.enpassant = saveState[1]
+        self.castling = saveState[2]
+        self.halfMoves = saveState[3]
+        self.fullMoves = saveState[4]
+
+        self.pieceMaps[P] = saveState[5]
+        self.pieceMaps[R] = saveState[6]
+        self.pieceMaps[N] = saveState[7]
+        self.pieceMaps[B] = saveState[8]
+        self.pieceMaps[Q] = saveState[9]
+        self.pieceMaps[K] = saveState[10]
+
+        self.pieceMaps[p] = saveState[11]
+        self.pieceMaps[r] = saveState[12]
+        self.pieceMaps[n] = saveState[13]
+        self.pieceMaps[b] = saveState[14]
+        self.pieceMaps[q] = saveState[15]
+        self.pieceMaps[k] = saveState[16]
+
+        self.board_union = saveState[17]
+        self.white_board_union = saveState[18]
+        self.black_board_union = saveState[19]
+
+        self.pawnAttacks = saveState[20]
+        self.rookAttacks = saveState[21]
+        self.knightAttacks = saveState[22]
+        self.bishopAttacks = saveState[23]
+        self.queenAttacks = saveState[24]
+        self.kingAttacks = saveState[25]
+        self.moveList = saveState[26]
+        self.moveIndex = saveState[27]
 
     def loadPrevState(self):
         self.turn = self.prevState[0]
@@ -148,6 +182,42 @@ class Board():
 
     def saveCurrentState(self):
         self.prevState = [
+            self.turn,
+            self.enpassant,
+            self.castling,
+            self.halfMoves,
+            self.fullMoves,
+
+            self.pieceMaps[P],
+            self.pieceMaps[R],
+            self.pieceMaps[N],
+            self.pieceMaps[B],
+            self.pieceMaps[Q],
+            self.pieceMaps[K],
+            self.pieceMaps[p],
+            self.pieceMaps[r],
+            self.pieceMaps[n],
+            self.pieceMaps[b],
+            self.pieceMaps[q],
+            self.pieceMaps[k],
+
+            self.board_union,
+            self.white_board_union,
+            self.black_board_union,
+
+            self.pawnAttacks,
+            self.rookAttacks,
+            self.knightAttacks,
+            self.bishopAttacks,
+            self.queenAttacks,
+            self.kingAttacks,
+            
+            self.moveList,
+            self.moveIndex 
+        ]
+
+    def getStateCopy(self):
+        return [
             self.turn,
             self.enpassant,
             self.castling,
@@ -237,7 +307,7 @@ class Board():
         self.black_board_union = bit.fullUnion(self.getBlackMaps())
 
     def setBoardUnion(self):
-        self.board_union = bit.fullUnion(self.getPieceMaps())
+        self.board_union = bit.fullUnion(self.pieceMaps)
 
     # make sure bord union is up to date
     def generateAttackMaps_NOMAGIC(self):
@@ -249,6 +319,13 @@ class Board():
         self.bishopAttacks = attackMaps[3]
         self.queenAttacks = attackMaps[4]
         self.kingAttacks = attackMaps[5]
+
+    def updateAttackMaps_NOMAGIC(self):
+        rookBishopQueenMaps = atk.allSliderAttacks_blocked(self.board_union)
+
+        self.rookAttacks = rookBishopQueenMaps[0]
+        self.bishopAttacks = rookBishopQueenMaps[1]
+        self.queenAttacks = rookBishopQueenMaps[2]
     
     def fenGameSetup(self, fenString):
         pieceMaps, turn, castle, enpassant, halfMoves, fullMoves = maps.fenToBoardInfo(fenString)
@@ -307,6 +384,22 @@ class Board():
 
         return False
 
+    # attacked by side color
+    def attackUnion(self, side):
+        attackUnion = 0
+        attackMaps = self.getAttackMaps()
+        colorMaps = self.getBlackMaps() if side == black else self.getWhiteMaps()
+
+        for i, map in enumerate(colorMaps):
+            pieceIndices = bit.getBitIndices(map)
+            for index in pieceIndices:
+                if i == 0:
+                    attackUnion |= attackMaps[i][side][index]
+                else:
+                    attackUnion |= attackMaps[i][index]
+
+        return attackUnion
+
     def isCheck(self, side):
         opponent = black if side == white else white
         whosKing = K if side == white else k
@@ -321,7 +414,6 @@ class Board():
         )
 
     def printMoveList(self):
-        print(f'\n')
         if self.moveIndex == -1:
             print('Movelist is empty.')
             return
@@ -390,7 +482,7 @@ class Board():
         self.moveList = []
         self.moveIndex = -1
 
-        for piece, bitmap in enumerate(self.getPieceMaps()):
+        for piece, bitmap in enumerate(self.pieceMaps):
             # creating a copy to use
             pieceMap = bitmap
 
@@ -704,11 +796,11 @@ class Board():
                 boardPieceIndex = startPiece
                 while boardPieceIndex <= endPiece:
 
-                    if bit.getBit(self.pieceMaps[piece], target):
-                        self.pieceMaps[piece] = bit.popBit(self.pieceMaps[piece], target)
+                    if bit.getBit(self.pieceMaps[boardPieceIndex], target):
+                        self.pieceMaps[boardPieceIndex] = bit.popBit(self.pieceMaps[piece], target)
                         break
                         
-                    boardPiece += 1
+                    boardPieceIndex += 1
 
             if promoted:
                 # erase pawn from target
@@ -752,8 +844,7 @@ class Board():
 
             self.setBoardUnion()
             self.setSideUnions()
-            # doesnt need to generate all, just sliders
-            self.generateAttackMaps_NOMAGIC()
+            self.updateAttackMaps_NOMAGIC()
 
             self.nextTurn()
             # self.generateMoves()
@@ -763,7 +854,7 @@ class Board():
             prevTurn = white if self.turn == black else black
             if self.isCheck(prevTurn):
                 # illegal
-                print('move is in check - revert')
+                # print('move is in check - revert')
                 self.loadPrevState()
                 return 0
             else:
@@ -844,6 +935,33 @@ class Board():
     # init position from fen string and make moves on chess board
     # position fen r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1 moves e2a6 e8g8
 
+    def returnLegalMoves(self):
+        # TODO: Assumes moves are generates
+        legal = []
+
+        saveState = self.getStateCopy()
+
+        for move in self.moveList:
+            if not self.makeMove(move, 0):
+                continue
+            else:
+                legal.append(move)
+                self.loadSaveState(saveState)
+
+        return legal
+
+    def evaluateScore(self):
+        score = 0
+
+        for i, piece in enumerate(self.pieceMaps):
+            pieceMap = piece
+            pieceIndex = i
+            while pieceMap:
+                fieldIndex = bit.getLsbIndex(pieceMap)
+                score += SCORE_ARRAY[pieceIndex]
+                pieceMap = bit.popBit(pieceMap, fieldIndex)
+
+        return score if self.turn == white else -score
 
     def parsePosition(self, commandString):
         commandList = commandString.split()
@@ -902,6 +1020,7 @@ class Board():
             if success:
                 print('success')
                 self.printBoard()
+                print(f'Score: {self.evaluateScore()}')
                 return 1
             else:
                 print('failed')

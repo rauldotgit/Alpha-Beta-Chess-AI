@@ -574,12 +574,19 @@ def fenToBoardInfo(fenString):
 	if len(fenArgs) != 6:
 		raise ValueError("FEN String is missing arguments.")
 
-	pieceMaps = fenBoardToBitMaps(fenArgs[0])
-	turn = 0 if fenArgs[1] == 'w' else 1
-	castling = parseCastle(fenArgs[2])
-	enpassant = 64 if fenArgs[3] == '-' else FIELD_OBJ[fenArgs[3]]
-	halfMoves = int(fenArgs[4])
-	fullMoves = int(fenArgs[5])
+	fenBoard = fenArgs[0]
+	fenTurn = fenArgs[1]
+	fenCastle = fenArgs[2]
+	fenEnpass = fenArgs[3]
+	fenHalf = fenArgs[4]
+	fenFull = fenArgs[5]
+
+	pieceMaps = fenBoardToBitMaps(fenBoard)
+	turn = 0 if fenTurn == 'w' else 1
+	castling = parseCastle(fenCastle)
+	enpassant = 64 if fenEnpass == '-' else FIELD_OBJ[fenEnpass]
+	halfMoves = 0 if fenHalf == '-' else int(fenHalf)
+	fullMoves = 0 if fenFull == '-' else int(fenFull)
 
 	return [pieceMaps, turn, castling, enpassant, halfMoves, fullMoves]
 
