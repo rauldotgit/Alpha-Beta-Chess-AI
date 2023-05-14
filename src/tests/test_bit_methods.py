@@ -178,9 +178,8 @@ def test_get_bit():
     test_map = bit.bitArrayToInt(test_array)
     test_index = 19
 
-    assumed_bool = True
     result_bool = bit.getBit(test_map, test_index)
-    assert result_bool == assumed_bool
+    assert result_bool == test_map
 
     test_array = [ 
         0, 0, 0, 0, 0, 0, 0, 0,

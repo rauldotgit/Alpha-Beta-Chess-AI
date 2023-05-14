@@ -10,9 +10,9 @@ def singlePawnAttacks(fieldIndex, turn):
     cdef unsigned long long attacks = 0
     cdef unsigned long long bitmap = 0
 
-    bitmap = bit.setBit(fieldIndex, bitmap)
+    bitmap = bit.setBit(bitmap, fieldIndex)
 
-    if not turn:
+    if turn == 0:
         if ((bitmap >> 7 & NOT_FILE_A)):
             attacks |= (bitmap >> 7)    
         if ((bitmap >> 9 & NOT_FILE_H)):
@@ -30,7 +30,7 @@ def singleKnightAttacks(fieldIndex):
     cdef unsigned long long attacks = 0
     cdef unsigned long long bitmap = 0
 
-    bitmap = bit.setBit(fieldIndex, bitmap)
+    bitmap = bit.setBit(bitmap, fieldIndex)
 
     if (bitmap >> 17) & NOT_FILE_H:
         attacks |= (bitmap >> 17)
@@ -57,7 +57,7 @@ def singleKingAttacks(fieldIndex):
     cdef unsigned long long attacks = 0
     cdef unsigned long long bitmap = 0
 
-    bitmap = bit.setBit(fieldIndex, bitmap)
+    bitmap = bit.setBit(bitmap, fieldIndex)
 
     if bitmap >> 8:
         attacks |= (bitmap >> 8)
@@ -243,7 +243,7 @@ def allLeaperAttacks(turn):
     for field in range(64):
         pawn_attacks[0][field] = singlePawnAttacks(field, 0)
         pawn_attacks[1][field] = singlePawnAttacks(field, 1)
-        knight_attacks[field] = singleKingAttacks(field)
+        knight_attacks[field] = singleKnightAttacks(field)
         king_attacks[field] = singleKingAttacks(field)
         
     return [pawn_attacks, knight_attacks, king_attacks]
@@ -291,7 +291,7 @@ def allAttacks_blocked(blockMap):
     for field in range(64):
         pawn_attacks[0][field] = singlePawnAttacks(field, 0)
         pawn_attacks[1][field] = singlePawnAttacks(field, 1)
-        knight_attacks[field] = singleKingAttacks(field)
+        knight_attacks[field] = singleKnightAttacks(field)
         king_attacks[field] = singleKingAttacks(field)
 
         rook_attacks[field] = singleRookAttacks_blocked(field, blockMap)

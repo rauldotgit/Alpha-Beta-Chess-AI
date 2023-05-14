@@ -51,19 +51,15 @@ def getLsbIndex(bitmap):
 
 def popBit(bitmap, index):
     cdef unsigned long long bitOnIndex = 1 << index
-
-    if bitmap & bitOnIndex == 0:
-        return bitmap
-    else:
-        bitmap ^= bitOnIndex
-        return bitmap
+    return bitmap & ~bitOnIndex
 
 def getBit(bitmap, index):
     cdef unsigned long long bitOnIndex = 1 << index
-    if bitmap & bitOnIndex == 0:
-        return False
-    else:
-        return True
+    return bitmap & bitOnIndex
+
+def setBit(bitmap, index):
+    cdef unsigned long long bitOnIndex = 1 << index
+    return bitmap | bitOnIndex
 
 def getBitIndices(bitmap):
     if bitmap == 0: return []
@@ -87,7 +83,3 @@ def ONEULL():
 def ZEROULL(): 
     cdef unsigned long long zero = 0
     return zero
-
-def setBit(fieldIndex, bitmap):
-    cdef unsigned long long pieceUnshifted = 1
-    return (pieceUnshifted << fieldIndex) | bitmap 

@@ -38,16 +38,17 @@ def test_get_piece_map():
     assert whitePawnMap == maps.WHITE_PAWNS_MAP
 
 def test_move_gen():
-    newBoard = board.Board()
-    newBoard.fenGameSetup(maps.FEN_HARD)
-    newBoard.printBoard()
+    # newBoard = board.Board()
+    # newBoard.fenGameSetup(maps.FEN_HARD)
+    # newBoard.printBoard()
 
     # maps.printMap(newBoard.board_union)
     # maps.printMap(newBoard.white_board_union)
     # maps.printMap(newBoard.black_board_union)
 
-    newBoard.printMoveList()
-    print(newBoard.castling & 1)
+    # newBoard.printMoveList()
+    # print(newBoard.castling & 1)
+    pass
 
 def test_save_current_state():
     newBoard = board.Board()
@@ -55,11 +56,50 @@ def test_save_current_state():
 
     # print(newBoard.prevState)
 
-def test_input_move():
+# def test_fen_game_setup():
+#     newBoard2 = board.Board()
 
-    newBoard = board.Board()
-    newBoard.inputMove(1)
+#     newBoard2.fenGameSetup(maps.FEN_HARD)
 
-def test_parse_command():
-    # TODO: THIS
+    # for piece in newBoard2.pieceMaps:
+    #     maps.printMap(piece)
+    # print('union')
+    # maps.printMap(newBoard2.board_union)
+    # print('white union')
+    # maps.printMap(newBoard2.white_board_union)
+    # print('black union')
+    # maps.printMap(newBoard2.black_board_union)
+    # maps.printMap(newBoard2.knightAttacks[maps.FIELD_OBJ['b1']])
+    # newBoard2.printBoard()
+    # newBoard2.printMoveList()
+
+# def test_make_move():
+#     pass
+
+# def test_parse_move():
+#     #TODO: THIS
+#     pass
+
+# def test_parse_position():
+#     #TODO: THIS
+#     pass
+
+# def test_parse_command():
+#     # TODO: THIS
+#     pass
+
+# def test_make_move_random():
+#     # TODO: THIS
+#     pass
+
+def test_generate_moves():
     pass
+
+def test_uci_loop():
+    newBoard = board.Board()
+    newBoard.uciLoop()
+
+# def test_queen_attacks():
+#     newBoard = board.Board()
+#     for map in newBoard.queenAttacks:
+#         maps.printMap(map)
