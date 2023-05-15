@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Alpha-Beta Search Chess AI
 
 Github repo for the TU-Berlin "Project AI - Symbolic Artificial Intelligence" course. 
@@ -82,3 +83,4 @@ So far our implementation computes attack maps for sliding pieces on the fly, in
 ## Acknowledgments
 
 
+=======
