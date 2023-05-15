@@ -81,6 +81,3 @@ So far our implementation computes attack maps for sliding pieces on the fly, in
 - Raul Nikolaus
 
 ## Acknowledgments
-
-
-=======
