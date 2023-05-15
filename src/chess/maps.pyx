@@ -500,7 +500,6 @@ def printChessArray(bitarray):
 		numbit = np.array(bitarray)
 		print(
 			 f'\n'
-			 f'\n'
 			 f'8 {"".join(str(e) + " " for e in numbit[0:8])} \n'
 			 f'7 {"".join(str(e) + " " for e in numbit[8:16])} \n'
 			 f'6 {"".join(str(e) + " " for e in numbit[16:24])} \n'

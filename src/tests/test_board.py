@@ -92,28 +92,12 @@ def test_save_current_state():
 #     # TODO: THIS
 #     pass
 
-def test_generate_moves():
-    pass
+# def test_generate_moves():
+#     pass
 
-# def test_uci_loop():
-#     newBoard = board.Board()
-#     newBoard.uciLoop()
-
-# def test_queen_attacks():
-#     newBoard = board.Board()
-#     for map in newBoard.queenAttacks:
-#         maps.printMap(map)
-
-# for map in newBoard.bishopAttacks:
-#     maps.printMap(map)
-
-# def test_attack_union():
-#     test_fen = "1R6/3R4/P2Pk3/4P3/4KP2/8/8/8 b - - 0 0"
-
-#     newBoard = board.Board()
-#     newBoard.fenGameSetup(test_fen)
-
-#     newBoard.printBoard()
+def test_uci_loop():
+    newBoard = board.Board()
+    newBoard.uciLoop()
 
 def test_evaluate_score():
     newBoard = board.Board()
@@ -130,7 +114,7 @@ def test_evaluate_score():
     newBoard.fenGameSetup(fenString)
 
     score = newBoard.evaluateScore()
-    assumed_score = 800
+    assumed_score = -800
     assert score == assumed_score
 
 

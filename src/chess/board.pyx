@@ -101,6 +101,9 @@ class Board():
 
     # this will have all variables from turn ... moveIndex from the last turn
     prevState = []
+
+    #list with time items
+    time = []
     
     def __init__(self):
         self.resetBoard()
@@ -146,6 +149,8 @@ class Board():
         self.moveList = saveState[26]
         self.moveIndex = saveState[27]
 
+        self.time = saveState[28]
+
     def loadPrevState(self):
         self.turn = self.prevState[0]
         self.enpassant = self.prevState[1]
@@ -180,6 +185,8 @@ class Board():
         self.moveList = self.prevState[26]
         self.moveIndex = self.prevState[27]
 
+        self.time = self.prevState[28]
+
     def saveCurrentState(self):
         self.prevState = [
             self.turn,
@@ -213,7 +220,9 @@ class Board():
             self.kingAttacks,
             
             self.moveList,
-            self.moveIndex 
+            self.moveIndex,
+
+            self.time
         ]
 
     def getStateCopy(self):
@@ -249,7 +258,9 @@ class Board():
             self.kingAttacks,
             
             self.moveList,
-            self.moveIndex 
+            self.moveIndex,
+
+            self.time
         ]
 
     def setPieces(self):
@@ -302,12 +313,25 @@ class Board():
         self.moveList = []
         self.moveIndex = -1
 
+        self.time = [3000, 3000]
+
     def setSideUnions(self):
         self.white_board_union = bit.fullUnion(self.getWhiteMaps())
         self.black_board_union = bit.fullUnion(self.getBlackMaps())
 
     def setBoardUnion(self):
         self.board_union = bit.fullUnion(self.pieceMaps)
+
+    def setGameDuration(self, tInSec):
+        self.time = [tInSec, tInSec]
+
+    def reduceTime(self, startTime):
+        endTime = time.time()
+        tInSec = endTime - startTime
+        newDuration = self.time[not self.turn] - tInSec
+        self.time[not self.turn] = newDuration
+
+        return newDuration
 
     # make sure bord union is up to date
     def generateAttackMaps_NOMAGIC(self):
@@ -761,6 +785,14 @@ class Board():
                     
                     pieceMap = bit.popBit(pieceMap, start)
 
+    def isCheck(self, kingIndex):
+        
+        return self.isFieldAttacked(kingIndex, self.turn)
+
+    def isKOTH(self, kingIndex):
+        KOTH = kingIndex == d4 or kingIndex == d5 or kingIndex == e4 or kingIndex == e5
+        return True if KOTH else False 
+
     def makeMove(self, move, flag):
         # 0 all, 1 captures only
 
@@ -844,14 +876,16 @@ class Board():
             # self.generateMoves()
 
             kingIndex = bit.getLsbIndex(self.pieceMaps[k]) if self.turn == white else bit.getLsbIndex(self.pieceMaps[K])
-            isCheck = self.isFieldAttacked(kingIndex, self.turn)
-            if isCheck:
+            if self.isCheck(kingIndex):
                 # illegal
                 # print('move is in check - revert')
                 self.loadPrevState()
                 return 0
             else:
-                return 1
+                if self.isKOTH(kingIndex):
+                    return 2
+                else:
+                    return 1
 
         else:
             capture = move[4]
@@ -954,7 +988,9 @@ class Board():
                 score += SCORE_ARRAY[pieceIndex]
                 pieceMap = bit.popBit(pieceMap, fieldIndex)
 
-        return score if self.turn == white else -score
+        # TODO: Revert to this for negamax
+        # return score if self.turn == white else -score
+        return score
 
     def parsePosition(self, commandString):
         commandList = commandString.split()
@@ -1001,22 +1037,30 @@ class Board():
     # try picking random moves until one works
     def makeRandomMove(self):
         success = 0
+        startTime = time.time()
         while not success:
             move, index = self.getMoveRandom()
             if move == []:
-                print('no more moves')
                 return 0
                 
             self.printMove(move)
-            success = self.makeMove(move, 0)
+            result = self.makeMove(move, 0)
 
-            if success:
-                print('success')
+            timeLeft =self.reduceTime(startTime)
+
+            if timeLeft <= 0:
+                self.printBoard()
+                return -1
+
+            if result == 1:
                 self.printBoard()
                 print(f'Score: {self.evaluateScore()}')
+                print(f'Time left: {round(self.time[not self.turn], 3)}s\n')
                 return 1
+            if result == 2:
+                self.printBoard()
+                return 2
             else:
-                print('failed')
                 self.deleteMove(index)
             
     def parseBot(self):
@@ -1027,16 +1071,26 @@ class Board():
 
         while(True):
             print(f'{"white" if self.turn == white else "black"}s turn.')
-            time.sleep(1)
+            self.generateMoves()
+            # time.sleep(1)
 
             # check for opposite side king hill win
             #  if kingOfHill(opponent):
 
-            ongoing = self.makeRandomMove()
-            self.generateMoves()
-            if not ongoing:
-                winner = white if self.turn == black else black 
-                print(f'Winner by check: {winner}')
+            result = self.makeRandomMove()
+
+            if result == -1:
+                winner = 'white' if self.turn == black else 'black'
+                print(f'Winner by timeout: {winner}')
+                break 
+
+            if result == 0:
+                winner = 'white' if self.turn == black else 'black' 
+                print(f'Winner by mate or stalemate: {winner}')
+                break
+            if result == 2:
+                winner = 'white' if self.turn == black else 'black' 
+                print(f'Winner by KOTH: {winner}')
                 break
 
     def parsePlayer(self):
@@ -1061,10 +1115,10 @@ class Board():
         # searchPosition()
 
     def uciLoop(self):
-
+        print('\n')
         print('id name TUCM')
         # TODO: add name of contributors 
-        print('id name somebody')
+        print('id name Konstantin Hasler, Cedric Braun, Raul Nikolaus')
 
         while(True):
             ui = input()
@@ -1100,6 +1154,16 @@ class Board():
                         
                     self.parseBot()
 
+                elif cmd0 == 'time':
+                    cmd1 = forceGet(cmdList, 1)
+                    if cmd1 and cmd1.isnumeric():
+
+                        time = int(cmd1)
+                        if time < 0:
+                            print('insufficient time setting')
+                            continue
+
+                        self.setGameDuration(time)
 
                 elif cmd0 == 'player':
                     cmd1 = forceGet(cmdList, 1)
