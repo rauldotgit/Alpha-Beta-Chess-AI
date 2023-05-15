@@ -478,7 +478,7 @@ def printMoveList(moveList):
 	for index, move in enumerate(moveList):
 		start, target, piece, promoted, capture, doublePush, enpassant, castling = move
 		print(
-			f'{FIELD_ARRAY[start]}{FIELD_ARRAY[target]} {ROLE_ARRAY[piece]}  {promoted} {capture} {doublePush} {enpassant} {castling}'
+			f'{FIELD_ARRAY[start]}{FIELD_ARRAY[target]} {ALL_UNICODES[piece]}  {promoted} {capture} {doublePush} {enpassant} {castling}'
 		)
 
 def printArray(bitarray):

@@ -1,5 +1,6 @@
 import src.chess.board as board
 import src.chess.maps as maps
+import numpy as np
 
 def test_demon():
     test_fen = "1R6/3R4/P2Pk3/4P3/4KP2/8/8/8 b - - 0 0"
@@ -34,7 +35,7 @@ def test_group_A_1():
     assert moveCount == test_count
     
 def test_group_A_2():
-    test_fen = "r1bqk2r/ppp3pp/5p2/2nPp3/P1Pn2P1/3P1N2/1P2BP1P/RN1Q1RK1 b - - - -"
+    test_fen = "r1bqk2r/ppp3pp/5p2/2nPp3/P1Pn2P1/3P1N2/1P2BP1P/RN1Q1RK1 b k - - -"
     test_count = 42
 
     newBoard = board.Board()
@@ -298,7 +299,7 @@ def test_group_R_1():
     assert moveCount == test_count
 
 def test_group_R_2():
-    test_fen = "2r4r/8/8/4k3/8/R7/8/4K2R w - - 0 1"
+    test_fen = "2r4r/8/8/4k3/8/R7/8/4K2R w K - 0 1"
     test_count = 29
 
     newBoard = board.Board()
@@ -310,7 +311,7 @@ def test_group_R_2():
 
 def test_group_S_1():
     test_fen = "rnbqkbnr/pppp1ppp/8/4p3/3PP3/8/PPP2PPP/RNBQKBNR b KQkq d3 0 2"
-    test_count = 28
+    test_count = 30
 
     newBoard = board.Board()
     newBoard.fenGameSetup(test_fen)
@@ -364,7 +365,7 @@ def test_group_U_1():
     assert moveCount == test_count
 
 def test_group_U_2():
-    test_fen = "r4rk1/1pp1q1pp/2np1pn1/p3p3/2PPP3/2N1BP2/PPQ2P1P/R3K2R w Kq - 2 14"
+    test_fen = "r4rk1/1pp1q1pp/2np1pn1/p3p3/2PPP3/2N1BP2/PPQ2P1P/R3K2R w KQ - 2 14"
     test_count = 40
 
     newBoard = board.Board()

@@ -516,7 +516,6 @@ class Board():
 
                         while whiteCaptureMoves:
                             captureTarget = bit.getLsbIndex(whiteCaptureMoves)
-                            print(FIELD_ARRAY[captureTarget])
 
                             #capture combined promotions
                             if start >= a7 and start <= h7:
