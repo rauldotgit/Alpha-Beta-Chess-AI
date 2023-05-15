@@ -469,6 +469,17 @@ FEN_VERY_HARD = 'rnbqkb1r/pp1p1pPp/8/2p1pP2/1P1P4/3P3P/P1P1P3/RNBQKBNR w KQkq e6
 FEN_CMK = 'r2q1rk1/ppp2ppp/2n1bn2/2b1p3/3pP3/3P1NPP/PPP1NPB1/R1BQ1RK1 b - - 0 9'
 FEN_PROBLEM = '1R6/3R4/P2PK3/4P3/4KP2/8/8/8 b - - 0 0'
 
+def printMoveList(moveList):
+	if len(moveList) == 0:
+		print('Movelist is empty.')
+		return
+
+	print(f's->t p  + - d e c')
+	for index, move in enumerate(moveList):
+		start, target, piece, promoted, capture, doublePush, enpassant, castling = move
+		print(
+			f'{FIELD_ARRAY[start]}{FIELD_ARRAY[target]} {ROLE_ARRAY[piece]}  {promoted} {capture} {doublePush} {enpassant} {castling}'
+		)
 
 def printArray(bitarray):
 		numbit = np.array(bitarray)

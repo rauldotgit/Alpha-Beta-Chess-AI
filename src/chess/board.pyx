@@ -400,12 +400,6 @@ class Board():
 
         return attackUnion
 
-    def isCheck(self, side):
-        opponent = black if side == white else white
-        whosKing = K if side == white else k
-        kingIndex = bit.getLsbIndex(self.pieceMaps[whosKing])
-        return self.isFieldAttacked(kingIndex, opponent)
-
     def printMove(self, move):
         start, target, piece, promoted, capture, doublePush, enpassant, castling = move
         print(
@@ -499,7 +493,7 @@ class Board():
                         startString = maps.FIELD_ARRAY[start]
                         targetString = maps.FIELD_ARRAY[target]
 
-                        if not (target < a8) and not bit.getBit(self.board_union, target):
+                        if not target < a8 and not bit.getBit(self.board_union, target):
                             if start >= a7 and start <= h7:
                                 #add move into move list
                                 #start, target, piece, promoted, capture, doublePush, enpassant, castling
@@ -521,19 +515,20 @@ class Board():
                         whiteCaptureMoves = self.pawnAttacks[self.turn][start] & self.black_board_union
 
                         while whiteCaptureMoves:
-                            target = bit.getLsbIndex(whiteCaptureMoves)
+                            captureTarget = bit.getLsbIndex(whiteCaptureMoves)
+                            print(FIELD_ARRAY[captureTarget])
 
                             #capture combined promotions
                             if start >= a7 and start <= h7:
-                                self.addMoveToList(start, target, piece, R, 1, 0, 0, 0)
-                                self.addMoveToList(start, target, piece, N, 1, 0, 0, 0)
-                                self.addMoveToList(start, target, piece, B, 1, 0, 0, 0)
-                                self.addMoveToList(start, target, piece, Q, 1, 0, 0, 0)
+                                self.addMoveToList(start, captureTarget, piece, R, 1, 0, 0, 0)
+                                self.addMoveToList(start, captureTarget, piece, N, 1, 0, 0, 0)
+                                self.addMoveToList(start, captureTarget, piece, B, 1, 0, 0, 0)
+                                self.addMoveToList(start, captureTarget, piece, Q, 1, 0, 0, 0)
                             else:
-                                self.addMoveToList(start, target, piece, 0, 1, 0, 0, 0)
+                                self.addMoveToList(start, captureTarget, piece, 0, 1, 0, 0, 0)
 
                             # end of this while loop
-                            whiteCaptureMoves = bit.popBit(whiteCaptureMoves, target)
+                            whiteCaptureMoves = bit.popBit(whiteCaptureMoves, captureTarget)
 
                         # enpassant captures
                         if self.enpassant != noSquare:
@@ -797,7 +792,7 @@ class Board():
                 while boardPieceIndex <= endPiece:
 
                     if bit.getBit(self.pieceMaps[boardPieceIndex], target):
-                        self.pieceMaps[boardPieceIndex] = bit.popBit(self.pieceMaps[piece], target)
+                        self.pieceMaps[boardPieceIndex] = bit.popBit(self.pieceMaps[boardPieceIndex], target)
                         break
                         
                     boardPieceIndex += 1
@@ -849,10 +844,9 @@ class Board():
             self.nextTurn()
             # self.generateMoves()
 
-            # check if king from previous move would be in check when moving
-            # if yes, go back to last move
-            prevTurn = white if self.turn == black else black
-            if self.isCheck(prevTurn):
+            kingIndex = bit.getLsbIndex(self.pieceMaps[k]) if self.turn == white else bit.getLsbIndex(self.pieceMaps[K])
+            isCheck = self.isFieldAttacked(kingIndex, self.turn)
+            if isCheck:
                 # illegal
                 # print('move is in check - revert')
                 self.loadPrevState()
