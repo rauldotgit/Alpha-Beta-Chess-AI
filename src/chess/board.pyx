@@ -344,6 +344,15 @@ class Board():
         self.queenAttacks = attackMaps[4]
         self.kingAttacks = attackMaps[5]
 
+    def generateAttackMaps_MAGIC(self):
+        leapers = atk.allLeaperAttacks()
+        self.pawnAttacks = leapers[0]
+        self.knightAttacks = leapers[0]
+        self.kingAttacks = leapers[0]
+
+        # TODO: continue here
+        pass
+
     def updateAttackMaps_NOMAGIC(self):
         rookBishopQueenMaps = atk.allSliderAttacks_blocked(self.board_union)
 

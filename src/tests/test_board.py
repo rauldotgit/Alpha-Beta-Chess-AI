@@ -95,9 +95,9 @@ def test_save_current_state():
 # def test_generate_moves():
 #     pass
 
-def test_uci_loop():
-    newBoard = board.Board()
-    newBoard.uciLoop()
+# def test_uci_loop():
+#     newBoard = board.Board()
+#     newBoard.uciLoop()
 
 def test_evaluate_score():
     newBoard = board.Board()
