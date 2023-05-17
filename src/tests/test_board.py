@@ -56,6 +56,24 @@ def test_save_current_state():
 
     # print(newBoard.prevState)
 
+def test_fen_to_board_info():
+    
+    pieceMaps, turn, castle, enpassant, halfMoves, fullMoves = board.fenToBoardInfo(maps.FEN_START)
+
+    assert turn == 0
+    assert castle == 15
+    assert enpassant == 64
+    assert halfMoves == 0
+    assert fullMoves == 1
+
+    pieceMaps, turn, castle, enpassant, halfMoves, fullMoves = board.fenToBoardInfo(maps.FEN_SOME_MOVE)
+
+    assert turn == 0
+    assert castle == 15
+    assert enpassant == board.FIELD_OBJ['c6']
+    assert halfMoves == 0
+    assert fullMoves == 2
+
 # def test_fen_game_setup():
 #     newBoard2 = board.Board()
 
@@ -95,9 +113,9 @@ def test_save_current_state():
 # def test_generate_moves():
 #     pass
 
-def test_uci_loop():
-    newBoard = board.Board()
-    newBoard.uciLoop()
+# def test_uci_loop():
+#     newBoard = board.Board()
+#     newBoard.uciLoop()
 
 def test_evaluate_score():
     newBoard = board.Board()

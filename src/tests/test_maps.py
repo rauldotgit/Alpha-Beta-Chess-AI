@@ -2,7 +2,7 @@ import src.chess.maps as maps
 import src.chess.board as board
 
 def test_fen_to_arrays():
-    bitArrays = maps.fenBoardToBitArrays(maps.STRING_BOARD)
+    bitArrays = maps.fenBoardToBitArrays(maps.FEN_START_BOARD)
     
     assert (maps.WHITE_PAWNS_ARRAY == bitArrays[0]).all()
     assert (maps.WHITE_ROOKS_ARRAY == bitArrays[1]).all()
@@ -19,7 +19,7 @@ def test_fen_to_arrays():
     assert (maps.BLACK_KING_ARRAY == bitArrays[11]).all()
 
 def test_fen_to_bitmaps():
-    bitMaps = maps.fenBoardToBitMaps(maps.STRING_BOARD)
+    bitMaps = maps.fenBoardToBitMaps(maps.FEN_START_BOARD)
     
     assert maps.WHITE_PAWNS_MAP == bitMaps[0]
     assert maps.WHITE_ROOKS_MAP == bitMaps[1]
@@ -41,21 +41,3 @@ def test_fen_to_bitmaps():
 # def test_pp_bit_maps():
 #     maps.ppBitMaps(maps.ALL_MAPS)
 
-def test_fen_to_board_info():
-    pieceMaps, turn, castle, enpassant, halfMoves, fullMoves = maps.fenToBoardInfo(maps.FEN_START)
-    # maps.ppBitMaps(pieceMaps)
-
-    assert turn == 0
-    assert castle == 15
-    assert enpassant == 64
-    assert halfMoves == 0
-    assert fullMoves == 1
-
-    pieceMaps, turn, castle, enpassant, halfMoves, fullMoves = maps.fenToBoardInfo(maps.FEN_SOME_MOVE)
-    # maps.ppBitMaps(pieceMaps)
-
-    assert turn == 0
-    assert castle == 15
-    assert enpassant == maps.FIELD_OBJ['c6']
-    assert halfMoves == 0
-    assert fullMoves == 2

@@ -1,9 +1,9 @@
 import numpy as np
+import src.chess.board as board
 import src.chess.bitmethods as bit
-import src.chess.maps as maps
 import src.chess.attacks as atk
 
-FIELD_OBJ = maps.FIELD_OBJ
+FIELD_OBJ = board.FIELD_OBJ
 
 def test_single_pawn_attacks():
 
@@ -416,3 +416,24 @@ def test_single_queen_attacks_blocked():
     test_map = bit.bitArrayToInt(test_array_2)
     result_map = atk.singleQueenAttacks_blocked(test_field, bit.bitArrayToInt(block_array_2))
     assert test_map == result_map
+
+# def test_rook_attack_permutations():
+
+#     test_field = maps.FIELD_OBJ['a1']
+#     attackMap = atk.singleRookAttacks(test_field)
+
+#     # number of permutations in rook attacks
+#     for i in range(4096):
+#         permutationMap = atk.attackPermutations(i, attackMap)
+#         maps.printMap(permutationMap)
+
+# def test_bishop_attack_permutations():
+
+#     test_field = maps.FIELD_OBJ['a1']
+#     attackMap = atk.singleBishopAttacks(test_field)
+
+#     # number of permutations in rook attacks
+#     for i in range(512):
+#         permutationMap = atk.attackPermutations(i, attackMap)
+#         maps.printMap(permutationMap)
+
