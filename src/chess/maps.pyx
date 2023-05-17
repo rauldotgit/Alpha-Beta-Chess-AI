@@ -274,18 +274,6 @@ SET_BOARD_UNION = np.array([
 ], dtype=np.byte)
 
 
-# used to bitwise and castling rights in case a piece of importance moves
-CASTLING_RIGHTS = [
-	 7, 15, 15, 15,  3, 15, 15, 11,
-	15, 15, 15, 15, 15, 15, 15, 15,
-	15, 15, 15, 15, 15, 15, 15, 15,
-	15, 15, 15, 15, 15, 15, 15, 15,
-	15, 15, 15, 15, 15, 15, 15, 15,
-	15, 15, 15, 15, 15, 15, 15, 15,
-	15, 15, 15, 15, 15, 15, 15, 15,
-	13, 15, 15, 15, 12, 15, 15, 14,
-]
-
 WHITE_ARRAYS = [
 	WHITE_PAWNS_ARRAY,
 	WHITE_ROOKS_ARRAY,
@@ -398,66 +386,11 @@ ROLE_ARRAY = [
 	'k',
 ]
 
-# TODO: change bishop and knight scores if needed
-
-#based on role array
-SCORE_ARRAY = [
-	100,
-	300,
-	350,
-	500,
-	1000,
-	10000,
-	-100,
-	-300,
-	-350,
-	-500,
-	-1000,
-	-10000,
-]
-
 COLOR_OBJ = {
 	'white': 0,
 	'black': 1
 }
 
-FIELD_OBJ = {
-		'a8': 0, 'b8': 1, 'c8': 2, 'd8': 3, 'e8': 4, 'f8': 5, 'g8': 6, 'h8': 7,
-		'a7': 8, 'b7': 9, 'c7': 10, 'd7': 11, 'e7': 12, 'f7': 13, 'g7': 14, 'h7': 15,
-		'a6': 16, 'b6': 17, 'c6': 18, 'd6': 19, 'e6': 20, 'f6': 21, 'g6': 22, 'h6': 23,
-		'a5': 24, 'b5': 25, 'c5': 26, 'd5': 27, 'e5': 28, 'f5': 29, 'g5': 30, 'h5': 31,
-		'a4': 32, 'b4': 33, 'c4': 34, 'd4': 35, 'e4': 36, 'f4': 37, 'g4': 38, 'h4': 39,
-		'a3': 40, 'b3': 41, 'c3': 42, 'd3': 43, 'e3': 44, 'f3': 45, 'g3': 46, 'h3': 47,
-		'a2': 48, 'b2': 49, 'c2': 50, 'd2': 51, 'e2': 52, 'f2': 54, 'g2': 54, 'h2': 55,
-		'a1': 56, 'b1': 57, 'c1': 58, 'd1': 59, 'e1': 60, 'f1': 62, 'g1': 62, 'h1': 63,
-}
-
-FIELD_ARRAY = [
-		'a8', 'b8', 'c8', 'd8', 'e8', 'f8', 'g8', 'h8',
-		'a7', 'b7', 'c7', 'd7', 'e7', 'f7', 'g7', 'h7',
-		'a6', 'b6', 'c6', 'd6', 'e6', 'f6', 'g6', 'h6',
-		'a5', 'b5', 'c5', 'd5', 'e5', 'f5', 'g5', 'h5',
-		'a4', 'b4', 'c4', 'd4', 'e4', 'f4', 'g4', 'h4',
-		'a3', 'b3', 'c3', 'd3', 'e3', 'f3', 'g3', 'h3',
-		'a2', 'b2', 'c2', 'd2', 'e2', 'f2', 'g2', 'h2',
-		'a1', 'b1', 'c1', 'd1', 'e1', 'f1', 'g1', 'h1',
-		]
-
-CASTLE_OBJ = {
-	'K': 1,
-	'Q': 2,
-	'k': 4,
-	'q': 8,
-}
-
-def parseCastle(castleString):
-	castleInt = 0
-	if castleString == '-': return castleInt
-
-	for char in castleString:
-		castleInt |= CASTLE_OBJ[char]
-
-	return castleInt
 
 STRING_BOARD = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR'
 
@@ -468,18 +401,6 @@ FEN_HARD = 'r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1
 FEN_VERY_HARD = 'rnbqkb1r/pp1p1pPp/8/2p1pP2/1P1P4/3P3P/P1P1P3/RNBQKBNR w KQkq e6 0 1'
 FEN_CMK = 'r2q1rk1/ppp2ppp/2n1bn2/2b1p3/3pP3/3P1NPP/PPP1NPB1/R1BQ1RK1 b - - 0 9'
 FEN_PROBLEM = '1R6/3R4/P2PK3/4P3/4KP2/8/8/8 b - - 0 0'
-
-def printMoveList(moveList):
-	if len(moveList) == 0:
-		print('Movelist is empty.')
-		return
-
-	print(f's->t p  + - d e c')
-	for index, move in enumerate(moveList):
-		start, target, piece, promoted, capture, doublePush, enpassant, castling = move
-		print(
-			f'{FIELD_ARRAY[start]}{FIELD_ARRAY[target]} {ALL_UNICODES[piece]}  {promoted} {capture} {doublePush} {enpassant} {castling}'
-		)
 
 def printArray(bitarray):
 		numbit = np.array(bitarray)
@@ -577,28 +498,6 @@ def fenBoardToBitMaps(fenString):
 		pieceMaps.append(pieceMap)
 
 	return pieceMaps
-
-def fenToBoardInfo(fenString):
-
-	fenArgs = fenString.split()
-	if len(fenArgs) != 6:
-		raise ValueError("FEN String is missing arguments.")
-
-	fenBoard = fenArgs[0]
-	fenTurn = fenArgs[1]
-	fenCastle = fenArgs[2]
-	fenEnpass = fenArgs[3]
-	fenHalf = fenArgs[4]
-	fenFull = fenArgs[5]
-
-	pieceMaps = fenBoardToBitMaps(fenBoard)
-	turn = 0 if fenTurn == 'w' else 1
-	castling = parseCastle(fenCastle)
-	enpassant = 64 if fenEnpass == '-' else FIELD_OBJ[fenEnpass]
-	halfMoves = 0 if fenHalf == '-' else int(fenHalf)
-	fullMoves = 0 if fenFull == '-' else int(fenFull)
-
-	return [pieceMaps, turn, castling, enpassant, halfMoves, fullMoves]
 
 
 # pieceArrays need to be sorted in PIECE_OBJ order 

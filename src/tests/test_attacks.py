@@ -1,9 +1,9 @@
 import numpy as np
+import src.chess.board as board
 import src.chess.bitmethods as bit
-import src.chess.maps as maps
 import src.chess.attacks as atk
 
-FIELD_OBJ = maps.FIELD_OBJ
+FIELD_OBJ = board.FIELD_OBJ
 
 def test_single_pawn_attacks():
 

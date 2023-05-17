@@ -41,21 +41,3 @@ def test_fen_to_bitmaps():
 # def test_pp_bit_maps():
 #     maps.ppBitMaps(maps.ALL_MAPS)
 
-def test_fen_to_board_info():
-    pieceMaps, turn, castle, enpassant, halfMoves, fullMoves = maps.fenToBoardInfo(maps.FEN_START)
-    # maps.ppBitMaps(pieceMaps)
-
-    assert turn == 0
-    assert castle == 15
-    assert enpassant == 64
-    assert halfMoves == 0
-    assert fullMoves == 1
-
-    pieceMaps, turn, castle, enpassant, halfMoves, fullMoves = maps.fenToBoardInfo(maps.FEN_SOME_MOVE)
-    # maps.ppBitMaps(pieceMaps)
-
-    assert turn == 0
-    assert castle == 15
-    assert enpassant == maps.FIELD_OBJ['c6']
-    assert halfMoves == 0
-    assert fullMoves == 2
