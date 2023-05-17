@@ -87,6 +87,21 @@ FIELD_OBJ = {
 		'a1': 56, 'b1': 57, 'c1': 58, 'd1': 59, 'e1': 60, 'f1': 62, 'g1': 62, 'h1': 63,
 }
 
+ROLE_OBJ = {
+	'P': 0,
+	'R': 1,
+	'N': 2,
+	'B': 3,
+	'Q': 4,
+	'K': 5,
+	'p': 6,
+	'r': 7,
+	'n': 8,
+	'b': 9,
+	'q': 10,
+	'k': 11
+}
+
 CASTLE_OBJ = {
 	'K': 1,
 	'Q': 2,
@@ -1020,7 +1035,7 @@ class Board():
         if len(moveString) == 5:
             inputPromotion = moveString[4].lower()
 
-            if inputPromotion not in maps.ROLE_OBJ:
+            if inputPromotion not in ROLE_OBJ:
                 return 0
 
 

@@ -2,7 +2,7 @@ import src.chess.maps as maps
 import src.chess.board as board
 
 def test_fen_to_arrays():
-    bitArrays = maps.fenBoardToBitArrays(maps.STRING_BOARD)
+    bitArrays = maps.fenBoardToBitArrays(maps.FEN_START_BOARD)
     
     assert (maps.WHITE_PAWNS_ARRAY == bitArrays[0]).all()
     assert (maps.WHITE_ROOKS_ARRAY == bitArrays[1]).all()
@@ -19,7 +19,7 @@ def test_fen_to_arrays():
     assert (maps.BLACK_KING_ARRAY == bitArrays[11]).all()
 
 def test_fen_to_bitmaps():
-    bitMaps = maps.fenBoardToBitMaps(maps.STRING_BOARD)
+    bitMaps = maps.fenBoardToBitMaps(maps.FEN_START_BOARD)
     
     assert maps.WHITE_PAWNS_MAP == bitMaps[0]
     assert maps.WHITE_ROOKS_MAP == bitMaps[1]

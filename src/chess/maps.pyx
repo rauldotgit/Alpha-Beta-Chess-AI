@@ -1,5 +1,6 @@
 import numpy as np
 import src.chess.bitmethods as bit
+import src.chess.board as board
 
 BLACK_PAWNS_MAP = 65280
 BLACK_ROOKS_MAP = 129
@@ -273,40 +274,6 @@ SET_BOARD_UNION = np.array([
 	1, 1, 1, 1, 1, 1, 1, 1,
 ], dtype=np.byte)
 
-
-WHITE_ARRAYS = [
-	WHITE_PAWNS_ARRAY,
-	WHITE_ROOKS_ARRAY,
-	WHITE_KNIGHTS_ARRAY,
-	WHITE_BISHOPS_ARRAY,
-	WHITE_QUEEN_ARRAY,
-	WHITE_KING_ARRAY,
-]
-
-BLACK_ARRAYS = [
-	BLACK_PAWNS_ARRAY,
-	BLACK_ROOKS_ARRAY,
-	BLACK_KNIGHTS_ARRAY,
-	BLACK_BISHOPS_ARRAY,
-	BLACK_QUEEN_ARRAY,
-	BLACK_KING_ARRAY,
-]
-
-ALL_ARRAYS = [
-	WHITE_PAWNS_ARRAY,
-	WHITE_ROOKS_ARRAY,
-	WHITE_KNIGHTS_ARRAY,
-	WHITE_BISHOPS_ARRAY,
-	WHITE_QUEEN_ARRAY,
-	WHITE_KING_ARRAY,
-	BLACK_PAWNS_ARRAY,
-	BLACK_ROOKS_ARRAY,
-	BLACK_KNIGHTS_ARRAY,
-	BLACK_BISHOPS_ARRAY,
-	BLACK_QUEEN_ARRAY,
-	BLACK_KING_ARRAY,
-]
-
 DOT_UNICODE = '\u2219'
 WHITE_PAWN_UNICODE = '\u265F'
 WHITE_ROOK_UNICODE = '\u265C'
@@ -356,46 +323,10 @@ BLACK_UNICODES = [
 	BLACK_KING_UNICODE 
 ]
 
-ROLE_OBJ = {
-	'P': 0,
-	'R': 1,
-	'N': 2,
-	'B': 3,
-	'Q': 4,
-	'K': 5,
-	'p': 6,
-	'r': 7,
-	'n': 8,
-	'b': 9,
-	'q': 10,
-	'k': 11
-}
-
-ROLE_ARRAY = [
-	'P',
-	'R',
-	'N',
-	'B',
-	'Q',
-	'K',
-	'p',
-	'r',
-	'n',
-	'b',
-	'q',
-	'k',
-]
-
-COLOR_OBJ = {
-	'white': 0,
-	'black': 1
-}
-
-
-STRING_BOARD = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR'
-
 FEN_EMPTY = '8/8/8/8/8/8/8/8 w - - '
 FEN_START = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1'
+FEN_START_BOARD = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR'
+
 FEN_SOME_MOVE = 'rnbqkbnr/pp1ppppp/8/2p5/4P3/8/PPPP1PPP/RNBQKBNR w KQkq c6 0 2'
 FEN_HARD = 'r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1'
 FEN_VERY_HARD = 'rnbqkb1r/pp1p1pPp/8/2p1pP2/1P1P4/3P3P/P1P1P3/RNBQKBNR w KQkq e6 0 1'
@@ -436,12 +367,6 @@ def printMap(map):
 	bitarray = bit.intToBitArray(map)
 	printArray(bitarray)
 
-# def arraysToNumberedUnion(pieceArraysList):
-# 	numberedUnion = np.zeros(64, dtype=int)
-# 	for index, pieceArray in enumerate(pieceArraysList):
-# 		factored = np.array(pieceArray) * (index + 1)
-# 		np.add(factored, numberedUnion, numberedUnion)
-# 	return numberedUnion
 
 # returns piece bitarrays from fen string 
 def fenBoardToBitArrays(fenString):
@@ -475,11 +400,11 @@ def fenBoardToBitArrays(fenString):
 		else:
 			if char == '/': 
 				continue
-			elif char not in ROLE_OBJ:
+			elif char not in board.ROLE_OBJ:
 				raise ValueError('Incorrect character in fen board.')
 				return
 			else:
-				pieceIndex = ROLE_OBJ[char]
+				pieceIndex = board.ROLE_OBJ[char]
 				bitarrays[pieceIndex][fieldIndex] = one
 		
 		fieldIndex += 1
