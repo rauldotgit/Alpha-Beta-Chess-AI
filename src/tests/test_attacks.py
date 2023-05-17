@@ -198,7 +198,7 @@ def test_single_bishop_attacks():
     ]
 
     test_map = bit.bitArrayToInt(test_array_1)
-    result_map = atk.singleBishopAttacks(test_field)
+    result_map = atk.singleBishopMask(test_field)
     assert test_map == result_map
 
     test_field = FIELD_OBJ['a1']
@@ -215,7 +215,7 @@ def test_single_bishop_attacks():
     ]
 
     test_map = bit.bitArrayToInt(test_array_2)
-    result_map = atk.singleBishopAttacks(test_field)
+    result_map = atk.singleBishopMask(test_field)
     assert test_map == result_map
 
 def test_single_bishop_attacks_blocked():
@@ -245,7 +245,7 @@ def test_single_bishop_attacks_blocked():
     ]
     
     test_map = bit.bitArrayToInt(test_array_1)
-    result_map = atk.singleBishopAttacks_blocked(test_field, bit.bitArrayToInt(block_array_1))
+    result_map = atk.singleBishopAttacks_otf(test_field, bit.bitArrayToInt(block_array_1))
     assert test_map == result_map
 
 def test_single_rook_attacks():
@@ -264,7 +264,7 @@ def test_single_rook_attacks():
     ]
 
     test_map = bit.bitArrayToInt(test_array_1)
-    result_map = atk.singleRookAttacks(test_field)
+    result_map = atk.singleRookMask(test_field)
     assert test_map == result_map
 
     test_field = FIELD_OBJ['a8']
@@ -281,7 +281,7 @@ def test_single_rook_attacks():
     ]
 
     test_map = bit.bitArrayToInt(test_array_2)
-    result_map = atk.singleRookAttacks(test_field)
+    result_map = atk.singleRookMask(test_field)
     assert test_map == result_map
 
     test_field = FIELD_OBJ['g2']
@@ -298,7 +298,7 @@ def test_single_rook_attacks():
     ]
 
     test_map = bit.bitArrayToInt(test_array_3)
-    result_map = atk.singleRookAttacks(test_field)
+    result_map = atk.singleRookMask(test_field)
     assert test_map == result_map
     
 def test_single_rook_attacks_blocked():
@@ -328,7 +328,7 @@ def test_single_rook_attacks_blocked():
     ]
 
     test_map = bit.bitArrayToInt(test_array_1)
-    result_map = atk.singleRookAttacks_blocked(test_field, bit.bitArrayToInt(block_array_1))
+    result_map = atk.singleRookAttacks_otf(test_field, bit.bitArrayToInt(block_array_1))
     assert test_map == result_map
 
     test_field = FIELD_OBJ['h8']
@@ -356,7 +356,7 @@ def test_single_rook_attacks_blocked():
     ]
 
     test_map = bit.bitArrayToInt(test_array_2)
-    result_map = atk.singleRookAttacks_blocked(test_field, bit.bitArrayToInt(block_array_2))
+    result_map = atk.singleRookAttacks_otf(test_field, bit.bitArrayToInt(block_array_2))
     assert test_map == result_map
 
 def test_single_queen_attacks_blocked():
@@ -386,7 +386,7 @@ def test_single_queen_attacks_blocked():
     ]
 
     test_map = bit.bitArrayToInt(test_array_1)
-    result_map = atk.singleQueenAttacks_blocked(test_field, bit.bitArrayToInt(block_array_1))
+    result_map = atk.singleQueenAttacks_otf(test_field, bit.bitArrayToInt(block_array_1))
     assert test_map == result_map
 
     test_field = FIELD_OBJ['a1']
@@ -414,13 +414,13 @@ def test_single_queen_attacks_blocked():
     ]
 
     test_map = bit.bitArrayToInt(test_array_2)
-    result_map = atk.singleQueenAttacks_blocked(test_field, bit.bitArrayToInt(block_array_2))
+    result_map = atk.singleQueenAttacks_otf(test_field, bit.bitArrayToInt(block_array_2))
     assert test_map == result_map
 
 # def test_rook_attack_permutations():
 
 #     test_field = maps.FIELD_OBJ['a1']
-#     attackMap = atk.singleRookAttacks(test_field)
+#     attackMap = atk.singleRookMask(test_field)
 
 #     # number of permutations in rook attacks
 #     for i in range(4096):
@@ -430,7 +430,7 @@ def test_single_queen_attacks_blocked():
 # def test_bishop_attack_permutations():
 
 #     test_field = maps.FIELD_OBJ['a1']
-#     attackMap = atk.singleBishopAttacks(test_field)
+#     attackMap = atk.singleBishopMask(test_field)
 
 #     # number of permutations in rook attacks
 #     for i in range(512):

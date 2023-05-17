@@ -193,14 +193,6 @@ class Board():
     white_board_union = 0
     black_board_union = 0
 
-    # careful, pawns are 2d [white/black][field]
-    pawnAttacks = []
-    rookAttacks = []
-    knightAttacks = []
-    bishopAttacks = []
-    queenAttacks = []
-    kingAttacks = []
-
     moveList = []
     moveIndex = -1
 
@@ -245,16 +237,10 @@ class Board():
         self.white_board_union = saveState[18]
         self.black_board_union = saveState[19]
 
-        self.pawnAttacks = saveState[20]
-        self.rookAttacks = saveState[21]
-        self.knightAttacks = saveState[22]
-        self.bishopAttacks = saveState[23]
-        self.queenAttacks = saveState[24]
-        self.kingAttacks = saveState[25]
-        self.moveList = saveState[26]
-        self.moveIndex = saveState[27]
+        self.moveList = saveState[20]
+        self.moveIndex = saveState[21]
 
-        self.time = saveState[28]
+        self.time = saveState[22]
 
     def loadPrevState(self):
         self.turn = self.prevState[0]
@@ -281,16 +267,10 @@ class Board():
         self.white_board_union = self.prevState[18]
         self.black_board_union = self.prevState[19]
 
-        self.pawnAttacks = self.prevState[20]
-        self.rookAttacks = self.prevState[21]
-        self.knightAttacks = self.prevState[22]
-        self.bishopAttacks = self.prevState[23]
-        self.queenAttacks = self.prevState[24]
-        self.kingAttacks = self.prevState[25]
-        self.moveList = self.prevState[26]
-        self.moveIndex = self.prevState[27]
+        self.moveList = self.prevState[20]
+        self.moveIndex = self.prevState[21]
 
-        self.time = self.prevState[28]
+        self.time = self.prevState[22]
 
     def saveCurrentState(self):
         self.prevState = [
@@ -316,13 +296,6 @@ class Board():
             self.board_union,
             self.white_board_union,
             self.black_board_union,
-
-            self.pawnAttacks,
-            self.rookAttacks,
-            self.knightAttacks,
-            self.bishopAttacks,
-            self.queenAttacks,
-            self.kingAttacks,
             
             self.moveList,
             self.moveIndex,
@@ -354,13 +327,6 @@ class Board():
             self.board_union,
             self.white_board_union,
             self.black_board_union,
-
-            self.pawnAttacks,
-            self.rookAttacks,
-            self.knightAttacks,
-            self.bishopAttacks,
-            self.queenAttacks,
-            self.kingAttacks,
             
             self.moveList,
             self.moveIndex,
@@ -392,26 +358,6 @@ class Board():
     def getPieceMaps(self):
         return self.pieceMaps
 
-    def getPieceAttacks(self, piece):
-        if piece == P: return self.pawnAttacks[0]
-        elif piece == p: return self.pawnAttacks[1]
-        elif piece == R or piece == r: return self.rookAttacks
-        elif piece == N or piece == n: return self.knightAttacks
-        elif piece == B or piece == b: return self.bishopAttacks
-        elif piece == Q or piece == q: return self.queenAttacks
-        elif piece == K or piece == k: return self.kingAttacks
-        else: return None
-
-    def getAttackMaps(self):
-        return [
-            self.pawnAttacks,
-            self.rookAttacks,
-            self.knightAttacks,
-            self.bishopAttacks,
-            self.queenAttacks,
-            self.kingAttacks
-        ]
-
     def resetBoard(self):
         self.setPieces()
         self.turn = white
@@ -423,7 +369,7 @@ class Board():
 
         self.setBoardUnion()
         self.setSideUnions()
-        self.generateAttackMaps_NOMAGIC()
+        self.updateSliderAttacks_otf()
 
         self.moveList = []
         self.moveIndex = -1
@@ -448,32 +394,8 @@ class Board():
 
         return newDuration
 
-    # make sure bord union is up to date
-    def generateAttackMaps_NOMAGIC(self):
-        attackMaps = atk.allAttacks_blocked(self.board_union)
-
-        self.pawnAttacks = attackMaps[0]
-        self.rookAttacks = attackMaps[1]
-        self.knightAttacks = attackMaps[2]
-        self.bishopAttacks = attackMaps[3]
-        self.queenAttacks = attackMaps[4]
-        self.kingAttacks = attackMaps[5]
-
-    def generateAttackMaps_MAGIC(self):
-        leapers = atk.allLeaperAttacks()
-        self.pawnAttacks = leapers[0]
-        self.knightAttacks = leapers[0]
-        self.kingAttacks = leapers[0]
-
-        # TODO: continue here
-        pass
-
-    def updateAttackMaps_NOMAGIC(self):
-        rookBishopQueenMaps = atk.allSliderAttacks_blocked(self.board_union)
-
-        self.rookAttacks = rookBishopQueenMaps[0]
-        self.bishopAttacks = rookBishopQueenMaps[1]
-        self.queenAttacks = rookBishopQueenMaps[2]
+    def updateSliderAttacks_otf(self):
+        atk.generateSliderAttacks_otf(self.board_union)
     
     def fenGameSetup(self, fenString):
         pieceMaps, turn, castle, enpassant, halfMoves, fullMoves = fenToBoardInfo(fenString)
@@ -500,7 +422,7 @@ class Board():
 
         self.setBoardUnion()
         self.setSideUnions()
-        self.generateAttackMaps_NOMAGIC()
+        self.updateSliderAttacks_otf()
         self.generateMoves()
 
     # TODO: copy with magic bitboards when implemented
@@ -508,27 +430,27 @@ class Board():
     def isFieldAttacked(self, fieldIndex, side):
         
         # black is attacked by white pawn, if there's a pawn on the black pawn attack fields (damn)
-        isAttackingBlackPawn = self.pawnAttacks[black][fieldIndex] & self.pieceMaps[P]
+        isAttackingBlackPawn = atk.getPawnAttack(black, fieldIndex) & self.pieceMaps[P]
         if side == white and isAttackingBlackPawn: return True
 
-        isAttackingWhitePawn = self.pawnAttacks[white][fieldIndex] & self.pieceMaps[p]
+        isAttackingWhitePawn = atk.getPawnAttack(white, fieldIndex) & self.pieceMaps[p]
         if side == black and isAttackingWhitePawn: return True
         
         rooksMap = self.pieceMaps[R] if side == white else self.pieceMaps[r]
-        if self.rookAttacks[fieldIndex] & rooksMap: return True
+        if atk.getRookAttack_otf(fieldIndex) & rooksMap: return True
 
         # a field is attacked by knights, if there are nights around the field in the shape of night attacks (oof)
         knightsMap = self.pieceMaps[N] if side == white else self.pieceMaps[n]
-        if self.knightAttacks[fieldIndex] & knightsMap: return True
+        if atk.getKnightAttack(fieldIndex) & knightsMap: return True
 
         bishopsMap = self.pieceMaps[B] if side == white else self.pieceMaps[b]
-        if self.bishopAttacks[fieldIndex] & bishopsMap: return True
+        if atk.getBishopAttack_otf(fieldIndex) & bishopsMap: return True
 
         queensMap = self.pieceMaps[Q] if side == white else self.pieceMaps[q]
-        if self.queenAttacks[fieldIndex] & queensMap: return True
+        if atk.getQueenAttack_otf(fieldIndex) & queensMap: return True
 
         kingsMap = self.pieceMaps[K] if side == white else self.pieceMaps[k]
-        if self.kingAttacks[fieldIndex] & kingsMap: return True
+        if atk.getKingAttack(fieldIndex) & kingsMap: return True
 
         return False
 
@@ -577,7 +499,7 @@ class Board():
             start = bit.getLsbIndex(pieceMap)
             
             reverseSideBoardUnion = ~self.white_board_union if self.turn == white else ~self.black_board_union
-            pieceAttackMoves = self.getPieceAttacks(piece)[start] & reverseSideBoardUnion
+            pieceAttackMoves = atk.getPieceAttacks_otf(piece)[start] & reverseSideBoardUnion
             
             while pieceAttackMoves:
                 target = bit.getLsbIndex(pieceAttackMoves)   
@@ -635,7 +557,7 @@ class Board():
                                     
 
                         # create capturing moves
-                        whiteCaptureMoves = self.pawnAttacks[self.turn][start] & self.black_board_union
+                        whiteCaptureMoves = atk.getPawnAttack(white, start) & self.black_board_union
 
                         while whiteCaptureMoves:
                             captureTarget = bit.getLsbIndex(whiteCaptureMoves)
@@ -654,7 +576,7 @@ class Board():
 
                         # enpassant captures
                         if self.enpassant != noSquare:
-                            enpassantAttacks = self.pawnAttacks[self.turn][start] & (bit.ONEULL() << self.enpassant)
+                            enpassantAttacks = atk.getPawnAttack(white, start) & (bit.ONEULL() << self.enpassant)
 
                             if enpassantAttacks:
                                 targetEnpassant = bit.getLsbIndex(enpassantAttacks)
@@ -717,7 +639,7 @@ class Board():
                                     self.addMoveToList(start, target + 8, piece, 0, 0, 1, 0, 0)
 
                         # create capturing moves
-                        blackCaptureMoves = self.pawnAttacks[self.turn][start] & self.white_board_union
+                        blackCaptureMoves = atk.getPawnAttack(black, start) & self.white_board_union
 
                         while blackCaptureMoves:
                             target = bit.getLsbIndex(blackCaptureMoves)
@@ -736,7 +658,7 @@ class Board():
 
                         # generate enpassant caputes
                         if self.enpassant != noSquare:
-                            enpassantAttacks = self.pawnAttacks[self.turn][start] & (bit.ONEULL() << self.enpassant)
+                            enpassantAttacks = atk.getPawnAttack(black, start) & (bit.ONEULL() << self.enpassant)
 
                             if enpassantAttacks:
                                 targetEnpassant = bit.getLsbIndex(enpassantAttacks)
@@ -795,7 +717,7 @@ class Board():
             #         start = bit.getLsbIndex(pieceMap)
 
             #         reverseSideBoardUnion = ~self.white_board_union if self.turn == white else ~self.black_board_union
-            #         knightAttackMoves = self.knightAttacks[start] & reverseSideBoardUnion
+            #         knightAttackMoves = atk.knightAttacks[start] & reverseSideBoardUnion
                     
             #         while knightAttackMoves:
             #             target = bit.getLsbIndex(knightAttackMoves)    
@@ -818,7 +740,7 @@ class Board():
             #         start = bit.getLsbIndex(pieceMap)
                     
             #         reverseSideBoardUnion = ~self.white_board_union if self.turn == white else ~self.black_board_union
-            #         bishopAttackMoves = self.bishopAttacks[start] & reverseSideBoardUnion
+            #         bishopAttackMoves = atk.bishopAttacks_otf[start] & reverseSideBoardUnion
                     
             #         while bishopAttackMoves:
             #             target = bit.getLsbIndex(bishopAttackMoves)   
@@ -841,7 +763,7 @@ class Board():
             #         start = bit.getLsbIndex(pieceMap)
                     
             #         reverseSideBoardUnion = ~self.white_board_union if self.turn == white else ~self.black_board_union
-            #         rookAttackMoves = self.rookAttacks[start] & reverseSideBoardUnion
+            #         rookAttackMoves = atk.rookAttacks_otf[start] & reverseSideBoardUnion
 
             #         while rookAttackMoves:
             #             target = bit.getLsbIndex(rookAttackMoves)    
@@ -864,7 +786,7 @@ class Board():
             #         start = bit.getLsbIndex(pieceMap)
                     
             #         reverseSideBoardUnion = ~self.white_board_union if self.turn == white else ~self.black_board_union
-            #         queenAttackMoves = self.queenAttacks[start] & reverseSideBoardUnion
+            #         queenAttackMoves = atk.queenAttacks_otf[start] & reverseSideBoardUnion
 
             #         while queenAttackMoves:
             #             target = bit.getLsbIndex(queenAttackMoves)    
@@ -887,7 +809,7 @@ class Board():
             #         start = bit.getLsbIndex(pieceMap)
                     
             #         reverseSideBoardUnion = ~self.white_board_union if self.turn == white else ~self.black_board_union
-            #         knightAttackMoves = self.kingAttacks[start] & reverseSideBoardUnion
+            #         knightAttackMoves = atk.kingAttacks[start] & reverseSideBoardUnion
 
             #         while knightAttackMoves:
             #             target = bit.getLsbIndex(knightAttackMoves)    
@@ -988,7 +910,7 @@ class Board():
 
             self.setBoardUnion()
             self.setSideUnions()
-            self.updateAttackMaps_NOMAGIC()
+            self.updateSliderAttacks_otf()
 
             self.nextTurn()
             # self.generateMoves()
