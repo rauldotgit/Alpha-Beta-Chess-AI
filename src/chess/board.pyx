@@ -287,6 +287,16 @@ class Board():
     def getPieceMaps(self):
         return self.pieceMaps
 
+    def getPieceAttacks(self, piece):
+        if piece == P: return self.pawnAttacks[0]
+        elif piece == p: return self.pawnAttacks[1]
+        elif piece == R or piece == r: return self.rookAttacks
+        elif piece == N or piece == n: return self.knightAttacks
+        elif piece == B or piece == b: return self.bishopAttacks
+        elif piece == Q or piece == q: return self.queenAttacks
+        elif piece == K or piece == k: return self.kingAttacks
+        else: return None
+
     def getAttackMaps(self):
         return [
             self.pawnAttacks,
@@ -417,22 +427,6 @@ class Board():
 
         return False
 
-    # attacked by side color
-    def attackUnion(self, side):
-        attackUnion = 0
-        attackMaps = self.getAttackMaps()
-        colorMaps = self.getBlackMaps() if side == black else self.getWhiteMaps()
-
-        for i, map in enumerate(colorMaps):
-            pieceIndices = bit.getBitIndices(map)
-            for index in pieceIndices:
-                if i == 0:
-                    attackUnion |= attackMaps[i][side][index]
-                else:
-                    attackUnion |= attackMaps[i][index]
-
-        return attackUnion
-
     def printMove(self, move):
         start, target, piece, promoted, capture, doublePush, enpassant, castling = move
         print(
@@ -472,37 +466,28 @@ class Board():
         if self.moveIndex == -1: return [], -1
         randIndex = random.randrange(0, self.moveIndex + 1)
         return self.moveList[randIndex], randIndex
-        
 
-    # def generateNonPawnMove(self, pieceMap, piece):
-    #     atkMapsIndex = -1
-    #     if piece == R or piece == r: atkMapsIndex = 1
-    #     elif piece == N or piece == n: atkMapsIndex = 2
-    #     elif piece == B or piece == b: atkMapsIndex = 3
-    #     elif piece == Q or piece == q: atkMapsIndex = 4
-    #     elif piece == K or piece == k: atkMapsIndex = 5 
-
-    #     while pieceMap:
-    #         start = bit.getLsbIndex(pieceMap);
+    def generateNonPawnMoves(self, pieceMap,  piece):
+        while pieceMap:
+            start = bit.getLsbIndex(pieceMap)
             
-    #         reverseSideBoardUnion = ~self.white_board_union if self.turn == white else ~self.black_board_union
-    #         pieceAttackMoves = self.attackMaps[atkMapsIndex][start] & reverseSideBoardUnion
+            reverseSideBoardUnion = ~self.white_board_union if self.turn == white else ~self.black_board_union
+            pieceAttackMoves = self.getPieceAttacks(piece)[start] & reverseSideBoardUnion
             
-    #         while pieceAttackMoves:
-    #             target = bit.getLsbIndex(pieceAttackMoves);    
+            while pieceAttackMoves:
+                target = bit.getLsbIndex(pieceAttackMoves)   
                 
-    #             sideBoardUnion = self.black_board_union if self.turn == white else self.white_board_union
-    #             noEnemy = not self.isFieldAttacked(sideBoardUnion, target)
-
-    #             if noEnemy:
-    #                 print("piece quiet move ", maps.FIELD_OBJ[start], maps.FIELD_OBJ[target])
-    #             else:
-    #                 print("piece capture ", maps.FIELD_OBJ[start], maps.FIELD_OBJ[target])
+                sideBoardUnion = self.black_board_union if self.turn == white else self.white_board_union
+                noEnemy = not bit.getBit(sideBoardUnion, target)
+                if noEnemy:
+                    self.addMoveToList(start, target, piece, 0, 0, 0, 0, 0)
                 
-    #             pieceAttackMoves = bit.popBit(pieceAttackMoves, target)
+                else:
+                    self.addMoveToList(start, target, piece, 0, 1, 0, 0, 0)
+                
+                pieceAttackMoves = bit.popBit(pieceAttackMoves, target)
             
-    #         pieceMap = bit.popBit(pieceMap, start);
-
+            pieceMap = bit.popBit(pieceMap, start)
 
     def generateMoves(self):
         cdef int start, target
@@ -678,124 +663,143 @@ class Board():
                             if rankLeftUnattacked:
                                 self.addMoveToList(e8, c8, piece, 0, 0, 0, 0, 1)
 
-            # generate knight moves
             isKnightPiece = piece == N if self.turn == white else piece == n
             if isKnightPiece:
-                while pieceMap:
-                    start = bit.getLsbIndex(pieceMap);
+                piecemap = self.generateNonPawnMoves(pieceMap, piece)
 
-                    reverseSideBoardUnion = ~self.white_board_union if self.turn == white else ~self.black_board_union
-                    knightAttackMoves = self.knightAttacks[start] & reverseSideBoardUnion
-                    
-                    while knightAttackMoves:
-                        target = bit.getLsbIndex(knightAttackMoves);    
-                        
-                        sideBoardUnion = self.black_board_union if self.turn == white else self.white_board_union
-                        noEnemy = not bit.getBit(sideBoardUnion, target)
-
-                        if noEnemy:
-                            self.addMoveToList(start, target, piece, 0, 0, 0, 0, 0)
-                        else:
-                            self.addMoveToList(start, target, piece, 0, 1, 0, 0, 0)
-                        
-                        knightAttackMoves = bit.popBit(knightAttackMoves, target)
-                    
-                    pieceMap = bit.popBit(pieceMap, start);
-            
             isBishopPiece = piece == B if self.turn == white else piece == b
             if isBishopPiece:
-                while pieceMap:
-                    start = bit.getLsbIndex(pieceMap)
-                    
-                    reverseSideBoardUnion = ~self.white_board_union if self.turn == white else ~self.black_board_union
-                    bishopAttackMoves = self.bishopAttacks[start] & reverseSideBoardUnion
-                    
-                    while bishopAttackMoves:
-                        target = bit.getLsbIndex(bishopAttackMoves)   
-                        
-                        sideBoardUnion = self.black_board_union if self.turn == white else self.white_board_union
-                        noEnemy = not bit.getBit(sideBoardUnion, target)
-                        if noEnemy:
-                            self.addMoveToList(start, target, piece, 0, 0, 0, 0, 0)
-                        
-                        else:
-                            self.addMoveToList(start, target, piece, 0, 1, 0, 0, 0)
-                        
-                        bishopAttackMoves = bit.popBit(bishopAttackMoves, target)
-                    
-                    pieceMap = bit.popBit(pieceMap, start)
-            
+                pieceMap = self.generateNonPawnMoves(pieceMap, piece)
+
             isRookPiece = piece == R if self.turn == white else piece == r
             if isRookPiece:
-                while pieceMap:
-                    start = bit.getLsbIndex(pieceMap)
-                    
-                    reverseSideBoardUnion = ~self.white_board_union if self.turn == white else ~self.black_board_union
-                    rookAttackMoves = self.rookAttacks[start] & reverseSideBoardUnion
+                pieceMap = self.generateNonPawnMoves(pieceMap, piece)
 
-                    while rookAttackMoves:
-                        target = bit.getLsbIndex(rookAttackMoves);    
-                        
-                        sideBoardUnion = self.black_board_union if self.turn == white else self.white_board_union
-                        noEnemy = not bit.getBit(sideBoardUnion, target)
-                        
-                        if noEnemy:
-                            self.addMoveToList(start, target, piece, 0, 0, 0, 0, 0)
-                        else:
-                            self.addMoveToList(start, target, piece, 0, 1, 0, 0, 0)
-                        
-                        rookAttackMoves = bit.popBit(rookAttackMoves, target)
-                    
-                    pieceMap = bit.popBit(pieceMap, start)
-            
             isQueenPiece = piece == Q if self.turn == white else piece == q
             if isQueenPiece:
-                while pieceMap:
-                    start = bit.getLsbIndex(pieceMap)
-                    
-                    reverseSideBoardUnion = ~self.white_board_union if self.turn == white else ~self.black_board_union
-                    queenAttackMoves = self.queenAttacks[start] & reverseSideBoardUnion
-
-                    while queenAttackMoves:
-                        target = bit.getLsbIndex(queenAttackMoves);    
-                        
-                        sideBoardUnion = self.black_board_union if self.turn == white else self.white_board_union
-                        noEnemy = not bit.getBit(sideBoardUnion, target)
-                        
-                        if noEnemy:
-                            self.addMoveToList(start, target, piece, 0, 0, 0, 0, 0)
-                        else:
-                            self.addMoveToList(start, target, piece, 0, 1, 0, 0, 0)
-                        
-                        queenAttackMoves = bit.popBit(queenAttackMoves, target)
-                    
-                    pieceMap = bit.popBit(pieceMap, start)
+                pieceMap = self.generateNonPawnMoves(pieceMap, piece)
 
             isKingPiece = piece == K if self.turn == white else piece == k
             if isKingPiece:
-                while pieceMap:
-                    start = bit.getLsbIndex(pieceMap)
-                    
-                    reverseSideBoardUnion = ~self.white_board_union if self.turn == white else ~self.black_board_union
-                    knightAttackMoves = self.kingAttacks[start] & reverseSideBoardUnion
+                pieceMap = self.generateNonPawnMoves(pieceMap, piece)
 
-                    while knightAttackMoves:
-                        target = bit.getLsbIndex(knightAttackMoves);    
-                        
-                        sideBoardUnion = self.black_board_union if self.turn == white else self.white_board_union
-                        noEnemy = not bit.getBit(sideBoardUnion, target)
-                        
-                        if noEnemy:
-                            self.addMoveToList(start, target, piece, 0, 0, 0, 0, 0)
-                        else:
-                            self.addMoveToList(start, target, piece, 0, 1, 0, 0, 0)
-                        
-                        knightAttackMoves = bit.popBit(knightAttackMoves, target)
+            # generate knight moves
+            # isKnightPiece = piece == N if self.turn == white else piece == n
+            # if isKnightPiece:
+            #     while pieceMap:
+            #         start = bit.getLsbIndex(pieceMap)
+
+            #         reverseSideBoardUnion = ~self.white_board_union if self.turn == white else ~self.black_board_union
+            #         knightAttackMoves = self.knightAttacks[start] & reverseSideBoardUnion
                     
-                    pieceMap = bit.popBit(pieceMap, start)
+            #         while knightAttackMoves:
+            #             target = bit.getLsbIndex(knightAttackMoves)    
+                        
+            #             sideBoardUnion = self.black_board_union if self.turn == white else self.white_board_union
+            #             noEnemy = not bit.getBit(sideBoardUnion, target)
+
+            #             if noEnemy:
+            #                 self.addMoveToList(start, target, piece, 0, 0, 0, 0, 0)
+            #             else:
+            #                 self.addMoveToList(start, target, piece, 0, 1, 0, 0, 0)
+                        
+            #             knightAttackMoves = bit.popBit(knightAttackMoves, target)
+                    
+            #         pieceMap = bit.popBit(pieceMap, start)
+            
+            # isBishopPiece = piece == B if self.turn == white else piece == b
+            # if isBishopPiece:
+            #     while pieceMap:
+            #         start = bit.getLsbIndex(pieceMap)
+                    
+            #         reverseSideBoardUnion = ~self.white_board_union if self.turn == white else ~self.black_board_union
+            #         bishopAttackMoves = self.bishopAttacks[start] & reverseSideBoardUnion
+                    
+            #         while bishopAttackMoves:
+            #             target = bit.getLsbIndex(bishopAttackMoves)   
+                        
+            #             sideBoardUnion = self.black_board_union if self.turn == white else self.white_board_union
+            #             noEnemy = not bit.getBit(sideBoardUnion, target)
+            #             if noEnemy:
+            #                 self.addMoveToList(start, target, piece, 0, 0, 0, 0, 0)
+                        
+            #             else:
+            #                 self.addMoveToList(start, target, piece, 0, 1, 0, 0, 0)
+                        
+            #             bishopAttackMoves = bit.popBit(bishopAttackMoves, target)
+                    
+            #         pieceMap = bit.popBit(pieceMap, start)
+            
+            # isRookPiece = piece == R if self.turn == white else piece == r
+            # if isRookPiece:
+            #     while pieceMap:
+            #         start = bit.getLsbIndex(pieceMap)
+                    
+            #         reverseSideBoardUnion = ~self.white_board_union if self.turn == white else ~self.black_board_union
+            #         rookAttackMoves = self.rookAttacks[start] & reverseSideBoardUnion
+
+            #         while rookAttackMoves:
+            #             target = bit.getLsbIndex(rookAttackMoves)    
+                        
+            #             sideBoardUnion = self.black_board_union if self.turn == white else self.white_board_union
+            #             noEnemy = not bit.getBit(sideBoardUnion, target)
+                        
+            #             if noEnemy:
+            #                 self.addMoveToList(start, target, piece, 0, 0, 0, 0, 0)
+            #             else:
+            #                 self.addMoveToList(start, target, piece, 0, 1, 0, 0, 0)
+                        
+            #             rookAttackMoves = bit.popBit(rookAttackMoves, target)
+                    
+            #         pieceMap = bit.popBit(pieceMap, start)
+            
+            # isQueenPiece = piece == Q if self.turn == white else piece == q
+            # if isQueenPiece:
+            #     while pieceMap:
+            #         start = bit.getLsbIndex(pieceMap)
+                    
+            #         reverseSideBoardUnion = ~self.white_board_union if self.turn == white else ~self.black_board_union
+            #         queenAttackMoves = self.queenAttacks[start] & reverseSideBoardUnion
+
+            #         while queenAttackMoves:
+            #             target = bit.getLsbIndex(queenAttackMoves)    
+                        
+            #             sideBoardUnion = self.black_board_union if self.turn == white else self.white_board_union
+            #             noEnemy = not bit.getBit(sideBoardUnion, target)
+                        
+            #             if noEnemy:
+            #                 self.addMoveToList(start, target, piece, 0, 0, 0, 0, 0)
+            #             else:
+            #                 self.addMoveToList(start, target, piece, 0, 1, 0, 0, 0)
+                        
+            #             queenAttackMoves = bit.popBit(queenAttackMoves, target)
+                    
+            #         pieceMap = bit.popBit(pieceMap, start)
+
+            # isKingPiece = piece == K if self.turn == white else piece == k
+            # if isKingPiece:
+            #     while pieceMap:
+            #         start = bit.getLsbIndex(pieceMap)
+                    
+            #         reverseSideBoardUnion = ~self.white_board_union if self.turn == white else ~self.black_board_union
+            #         knightAttackMoves = self.kingAttacks[start] & reverseSideBoardUnion
+
+            #         while knightAttackMoves:
+            #             target = bit.getLsbIndex(knightAttackMoves)    
+                        
+            #             sideBoardUnion = self.black_board_union if self.turn == white else self.white_board_union
+            #             noEnemy = not bit.getBit(sideBoardUnion, target)
+                        
+            #             if noEnemy:
+            #                 self.addMoveToList(start, target, piece, 0, 0, 0, 0, 0)
+            #             else:
+            #                 self.addMoveToList(start, target, piece, 0, 1, 0, 0, 0)
+                        
+            #             knightAttackMoves = bit.popBit(knightAttackMoves, target)
+                    
+            #         pieceMap = bit.popBit(pieceMap, start)
 
     def isCheck(self, kingIndex):
-        
         return self.isFieldAttacked(kingIndex, self.turn)
 
     def isKOTH(self, kingIndex):
