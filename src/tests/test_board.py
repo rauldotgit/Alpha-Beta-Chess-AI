@@ -113,9 +113,9 @@ def test_fen_to_board_info():
 # def test_generate_moves():
 #     pass
 
-# def test_uci_loop():
-#     newBoard = board.Board()
-#     newBoard.uciLoop()
+def test_uci_loop():
+    newBoard = board.Board()
+    newBoard.uciLoop()
 
 def test_evaluate_score():
     newBoard = board.Board()
@@ -132,7 +132,7 @@ def test_evaluate_score():
     newBoard.fenGameSetup(fenString)
 
     score = newBoard.evaluateScore()
-    assumed_score = -800
+    assumed_score = -810
     assert score == assumed_score
 
 

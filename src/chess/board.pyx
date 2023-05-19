@@ -8,10 +8,6 @@ import random
 import time 
 
 ###########################################################
-# TODO: Fix all variable names to follow a standard
-# TODO: Clean up move function
-# TODO: Initialize and check for enpassant
-# TODO: change all references of allmaps or piecemaps
 
 cdef int noSquare = 64
 
@@ -38,15 +34,26 @@ cdef enum castle_int:
     bq = 8
 
 FIELD_ARRAY = [
-		'a8', 'b8', 'c8', 'd8', 'e8', 'f8', 'g8', 'h8',
-		'a7', 'b7', 'c7', 'd7', 'e7', 'f7', 'g7', 'h7',
-		'a6', 'b6', 'c6', 'd6', 'e6', 'f6', 'g6', 'h6',
-		'a5', 'b5', 'c5', 'd5', 'e5', 'f5', 'g5', 'h5',
-		'a4', 'b4', 'c4', 'd4', 'e4', 'f4', 'g4', 'h4',
-		'a3', 'b3', 'c3', 'd3', 'e3', 'f3', 'g3', 'h3',
-		'a2', 'b2', 'c2', 'd2', 'e2', 'f2', 'g2', 'h2',
-		'a1', 'b1', 'c1', 'd1', 'e1', 'f1', 'g1', 'h1',
-		]
+    'a8', 'b8', 'c8', 'd8', 'e8', 'f8', 'g8', 'h8',
+    'a7', 'b7', 'c7', 'd7', 'e7', 'f7', 'g7', 'h7',
+    'a6', 'b6', 'c6', 'd6', 'e6', 'f6', 'g6', 'h6',
+    'a5', 'b5', 'c5', 'd5', 'e5', 'f5', 'g5', 'h5',
+    'a4', 'b4', 'c4', 'd4', 'e4', 'f4', 'g4', 'h4',
+    'a3', 'b3', 'c3', 'd3', 'e3', 'f3', 'g3', 'h3',
+    'a2', 'b2', 'c2', 'd2', 'e2', 'f2', 'g2', 'h2',
+    'a1', 'b1', 'c1', 'd1', 'e1', 'f1', 'g1', 'h1',
+    ]
+
+MIRROR_FIELD_ARRAY = [
+	a1, b1, c1, d1, e1, f1, g1, h1,
+	a2, b2, c2, d2, e2, f2, g2, h2,
+	a3, b3, c3, d3, e3, f3, g3, h3,
+	a4, b4, c4, d4, e4, f4, g4, h4,
+	a5, b5, c5, d5, e5, f5, g5, h5,
+	a6, b6, c6, d6, e6, f6, g6, h6,
+	a7, b7, c7, d7, e7, f7, g7, h7,
+	a8, b8, c8, d8, e8, f8, g8, h8
+]
 
 CASTLING_ARRAY = [
 	 7, 15, 15, 15,  3, 15, 15, 11,
@@ -75,6 +82,75 @@ SCORE_ARRAY = [
 	-1000,
 	-10000,
 ]
+
+# evaluation scores
+cdef int[64] pawnScores =  [
+    0,  0,  0,  0,  0,  0,  0,  0,
+    50, 50, 50, 50, 50, 50, 50, 50,
+    10, 10, 20, 30, 30, 20, 10, 10,
+    5,  5, 10, 25, 25, 10,  5,  5,
+    0,  0,  0, 20, 20,  0,  0,  0,
+    5, -5,-10,  0,  0,-10, -5,  5,
+    5, 10, 10,-20,-20, 10, 10,  5,
+    0,  0,  0,  0,  0,  0,  0,  0
+]
+cdef int[64] rookScores = [
+     0,  0,  0,  0,  0,  0,  0,  0,
+     5, 10, 10, 10, 10, 10, 10,  5,
+    -5,  0,  0,  0,  0,  0,  0, -5,
+    -5,  0,  0,  0,  0,  0,  0, -5,
+    -5,  0,  0,  0,  0,  0,  0, -5,
+    -5,  0,  0,  0,  0,  0,  0, -5,
+    -5,  0,  0,  0,  0,  0,  0, -5,
+     0,  0,  0,  5,  5,  0,  0,  0
+]
+
+cdef int[64] knightScores =  [
+    -50,-40,-30,-30,-30,-30,-40,-50,
+    -40,-20,  0,  0,  0,  0,-20,-40,
+    -30,  0, 10, 15, 15, 10,  0,-30,
+    -30,  5, 15, 20, 20, 15,  5,-30,
+    -30,  0, 15, 20, 20, 15,  0,-30,
+    -30,  5, 10, 15, 15, 10,  5,-30,
+    -40,-20,  0,  5,  5,  0,-20,-40,
+    -50,-40,-30,-30,-30,-30,-40,-50,
+]
+
+cdef int[64] bishopScores =  [
+    -20,-10,-10,-10,-10,-10,-10,-20,
+    -10,  0,  0,  0,  0,  0,  0,-10,
+    -10,  0,  5, 10, 10,  5,  0,-10,
+    -10,  5,  5, 10, 10,  5,  5,-10,
+    -10,  0, 10, 10, 10, 10,  0,-10,
+    -10, 10, 10, 10, 10, 10, 10,-10,
+    -10,  5,  0,  0,  0,  0,  5,-10,
+    -20,-10,-10,-10,-10,-10,-10,-20,
+]
+
+
+cdef int[64] queenScores =  [
+    -20,-10,-10, -5, -5,-10,-10,-20,
+    -10,  0,  0,  0,  0,  0,  0,-10,
+    -10,  0,  5,  5,  5,  5,  0,-10,
+     -5,  0,  5,  5,  5,  5,  0, -5,
+      0,  0,  5,  5,  5,  5,  0, -5,
+    -10,  5,  5,  5,  5,  5,  0,-10,
+    -10,  0,  5,  0,  0,  0,  0,-10,
+    -20,-10,-10, -5, -5,-10,-10,-20
+]
+
+# TODO: Play around with theses, maybe with an optimization function
+cdef int[64] kingScores =  [
+    -50,-40,-30,-20,-20,-30,-40,-50,
+    -30,-20,-10,  0,  0,-10,-20,-30,
+    -30,-10, 20, 30, 30, 20,-10,-30,
+    -30,-10, 30, 1001, 1001, 30,-10,-30,
+    -30,-10, 30, 1001, 1001, 30,-10,-30,
+    -30,-10, 20, 30, 30, 20,-10,-30,
+    -30,-30,  0,  0,  0,  0,-30,-30,
+    -50,-30,-30,-30,-30,-30,-30,-50
+]
+
 
 FIELD_OBJ = {
 		'a8':  0, 'b8':  1, 'c8':  2, 'd8':  3, 'e8':  4, 'f8':  5, 'g8':  6, 'h8':  7,
@@ -303,7 +379,7 @@ class Board():
             self.time
         ]
 
-    def getStateCopy(self):
+    def getSaveState(self):
         return [
             self.turn,
             self.enpassant,
@@ -489,7 +565,7 @@ class Board():
         self.moveIndex -= 1
 
         # returns moveArray and index
-    def getMoveRandom(self):
+    def getRandomMove(self):
         if self.moveIndex == -1: return [], -1
         randIndex = random.randrange(0, self.moveIndex + 1)
         return self.moveList[randIndex], randIndex
@@ -586,7 +662,7 @@ class Board():
 
 
                 ###################################  CASTLE ###################################
-                #TODO: Simplify conditional cascading
+
                 if isWhiteKing:
                     # king side castling 
                     if self.castling & wk:
@@ -668,7 +744,6 @@ class Board():
                         pieceMap = bit.popBit(pieceMap, start)
 
                 ###################################  CASTLE ###################################
-                #TODO: Simplify conditional cascading
                 if isBlackKing:
                     # king side castling 
                     if self.castling & bk:
@@ -710,122 +785,6 @@ class Board():
             if isKingPiece:
                 pieceMap = self.generateNonPawnMoves(pieceMap, piece)
 
-            # generate knight moves
-            # isKnightPiece = piece == N if self.turn == white else piece == n
-            # if isKnightPiece:
-            #     while pieceMap:
-            #         start = bit.getLsbIndex(pieceMap)
-
-            #         reverseSideBoardUnion = ~self.white_board_union if self.turn == white else ~self.black_board_union
-            #         knightAttackMoves = atk.knightAttacks[start] & reverseSideBoardUnion
-                    
-            #         while knightAttackMoves:
-            #             target = bit.getLsbIndex(knightAttackMoves)    
-                        
-            #             sideBoardUnion = self.black_board_union if self.turn == white else self.white_board_union
-            #             noEnemy = not bit.getBit(sideBoardUnion, target)
-
-            #             if noEnemy:
-            #                 self.addMoveToList(start, target, piece, 0, 0, 0, 0, 0)
-            #             else:
-            #                 self.addMoveToList(start, target, piece, 0, 1, 0, 0, 0)
-                        
-            #             knightAttackMoves = bit.popBit(knightAttackMoves, target)
-                    
-            #         pieceMap = bit.popBit(pieceMap, start)
-            
-            # isBishopPiece = piece == B if self.turn == white else piece == b
-            # if isBishopPiece:
-            #     while pieceMap:
-            #         start = bit.getLsbIndex(pieceMap)
-                    
-            #         reverseSideBoardUnion = ~self.white_board_union if self.turn == white else ~self.black_board_union
-            #         bishopAttackMoves = atk.bishopAttacks_otf[start] & reverseSideBoardUnion
-                    
-            #         while bishopAttackMoves:
-            #             target = bit.getLsbIndex(bishopAttackMoves)   
-                        
-            #             sideBoardUnion = self.black_board_union if self.turn == white else self.white_board_union
-            #             noEnemy = not bit.getBit(sideBoardUnion, target)
-            #             if noEnemy:
-            #                 self.addMoveToList(start, target, piece, 0, 0, 0, 0, 0)
-                        
-            #             else:
-            #                 self.addMoveToList(start, target, piece, 0, 1, 0, 0, 0)
-                        
-            #             bishopAttackMoves = bit.popBit(bishopAttackMoves, target)
-                    
-            #         pieceMap = bit.popBit(pieceMap, start)
-            
-            # isRookPiece = piece == R if self.turn == white else piece == r
-            # if isRookPiece:
-            #     while pieceMap:
-            #         start = bit.getLsbIndex(pieceMap)
-                    
-            #         reverseSideBoardUnion = ~self.white_board_union if self.turn == white else ~self.black_board_union
-            #         rookAttackMoves = atk.rookAttacks_otf[start] & reverseSideBoardUnion
-
-            #         while rookAttackMoves:
-            #             target = bit.getLsbIndex(rookAttackMoves)    
-                        
-            #             sideBoardUnion = self.black_board_union if self.turn == white else self.white_board_union
-            #             noEnemy = not bit.getBit(sideBoardUnion, target)
-                        
-            #             if noEnemy:
-            #                 self.addMoveToList(start, target, piece, 0, 0, 0, 0, 0)
-            #             else:
-            #                 self.addMoveToList(start, target, piece, 0, 1, 0, 0, 0)
-                        
-            #             rookAttackMoves = bit.popBit(rookAttackMoves, target)
-                    
-            #         pieceMap = bit.popBit(pieceMap, start)
-            
-            # isQueenPiece = piece == Q if self.turn == white else piece == q
-            # if isQueenPiece:
-            #     while pieceMap:
-            #         start = bit.getLsbIndex(pieceMap)
-                    
-            #         reverseSideBoardUnion = ~self.white_board_union if self.turn == white else ~self.black_board_union
-            #         queenAttackMoves = atk.queenAttacks_otf[start] & reverseSideBoardUnion
-
-            #         while queenAttackMoves:
-            #             target = bit.getLsbIndex(queenAttackMoves)    
-                        
-            #             sideBoardUnion = self.black_board_union if self.turn == white else self.white_board_union
-            #             noEnemy = not bit.getBit(sideBoardUnion, target)
-                        
-            #             if noEnemy:
-            #                 self.addMoveToList(start, target, piece, 0, 0, 0, 0, 0)
-            #             else:
-            #                 self.addMoveToList(start, target, piece, 0, 1, 0, 0, 0)
-                        
-            #             queenAttackMoves = bit.popBit(queenAttackMoves, target)
-                    
-            #         pieceMap = bit.popBit(pieceMap, start)
-
-            # isKingPiece = piece == K if self.turn == white else piece == k
-            # if isKingPiece:
-            #     while pieceMap:
-            #         start = bit.getLsbIndex(pieceMap)
-                    
-            #         reverseSideBoardUnion = ~self.white_board_union if self.turn == white else ~self.black_board_union
-            #         knightAttackMoves = atk.kingAttacks[start] & reverseSideBoardUnion
-
-            #         while knightAttackMoves:
-            #             target = bit.getLsbIndex(knightAttackMoves)    
-                        
-            #             sideBoardUnion = self.black_board_union if self.turn == white else self.white_board_union
-            #             noEnemy = not bit.getBit(sideBoardUnion, target)
-                        
-            #             if noEnemy:
-            #                 self.addMoveToList(start, target, piece, 0, 0, 0, 0, 0)
-            #             else:
-            #                 self.addMoveToList(start, target, piece, 0, 1, 0, 0, 0)
-                        
-            #             knightAttackMoves = bit.popBit(knightAttackMoves, target)
-                    
-            #         pieceMap = bit.popBit(pieceMap, start)
-
     def isCheck(self, kingIndex):
         return self.isFieldAttacked(kingIndex, self.turn)
 
@@ -840,8 +799,8 @@ class Board():
             
             # make sure this does what it should
             start, target, piece, promoted, capture, double, enpassant, castle = move
-            self.saveCurrentState()
-
+            # self.saveCurrentState()
+            saveState = self.getSaveState()
             # print(self.pieceMaps[piece])
             # return
 
@@ -918,8 +877,7 @@ class Board():
             kingIndex = bit.getLsbIndex(self.pieceMaps[k]) if self.turn == white else bit.getLsbIndex(self.pieceMaps[K])
             if self.isCheck(kingIndex):
                 # illegal
-                # print('move is in check - revert')
-                self.loadPrevState()
+                self.loadSaveState(saveState)
                 return 0
             else:
                 if self.isKOTH(kingIndex):
@@ -1002,11 +960,10 @@ class Board():
     # init position from fen string and make moves on chess board
     # position fen r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1 moves e2a6 e8g8
 
-    def returnLegalMoves(self):
-        # TODO: Assumes moves are generates
+    def getLegalMoves(self):
         legal = []
 
-        saveState = self.getStateCopy()
+        saveState = self.getSaveState()
 
         for move in self.moveList:
             if not self.makeMove(move, 0):
@@ -1017,20 +974,43 @@ class Board():
 
         return legal
 
+    # based on legal
+    def filterMoves(self):
+        pass
+
+    def getPieceScore(self, piece, fieldIndex):
+        pieceScore = 0
+        mirrorFieldIndex = MIRROR_FIELD_ARRAY[fieldIndex]
+
+        if   piece == P: pieceScore = pawnScores[fieldIndex] 
+        elif piece == R: pieceScore = rookScores[fieldIndex] 
+        elif piece == N: pieceScore = knightScores[fieldIndex] 
+        elif piece == B: pieceScore = bishopScores[fieldIndex] 
+        elif piece == Q: pieceScore = queenScores[fieldIndex] 
+        elif piece == K: pieceScore = kingScores[fieldIndex] 
+
+        elif piece == p: pieceScore = -pawnScores[mirrorFieldIndex] 
+        elif piece == r: pieceScore = -rookScores[mirrorFieldIndex] 
+        elif piece == n: pieceScore = -knightScores[mirrorFieldIndex] 
+        elif piece == b: pieceScore = -bishopScores[mirrorFieldIndex] 
+        elif piece == q: pieceScore = -queenScores[mirrorFieldIndex] 
+        elif piece == k: pieceScore = -kingScores[mirrorFieldIndex] 
+
+        return pieceScore
+
     def evaluateScore(self):
         score = 0
 
-        for i, piece in enumerate(self.pieceMaps):
-            pieceMap = piece
-            pieceIndex = i
+        for piece, pieceMap in enumerate(self.pieceMaps):
             while pieceMap:
                 fieldIndex = bit.getLsbIndex(pieceMap)
-                score += SCORE_ARRAY[pieceIndex]
+
+                score += SCORE_ARRAY[piece]
+                score += self.getPieceScore(piece, fieldIndex)
+
                 pieceMap = bit.popBit(pieceMap, fieldIndex)
 
-        # TODO: Revert to this for negamax
-        # return score if self.turn == white else -score
-        return score
+        return score if self.turn == white else -score
 
     def parsePosition(self, commandString):
         commandList = commandString.split()
@@ -1072,14 +1052,13 @@ class Board():
                 self.fenGameSetup(maps.FEN_START)
         else:
             print('unknown command')
-        #change this if needed TODO\
 
     # try picking random moves until one works
     def makeRandomMove(self):
         success = 0
         startTime = time.time()
         while not success:
-            move, index = self.getMoveRandom()
+            move, index = self.getRandomMove()
             if move == []:
                 return 0
                 
@@ -1094,7 +1073,7 @@ class Board():
 
             if result == 1:
                 self.printBoard()
-                print(f'Score: {self.evaluateScore()}')
+                print(f'Score: {-self.evaluateScore()}')
                 print(f'Time left: {round(self.time[not self.turn], 3)}s\n')
                 return 1
             if result == 2:
@@ -1102,9 +1081,12 @@ class Board():
                 return 2
             else:
                 self.deleteMove(index)
-            
-    def parseBot(self):
+
+    def parseBot(self, sleepTime):
         print('botgame')
+
+        self.printBoard()
+        print(f'Score: {-self.evaluateScore()}')
 
         if self.pieceMaps == [0,0,0,0,0,0,0,0,0,0,0,0]:
             self.parsePosition('position startpos')
@@ -1112,7 +1094,7 @@ class Board():
         while(True):
             print(f'{"white" if self.turn == white else "black"}s turn.')
             self.generateMoves()
-            # time.sleep(1)
+            time.sleep(sleepTime)
 
             # check for opposite side king hill win
             #  if kingOfHill(opponent):
@@ -1157,7 +1139,6 @@ class Board():
     def uciLoop(self):
         print('\n')
         print('id name TUCM')
-        # TODO: add name of contributors 
         print('id name Konstantin Hasler, Cedric Braun, Raul Nikolaus')
 
         while(True):
@@ -1188,11 +1169,16 @@ class Board():
 
                 elif cmd0 == 'bot':
                     cmd1 = forceGet(cmdList, 1)
+                    cmd2 = forceGet(cmdList, 2)
+                    sleepTime = 0
 
                     if cmd1 and cmd1 == 'newgame':
                         self.parsePosition('position startpos')
+
+                    if cmd2 and cmd2.isnumeric():
+                        sleepTime = int(cmd2)
                         
-                    self.parseBot()
+                    self.parseBot(sleepTime)
 
                 elif cmd0 == 'time':
                     cmd1 = forceGet(cmdList, 1)
