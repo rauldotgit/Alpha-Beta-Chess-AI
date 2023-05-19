@@ -23,7 +23,7 @@ FEN_LATE = '1R6/3R4/P2Pk3/4P3/4KP2/8/8/8 b - - 0 0'
 #     startTime = time.time()
 #     for i in range(runs + 1):
 #         newBoard.generateMoves()
-#         legalMoves = newBoard.returnLegalMoves()
+#         legalMoves = newBoard.getLegalMoves()
 
 #     duration = time.time() - startTime
 
@@ -44,7 +44,7 @@ FEN_LATE = '1R6/3R4/P2Pk3/4P3/4KP2/8/8/8 b - - 0 0'
 #     startTime = time.time()
 #     for i in range(runs + 1):
 #         newBoard.generateMoves()
-#         legalMoves = newBoard.returnLegalMoves()
+#         legalMoves = newBoard.getLegalMoves()
 
 #     duration = time.time() - startTime
 
@@ -64,7 +64,7 @@ FEN_LATE = '1R6/3R4/P2Pk3/4P3/4KP2/8/8/8 b - - 0 0'
 #     startTime = time.time()
 #     for i in range(runs + 1):
 #         newBoard.generateMoves()
-#         legalMoves = newBoard.returnLegalMoves()
+#         legalMoves = newBoard.getLegalMoves()
 
 #     duration = time.time() - startTime
 

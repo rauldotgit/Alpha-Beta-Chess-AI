@@ -1,11 +1,13 @@
+from operator import itemgetter
 import numpy as np
 import cython
+import random
+import time 
+
 import src.chess.maps as maps
 import src.chess.bitmethods as bit
 import src.chess.attacks as atk
 import src.chess.move_encoding as menc
-import random
-import time 
 
 ###########################################################
 
@@ -149,6 +151,15 @@ cdef int[64] kingScores =  [
     -30,-10, 20, 30, 30, 20,-10,-30,
     -30,-30,  0,  0,  0,  0,-30,-30,
     -50,-30,-30,-30,-30,-30,-30,-50
+]
+
+cdef int[6][6] MVV_LVA_ARRAY = [
+    [105, 205, 305, 405, 505, 605],
+    [104, 204, 304, 404, 504, 604],
+    [103, 203, 303, 403, 503, 603],
+    [102, 202, 302, 402, 502, 602],
+    [101, 201, 301, 401, 501, 601],
+    [100, 200, 300, 400, 500, 600]
 ]
 
 
@@ -960,25 +971,24 @@ class Board():
     # init position from fen string and make moves on chess board
     # position fen r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1 moves e2a6 e8g8
 
-    def getLegalMoves(self):
-        legal = []
+    # gets a potential capture move from the movelist and returns piece index (P,p .. K,k) of captured piece
+    def getCapturedPiece(self, captureField):
+        cdef unsigned long long attackBit = 1 << captureField
 
-        saveState = self.getSaveState()
+        # TODO: could be improved by just checking one side 
+        for index, pieceMap in enumerate(self.pieceMaps):
+            if pieceMap & attackBit:
+                return index 
 
-        for move in self.moveList:
-            if not self.makeMove(move, 0):
-                continue
-            else:
-                legal.append(move)
-                self.loadSaveState(saveState)
+        print('getCapturedPiece: Not found')
 
-        return legal
+    def getCaptureValue(self, move):
+        captureField = move[1]
+        attackPiece = move[2]
+        capturedPiece = self.getCapturedPiece(captureField)
+        return MVV_LVA_ARRAY[attackPiece % 6][capturedPiece % 6]
 
-    # based on legal
-    def filterMoves(self):
-        pass
-
-    def getPieceScore(self, piece, fieldIndex):
+    def getFieldValue(self, piece, fieldIndex):
         pieceScore = 0
         mirrorFieldIndex = MIRROR_FIELD_ARRAY[fieldIndex]
 
@@ -1006,11 +1016,52 @@ class Board():
                 fieldIndex = bit.getLsbIndex(pieceMap)
 
                 score += SCORE_ARRAY[piece]
-                score += self.getPieceScore(piece, fieldIndex)
+                score += self.getFieldValue(piece, fieldIndex)
 
                 pieceMap = bit.popBit(pieceMap, fieldIndex)
 
         return score if self.turn == white else -score
+
+    def getLegalMoves(self):
+        legal = []
+
+        saveState = self.getSaveState()
+
+        for move in self.moveList:
+            if not self.makeMove(move, 0):
+                continue
+            else:
+                legal.append(move)
+                self.loadSaveState(saveState)
+
+        return legal
+
+    def getLegalMoves_withValues(self):
+        legal = []
+
+        saveState = self.getSaveState()
+
+        for move in self.moveList:
+            if not self.makeMove(move, 0):
+                continue
+            else:
+                score = self.evaluateScore()
+                captureValue = 0
+                isCapture = move[4]
+
+                if isCapture:
+                    captureValue = self.getCaptureValue(move)    
+
+                legal.append((move, score, captureValue))
+                self.loadSaveState(saveState)
+
+        return legal
+
+    # return legal moves, sorted based on score first and capture value second
+    def getSortedMoves(self):
+        moveList = self.getLegalMoves_withValues()
+        return sorted(moveList, key=itemgetter(1,2))
+
 
     def parsePosition(self, commandString):
         commandList = commandString.split()
@@ -1076,11 +1127,37 @@ class Board():
                 print(f'Score: {-self.evaluateScore()}')
                 print(f'Time left: {round(self.time[not self.turn], 3)}s\n')
                 return 1
-            if result == 2:
+            elif result == 2:
                 self.printBoard()
                 return 2
             else:
                 self.deleteMove(index)
+
+    def makeBetterMove(self):
+        startTime = time.time()
+        sortedMoves = self.getSortedMoves()
+        
+        if sortedMoves == []:
+            return 0
+
+        move = sortedMoves[0][0]
+        self.printMove(move)
+
+        result = self.makeMove(move, 0)
+        timeLeft = self.reduceTime(startTime)
+
+        if timeLeft <= 0:
+            self.printBoard()
+            return -1
+        
+        if result == 1:
+            self.printBoard()
+            print(f'Score: {-self.evaluateScore()}')
+            print(f'Time left: {round(self.time[not self.turn], 3)}s\n')
+        elif result == 2:
+            self.printBoard()
+            return 2
+
 
     def parseBot(self, sleepTime):
         print('botgame')
@@ -1099,7 +1176,8 @@ class Board():
             # check for opposite side king hill win
             #  if kingOfHill(opponent):
 
-            result = self.makeRandomMove()
+            # result = self.makeRandomMove()
+            result = self.makeBetterMove()
 
             if result == -1:
                 winner = 'white' if self.turn == black else 'black'

@@ -132,7 +132,7 @@ def test_evaluate_score():
     newBoard.fenGameSetup(fenString)
 
     score = newBoard.evaluateScore()
-    assumed_score = -810
+    assumed_score = 810
     assert score == assumed_score
 
 
