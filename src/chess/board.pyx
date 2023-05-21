@@ -1285,6 +1285,128 @@ class Board():
                     print('id name somebody')
                     print('uciok')
     
+    # variables for time control #
+
+    # exit from engine flag
+    quit = 0;
+
+    # UCI movestogo command moves counter
+    movestogo = 30;
+
+    # UCI movetime command time counter
+    movetime = -1;
+
+    # UCI time command holder (ms)
+    time = -1;
+
+    # UCI inc command's time increment holder
+    inc = 0;
+
+    # UCI starttime command time holder
+    starttime = 0;
+
+    # UCI stoptime command time holder
+    stoptime = 0;
+
+    # variable to flag time control availability
+    timeset = 0;
+
+    # variable to flag when the time is up
+    stopped = 0;
+
+    # obtain time in ms
+    import time
+
+    def get_time_ms():
+        if sys.platform == 'win32':
+            return int(time.perf_counter() * 1000)
+        else:
+        return int(time.time() * 1000)
+
+    # communication function for GUI's input during search
+    import sys
+    import select
+
+    def input_waiting():
+        if sys.platform != 'win32':
+            readfds = select.select([sys.stdin], [], [], 0)
+            return bool(readfds[0])
+        else:
+            global init, pipe, inh
+            if not init:
+                init = 1
+                inh = ctypes.windll.kernel32.GetStdHandle(-10)
+                dw = ctypes.c_uint32()
+                pipe = not ctypes.windll.kernel32.GetConsoleMode(inh, ctypes.byref(dw))
+                if not pipe:
+                    ctypes.windll.kernel32.SetConsoleMode(inh, dw.value & ~(0x0010 | 0x0008))
+                    ctypes.windll.kernel32.FlushConsoleInputBuffer(inh)
+            
+            if pipe:
+                dw = ctypes.c_uint32()
+                if not ctypes.windll.kernel32.PeekNamedPipe(inh, None, 0, None, ctypes.byref(dw), None):
+                    return 1
+                return dw.value
+            
+            else:
+                dw = ctypes.c_uint32()
+                ctypes.windll.kernel32.GetNumberOfConsoleInputEvents(inh, ctypes.byref(dw))
+                return 0 if dw.value <= 1 else dw.value
+
+    # read GUI/user input
+    import sys
+    import ctypes
+
+    def read_input():
+        # bytes to read holder
+        bytes_read = 0
+
+        # GUI/user input
+        input_data = ctypes.create_string_buffer(256)
+
+        # "listen" to STDIN
+        if input_waiting():
+            # tell engine to stop calculating
+            global stopped
+            stopped = 1
+
+            # loop to read bytes from STDIN
+            while bytes_read < 0:
+                # read bytes from STDIN
+                bytes_read = sys.stdin.readinto(input_data)
+
+            # searches for the first occurrence of '\n'
+            endc = input_data.find(b'\n')
+
+            # if found new line set value at pointer to 0
+            if endc >= 0:
+                input_data[endc] = 0
+
+            # if input is available
+            if len(input_data.value) > 0:
+                # match UCI "quit" command
+                if input_data.value.startswith(b"quit"):
+                    # tell engine to terminate execution
+                    global quit
+                    quit = 1
+
+                # match UCI "stop" command
+                elif input_data.value.startswith(b"stop"):
+                    # tell engine to terminate execution
+                    quit = 1
+
+    def communicate():
+        # if time is up, break here
+        if timeset == 1 and get_time_ms() > stoptime:
+            # tell engine to stop calculating
+            global stopped
+            stopped = 1
+
+        # read GUI input
+        read_input()
+
+
+
 
 
 
