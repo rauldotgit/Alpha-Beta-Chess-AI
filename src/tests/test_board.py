@@ -113,9 +113,9 @@ def test_fen_to_board_info():
 # def test_generate_moves():
 #     pass
 
-def test_uci_loop():
-    newBoard = board.Board()
-    newBoard.uciLoop()
+# def test_uci_loop():
+#     newBoard = board.Board()
+#     newBoard.uciLoop()
 
 def test_evaluate_score():
     newBoard = board.Board()
@@ -136,5 +136,13 @@ def test_evaluate_score():
     assert score == assumed_score
 
 
+def test_negamax():
+    print("Testing negamax: \n")
+    newBoard = board.Board()
+    newBoard.fenGameSetup(maps.FEN_START)
 
+    newBoard.searchPosition(8)
+    # best = newBoard.best_move
+    # assumed_best = best 
+    # assert best == assumed_best
     

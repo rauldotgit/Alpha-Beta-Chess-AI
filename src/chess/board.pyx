@@ -1159,6 +1159,370 @@ class Board():
             return 2
 
 
+    ################### ALPHA BETA ###################
+
+    # MVV LVA [attacker][victim]
+    mvv_lva = [
+        105, 205, 305, 405, 505, 605,  105, 205, 305, 405, 505, 605,
+        104, 204, 304, 404, 504, 604,  104, 204, 304, 404, 504, 604,
+        103, 203, 303, 403, 503, 603,  103, 203, 303, 403, 503, 603,
+        102, 202, 302, 402, 502, 602,  102, 202, 302, 402, 502, 602,
+        101, 201, 301, 401, 501, 601,  101, 201, 301, 401, 501, 601,
+        100, 200, 300, 400, 500, 600,  100, 200, 300, 400, 500, 600,
+
+        105, 205, 305, 405, 505, 605,  105, 205, 305, 405, 505, 605,
+        104, 204, 304, 404, 504, 604,  104, 204, 304, 404, 504, 604,
+        103, 203, 303, 403, 503, 603,  103, 203, 303, 403, 503, 603,
+        102, 202, 302, 402, 502, 602,  102, 202, 302, 402, 502, 602,
+        101, 201, 301, 401, 501, 601,  101, 201, 301, 401, 501, 601,
+        100, 200, 300, 400, 500, 600,  100, 200, 300, 400, 500, 600
+    ]
+
+    # max ply that we can reach within a search
+    max_ply = 64
+
+    # killer moves [id][ply]
+    killer_moves = np.zeros(2, max_ply)
+
+    # history moves [piece][square]
+    history_moves = np.zeros(12, 64)
+
+    # PV length [ply]
+    pv_length = np.zeros(max_ply)
+
+    # PV table [ply][ply]
+    pv_table = np.zeros(max_ply, max_ply)
+
+    # half move counter
+    ply = 0
+
+    # nodes
+    nodes = 0
+
+    # move -> start, target, piece, promoted, capture, doublePush, enpassant, castling
+
+    # score moves
+    def scoreMove(self, move):
+        print("DEBUGGING SCOREMOVE(): ")
+        print("move: ", move[1], move[2], move[3])
+        # score capture move
+        if move[4] == 1:
+            # init target piece
+            target_piece = move[1]
+            
+            return mvv_lva[move[2]][target_piece] + 10000 # TODO: maybe move[2] needs to be converted to int
+        
+        
+        # score quiet move
+        else:
+            # score 1st killer move
+            if (killer_moves[0][ply] == menc.encode(*move)): 
+                return 9000
+            
+            # score 2nd killer move
+            else if (killer_moves[1][ply] == menc.encode(*move)):
+                return 8000
+            
+            # score history move
+            else:
+                return history_moves[move[2]][target_piece] # TODO: maybe move[2] needs to be converted to int
+        
+        return 0
+
+    # sort moves in descending order
+    def sortMoves(self): 
+        # move scores
+        move_scores = np.zeros(len(self.moveList))
+        print("DEBUGGING SORTMOVES():")
+        print("self.moveList :", self.moveList)
+        
+        # score all the moves within a move list
+        for index, move in enumerate(self.moveList):
+            print("DEBUGGING SORTMOVES() LOOP:")
+            print("move: ", move)
+            # score move
+            move_scores[index] = self.scoreMove(move)
+        
+        # loop over current move within a move list
+        for current_index, current_move in enumerate(self.moveList):
+            # loop over next move within a move list
+            for next_index, next_move in enumerate(self.moveList[1:]):
+                # compare current and next move scores
+                if (move_scores[current_index] < move_scores[next_index]):
+                    # swap scores
+                    temp_score = move_scores[current_index]
+                    move_scores[current_index] = move_scores[next_index]
+                    move_scores[next_index] = temp_score
+                    
+                    # swap moves
+                    temp_move = current_move
+                    current_move = next_move
+                    next_move = temp_move
+
+    # print move scores
+    def printMoveScores(self): 
+        print("     Move scores:\n\n");
+            
+        # loop over moves within a move list
+        for move in self.moveList:
+            print("     move: ")
+            self.printMove(move) 
+            print(f' score: {scoreMove(move)} \n')
+
+    # quiescence search
+    def quiescence(self, alpha, beta):
+        # increment nodes count
+        nodes+=1
+
+        # evaluate position
+        evaluation = self.evaluateScore()
+        
+        # fail-hard beta cutoff
+        if (evaluation >= beta):
+            # node (move) fails high
+            return beta
+        
+        # found a better move
+        if (evaluation > alpha):
+            # PV node (move)
+            alpha = evaluation
+        
+        # create move list instance
+        #move_list = self.moveList
+        
+        # generate moves
+        #generate_moves(move_list)
+        self.generateMoves()
+        print("DEBUGGING QUIESCENE():")
+        print("generated moves: ", self.moveList)
+        
+        # sort moves
+        #sort_moves(move_list)
+        self.sortMoves()
+        
+        # loop over moves within a movelist
+        for move in self.moveList:
+            # preserve board state
+            self.saveCurrentState()
+            
+            # increment ply
+            ply+=1
+            
+            # make sure to make only legal moves
+            if self.makeMove(move, 1) == 0:
+                # decrement ply
+                ply-=1
+                
+                # skip to next move
+                continue
+
+            # score current move
+            score = -self.quiescence(-beta, -alpha)
+            
+            # decrement ply
+            ply-=1
+
+            # take move back
+            self.loadPrevState()
+            
+            # fail-hard beta cutoff
+            if score >= beta:
+                # node (move) fails high
+                return beta
+            
+            # found a better move
+            if score > alpha:
+                # PV node (move)
+                alpha = score
+        
+        # node (move) fails low
+        return alpha
+
+    # negamax alpha beta search
+    def negamax(self, alpha, beta, depth):
+        # init PV length
+        pv_length[ply] = ply
+
+        # recursion escape condition
+        if depth == 0:
+            # run quiescence search
+            return self.quiescence(alpha, beta)
+        
+        # we are too deep, hence there's an overflow of arrays relying on max ply constant
+        if (ply > max_ply - 1):
+            # evaluate position
+            return self.evaluateScore()
+        
+        # increment nodes count
+        nodes+=1
+        
+        # is king in check
+        kingIndex = bit.getLsbIndex(self.pieceMaps[k]) if self.turn == white else bit.getLsbIndex(self.pieceMaps[K])
+        in_check = self.isCheck(kingIndex)
+        
+        # increase search depth if the king has been exposed into a check
+        if in_check: 
+            depth+=1
+        
+        # legal moves counter
+        legal_moves = 0
+        
+        # create move list instance
+        #moves move_list[1];
+        
+        # generate moves
+        #generate_moves(move_list);
+        self.generateMoves()
+        
+        # sort moves
+        #sort_moves(move_list);
+        self.sortMoves()
+        
+        # loop over moves within a movelist
+        for move in self.moveList:
+            # preserve board state
+            self.saveCurrentState()
+            
+            # increment ply
+            ply+=1
+            
+            # make sure to make only legal moves
+            if self.makeMove(move, 0) == 0:
+                # decrement ply
+                ply-=1
+                
+                # skip to next move
+                continue
+            
+            # increment legal moves
+            legal_moves+=1
+            
+            # score current move
+            score = -self.negamax(-beta, -alpha, depth - 1)
+            
+            # decrement ply
+            ply-=1
+
+            # take move back
+            self.loadPrevState()
+            
+            # fail-hard beta cutoff
+            if score >= beta:
+                # on quiet moves
+                if not move[4]:
+                    # store killer moves
+                    killer_moves[1][ply] = killer_moves[0][ply]
+                    killer_moves[0][ply] = menc.encode(*move)
+                
+                # node (move) fails high
+                return beta
+            
+            # found a better move
+            if score > alpha:
+                # on quiet moves
+                if not move[4]:
+                    # store history moves
+                    history_moves[move[2]][move[1]] += depth # TODO: maybe move[2] needs to be converted to int
+                
+                # PV node (move)
+                alpha = score
+                
+                # write PV move
+                pv_table[ply][ply] = menc.encode(*move)
+                
+                # loop over the next ply
+                #for (int next_ply = ply + 1; next_ply < pv_length[ply + 1]; next_ply++) 
+                for next_ply in pv_length[ply+1:]:
+                    # copy move from deeper ply into a current ply's line
+                    pv_table[ply][next_ply] = pv_table[ply + 1][next_ply]
+                
+                # adjust PV length
+                pv_length[ply] = pv_length[ply + 1]
+        
+        # we don't have any legal moves to make in the current postion
+        if legal_moves == 0:
+            # king is in check
+            if in_check:
+                # return mating score (assuming closest distance to mating position)
+                return -49000 + ply
+            
+            # king is not in check
+            else:
+                # return stalemate score
+                return 0
+        
+        # node (move) fails low
+        return alpha
+
+    # search position for the best move
+    def searchPosition(self, depth):
+        # define best score variable
+        score = 0
+        
+        # reset nodes counter
+        nodes = 0
+        
+        # clear helper data structures for search
+        killer_moves = np.zeros_like(killer_moves)
+        history_moves = np.zeros_like(history_moves)
+        pv_table = np.zeros_like(pv_table)
+        pv_length = np.zeros(pv_length)
+        
+        # iterative deepening
+        for current_depth in range(1, depth):
+            nodes = 0
+            
+            # find best move within a given position
+            score = self.negamax(-50000, 50000, current_depth)
+            
+            print(f'info score cp {score} depth {current_depth} nodes {nodes} pv ')
+            
+            # loop over the moves within a PV line
+            for count in range(0, pv_length):
+                # print PV move
+                print("printMove") # self.printMove(pv_table[0][count]) # TODO printMove takes move
+                print(" ")
+            
+            # print new line
+            print("\n")
+
+        # best move placeholder
+        print("bestmove ")
+        print("printMove") # self.printMove(pv_table[0][0]) # TODO printMove takes move
+        print("\n")
+        
+        
+        
+        # reset nodes counter
+        nodes = 0
+        
+        # clear helper data structures for search
+        killer_moves = np.zeros_like(killer_moves)
+        history_moves = np.zeros_like(history_moves)
+        pv_table = np.zeros_like(pv_table)
+        pv_length = np.zeros(pv_length)
+        
+        # find best move within a given position
+        score = self.negamax(-50000, 50000, depth)
+        
+        print(f'info score cp {score} depth {current_depth} nodes {nodes} pv ')
+        
+        # loop over the moves within a PV line
+            for count in range(0, pv_length):
+                # print PV move
+                print("printMove") # self.printMove(pv_table[0][count]) # TODO printMove takes move
+                print(" ")
+            
+            # print new line
+            print("\n")
+
+        # best move placeholder
+        print("bestmove ")
+        print("printMove") # self.printMove(pv_table[0][0]) # TODO printMove takes move
+        print("\n")
+
+    ################### ALPHA BETA END ###################
+
     def parseBot(self, sleepTime):
         print('botgame')
 
