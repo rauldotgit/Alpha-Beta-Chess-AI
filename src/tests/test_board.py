@@ -136,6 +136,12 @@ def test_evaluate_score():
     assert score == assumed_score
 
 
+def test_score_move():
+
+    
+    pass
+
+
 def test_negamax():
     print("Testing negamax: \n")
     newBoard = board.Board()

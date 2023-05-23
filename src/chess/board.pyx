@@ -899,7 +899,7 @@ class Board():
         else:
             capture = move[4]
             if capture: 
-                self.make_move(move, 0)
+                self.makeMove(move, 0)
             else:
                 return 0
     
@@ -980,7 +980,7 @@ class Board():
             if pieceMap & attackBit:
                 return index 
 
-        print('getCapturedPiece: Not found')
+        return -1
 
     def getCaptureValue(self, move):
         captureField = move[1]
@@ -1178,20 +1178,20 @@ class Board():
         100, 200, 300, 400, 500, 600,  100, 200, 300, 400, 500, 600
     ]
 
-    # max ply that we can reach within a search
+    # max self.ply that we can reach within a search
     max_ply = 64
 
-    # killer moves [id][ply]
-    killer_moves = np.zeros(2, max_ply)
+    # killer moves [id][self.ply]
+    killer_moves = np.zeros((2, max_ply), dtype=int)
 
     # history moves [piece][square]
-    history_moves = np.zeros(12, 64)
+    history_moves = np.zeros((12, 64))
 
-    # PV length [ply]
-    pv_length = np.zeros(max_ply)
+    # PV length [self.ply]
+    pv_length = [0 for i in range(max_ply)]
 
-    # PV table [ply][ply]
-    pv_table = np.zeros(max_ply, max_ply)
+    # PV table [self.ply][self.ply]
+    pv_table = np.zeros((max_ply, max_ply))
 
     # half move counter
     ply = 0
@@ -1203,29 +1203,47 @@ class Board():
 
     # score moves
     def scoreMove(self, move):
-        print("DEBUGGING SCOREMOVE(): ")
-        print("move: ", move[1], move[2], move[3])
+        start = move[0]
+        target_field = move[1]
+        piece = move[2]
+        promotion = move[3]
+        capture = move[4]
+
         # score capture move
-        if move[4] == 1:
-            # init target piece
-            target_piece = move[1]
+        if capture:
+            # init target_field piece
+            print("Target field: ", fieldStr(target_field))
+            print("PIECE MAPS")
+            for pMap in self.pieceMaps:
+                maps.printMap(pMap)
+            print("PIECE MAPS END")
             
-            return mvv_lva[move[2]][target_piece] + 10000 # TODO: maybe move[2] needs to be converted to int
-        
+            target_piece = self.getCapturedPiece(target_field)
+
+            if target_piece == -1:
+                print('Piece not found')
+                raise ValueError
+
+            return MVV_LVA_ARRAY[piece][target_piece] + 10000 # TODO: maybe move[2] needs to be converted to int        
         
         # score quiet move
         else:
             # score 1st killer move
-            if (killer_moves[0][ply] == menc.encode(*move)): 
+            if (self.killer_moves[0][self.ply] == menc.encode(*move)): 
                 return 9000
             
             # score 2nd killer move
-            else if (killer_moves[1][ply] == menc.encode(*move)):
+            elif (self.killer_moves[1][self.ply] == menc.encode(*move)):
                 return 8000
             
             # score history move
             else:
-                return history_moves[move[2]][target_piece] # TODO: maybe move[2] needs to be converted to int
+                print("Piece: ", piece)
+                print("Target Field: ", target_field)
+                histMove = self.history_moves[piece][target_field]
+                print("DEBUGGING SCOREMOVE(): ")
+                print("history_moves: ", histMove)
+                return histMove # TODO: maybe move[2] needs to be converted to int
         
         return 0
 
@@ -1241,7 +1259,10 @@ class Board():
             print("DEBUGGING SORTMOVES() LOOP:")
             print("move: ", move)
             # score move
-            move_scores[index] = self.scoreMove(move)
+            moveScore = self.scoreMove(move)
+            print("DEBUGGING SORTMOVES() LOOP:")
+            print(moveScore)
+            move_scores[index] = moveScore
         
         # loop over current move within a move list
         for current_index, current_move in enumerate(self.moveList):
@@ -1267,12 +1288,12 @@ class Board():
         for move in self.moveList:
             print("     move: ")
             self.printMove(move) 
-            print(f' score: {scoreMove(move)} \n')
+            print(f' score: {self.scoreMove(move)} \n')
 
     # quiescence search
     def quiescence(self, alpha, beta):
         # increment nodes count
-        nodes+=1
+        self.nodes+=1
 
         # evaluate position
         evaluation = self.evaluateScore()
@@ -1305,13 +1326,13 @@ class Board():
             # preserve board state
             self.saveCurrentState()
             
-            # increment ply
-            ply+=1
+            # increment self.ply
+            self.ply+=1
             
             # make sure to make only legal moves
             if self.makeMove(move, 1) == 0:
-                # decrement ply
-                ply-=1
+                # decrement self.ply
+                self.ply-=1
                 
                 # skip to next move
                 continue
@@ -1319,8 +1340,8 @@ class Board():
             # score current move
             score = -self.quiescence(-beta, -alpha)
             
-            # decrement ply
-            ply-=1
+            # decrement self.ply
+            self.ply-=1
 
             # take move back
             self.loadPrevState()
@@ -1341,20 +1362,20 @@ class Board():
     # negamax alpha beta search
     def negamax(self, alpha, beta, depth):
         # init PV length
-        pv_length[ply] = ply
+        self.pv_length[self.ply] = self.ply
 
         # recursion escape condition
         if depth == 0:
             # run quiescence search
             return self.quiescence(alpha, beta)
         
-        # we are too deep, hence there's an overflow of arrays relying on max ply constant
-        if (ply > max_ply - 1):
+        # we are too deep, hence there's an overflow of arrays relying on max self.ply constant
+        if (self.ply > self.max_ply - 1):
             # evaluate position
             return self.evaluateScore()
         
         # increment nodes count
-        nodes+=1
+        self.nodes+=1
         
         # is king in check
         kingIndex = bit.getLsbIndex(self.pieceMaps[k]) if self.turn == white else bit.getLsbIndex(self.pieceMaps[K])
@@ -1383,13 +1404,13 @@ class Board():
             # preserve board state
             self.saveCurrentState()
             
-            # increment ply
-            ply+=1
+            # increment self.ply
+            self.ply+=1
             
             # make sure to make only legal moves
             if self.makeMove(move, 0) == 0:
-                # decrement ply
-                ply-=1
+                # decrement self.ply
+                self.ply-=1
                 
                 # skip to next move
                 continue
@@ -1400,8 +1421,8 @@ class Board():
             # score current move
             score = -self.negamax(-beta, -alpha, depth - 1)
             
-            # decrement ply
-            ply-=1
+            # decrement self.ply
+            self.ply-=1
 
             # take move back
             self.loadPrevState()
@@ -1411,8 +1432,8 @@ class Board():
                 # on quiet moves
                 if not move[4]:
                     # store killer moves
-                    killer_moves[1][ply] = killer_moves[0][ply]
-                    killer_moves[0][ply] = menc.encode(*move)
+                    self.killer_moves[1][self.ply] = self.killer_moves[0][self.ply]
+                    self.killer_moves[0][self.ply] = menc.encode(*move)
                 
                 # node (move) fails high
                 return beta
@@ -1422,29 +1443,30 @@ class Board():
                 # on quiet moves
                 if not move[4]:
                     # store history moves
-                    history_moves[move[2]][move[1]] += depth # TODO: maybe move[2] needs to be converted to int
+                    print("depth: ", depth)
+                    self.history_moves[move[2]][move[1]] += depth # TODO: maybe move[2] needs to be converted to int
                 
                 # PV node (move)
                 alpha = score
                 
                 # write PV move
-                pv_table[ply][ply] = menc.encode(*move)
+                self.pv_table[self.ply][self.ply] = menc.encode(*move)
                 
-                # loop over the next ply
-                #for (int next_ply = ply + 1; next_ply < pv_length[ply + 1]; next_ply++) 
-                for next_ply in pv_length[ply+1:]:
-                    # copy move from deeper ply into a current ply's line
-                    pv_table[ply][next_ply] = pv_table[ply + 1][next_ply]
+                # loop over the next self.ply
+                #for (int next_ply = self.ply + 1; next_ply < self.pv_length[self.ply + 1]; next_ply++) 
+                for next_ply in self.pv_length[self.ply+1:]:
+                    # copy move from deeper self.ply into a current self.ply's line
+                    self.pv_table[self.ply][next_ply] = self.pv_table[self.ply + 1][next_ply]
                 
                 # adjust PV length
-                pv_length[ply] = pv_length[ply + 1]
+                self.pv_length[self.ply] = self.pv_length[self.ply + 1]
         
         # we don't have any legal moves to make in the current postion
         if legal_moves == 0:
             # king is in check
             if in_check:
                 # return mating score (assuming closest distance to mating position)
-                return -49000 + ply
+                return -49000 + self.ply
             
             # king is not in check
             else:
@@ -1460,27 +1482,27 @@ class Board():
         score = 0
         
         # reset nodes counter
-        nodes = 0
+        self.nodes = 0
         
         # clear helper data structures for search
-        killer_moves = np.zeros_like(killer_moves)
-        history_moves = np.zeros_like(history_moves)
-        pv_table = np.zeros_like(pv_table)
-        pv_length = np.zeros(pv_length)
+        self.killer_moves = np.zeros((2, 64))
+        self.history_moves = np.zeros((12, 64))
+        self.pv_table = np.zeros((64, 64))
+        self.pv_length = [0 for i in range(64)]
         
         # iterative deepening
         for current_depth in range(1, depth):
-            nodes = 0
+            self.nodes = 0
             
             # find best move within a given position
             score = self.negamax(-50000, 50000, current_depth)
             
-            print(f'info score cp {score} depth {current_depth} nodes {nodes} pv ')
+            print(f'info score cp {score} depth {current_depth} nodes {self.nodes} pv ')
             
             # loop over the moves within a PV line
-            for count in range(0, pv_length):
+            for count in range(0, len(self.pv_length)):
                 # print PV move
-                print("printMove") # self.printMove(pv_table[0][count]) # TODO printMove takes move
+                print("printMove") # self.printMove(self.pv_table[0][count]) # TODO printMove takes move
                 print(" ")
             
             # print new line
@@ -1488,33 +1510,33 @@ class Board():
 
         # best move placeholder
         print("bestmove ")
-        print("printMove") # self.printMove(pv_table[0][0]) # TODO printMove takes move
+        print("printMove") # self.printMove(self.pv_table[0][0]) # TODO printMove takes move
         print("\n")
         
         
         
         # reset nodes counter
-        nodes = 0
+        self.nodes = 0
         
         # clear helper data structures for search
-        killer_moves = np.zeros_like(killer_moves)
-        history_moves = np.zeros_like(history_moves)
-        pv_table = np.zeros_like(pv_table)
-        pv_length = np.zeros(pv_length)
+        self.killer_moves = np.zeros((2, 64))
+        self.history_moves = np.zeros((12, 64))
+        self.pv_table = np.zeros((64, 64))
+        self.pv_length = [0 for i in range(64)]
         
         # find best move within a given position
         score = self.negamax(-50000, 50000, depth)
         
-        print(f'info score cp {score} depth {current_depth} nodes {nodes} pv ')
+        print(f'info score cp {score} depth {current_depth} nodes {self.nodes} pv ')
         
         # loop over the moves within a PV line
-            for count in range(0, pv_length):
-                # print PV move
-                print("printMove") # self.printMove(pv_table[0][count]) # TODO printMove takes move
-                print(" ")
-            
-            # print new line
-            print("\n")
+        for count in range(0, len(self.pv_length)):
+            # print PV move
+            print("printMove") # self.printMove(self.pv_table[0][count]) # TODO printMove takes move
+            print(" ")
+        
+        # print new line
+        print("\n")
 
         # best move placeholder
         print("bestmove ")
