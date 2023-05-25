@@ -1371,18 +1371,18 @@ class Board:
                 elif cmd0 == 'go':
                     self.parseGo(ui)
 
-                elif cmd0 == 'bot':
-                    cmd1 = forceGet(cmdList, 1)
-                    cmd2 = forceGet(cmdList, 2)
-                    sleepTime = 0
+                # elif cmd0 == 'bot':
+                #     cmd1 = forceGet(cmdList, 1)
+                #     cmd2 = forceGet(cmdList, 2)
+                #     sleepTime = 0
 
-                    if cmd1 and cmd1 == 'newgame':
-                        self.parsePosition('position startpos')
+                #     if cmd1 and cmd1 == 'newgame':
+                #         self.parsePosition('position startpos')
 
-                    if cmd2 and cmd2.isnumeric():
-                        sleepTime = int(cmd2)
+                #     if cmd2 and cmd2.isnumeric():
+                #         sleepTime = int(cmd2)
                         
-                    self.parseBot(sleepTime)
+                #     self.parseBot(sleepTime)
 
                 elif cmd0 == 'time':
                     cmd1 = forceGet(cmdList, 1)
