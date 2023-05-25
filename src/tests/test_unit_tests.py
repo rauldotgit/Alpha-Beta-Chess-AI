@@ -8,7 +8,10 @@ def test_demon():
 
     newBoard = board.Board()
     newBoard.fenGameSetup(test_fen)
-    moves = newBoard.getLegalMoves()
+
+    newMoveList = board.MoveList()
+    newBoard.generateMoves(newMoveList)
+    moves = newBoard.getLegalMoves(newMoveList)
 
     moveCount = len(moves)
     assert moveCount == test_count
@@ -18,7 +21,10 @@ def test_group_0():
     test_count = 20
     newBoard = board.Board()
     newBoard.fenGameSetup(test_fen)
-    moves = newBoard.getLegalMoves()
+
+    newMoveList = board.MoveList()
+    newBoard.generateMoves(newMoveList)
+    moves = newBoard.getLegalMoves(newMoveList)
 
     moveCount = len(moves)
     assert moveCount == test_count
@@ -29,7 +35,10 @@ def test_group_A_1():
 
     newBoard = board.Board()
     newBoard.fenGameSetup(test_fen)
-    moves = newBoard.getLegalMoves()
+
+    newMoveList = board.MoveList()
+    newBoard.generateMoves(newMoveList)
+    moves = newBoard.getLegalMoves(newMoveList)
 
     moveCount = len(moves)
     assert moveCount == test_count
@@ -40,7 +49,10 @@ def test_group_A_2():
 
     newBoard = board.Board()
     newBoard.fenGameSetup(test_fen)
-    moves = newBoard.getLegalMoves()
+
+    newMoveList = board.MoveList()
+    newBoard.generateMoves(newMoveList)
+    moves = newBoard.getLegalMoves(newMoveList)
 
     moveCount = len(moves)
     assert moveCount == test_count
@@ -51,7 +63,10 @@ def test_group_AB_1():
 
     newBoard = board.Board()
     newBoard.fenGameSetup(test_fen)
-    moves = newBoard.getLegalMoves()
+
+    newMoveList = board.MoveList()
+    newBoard.generateMoves(newMoveList)
+    moves = newBoard.getLegalMoves(newMoveList)
 
     moveCount = len(moves)
     assert moveCount == test_count
@@ -62,7 +77,10 @@ def test_group_AB_2():
 
     newBoard = board.Board()
     newBoard.fenGameSetup(test_fen)
-    moves = newBoard.getLegalMoves()
+
+    newMoveList = board.MoveList()
+    newBoard.generateMoves(newMoveList)
+    moves = newBoard.getLegalMoves(newMoveList)
 
     moveCount = len(moves)
     assert moveCount == test_count
@@ -73,7 +91,10 @@ def test_group_AF_1():
 
     newBoard = board.Board()
     newBoard.fenGameSetup(test_fen)
-    moves = newBoard.getLegalMoves()
+
+    newMoveList = board.MoveList()
+    newBoard.generateMoves(newMoveList)
+    moves = newBoard.getLegalMoves(newMoveList)
 
     moveCount = len(moves)
     assert moveCount == test_count
@@ -84,7 +105,10 @@ def test_group_AF_2():
 
     newBoard = board.Board()
     newBoard.fenGameSetup(test_fen)
-    moves = newBoard.getLegalMoves()
+
+    newMoveList = board.MoveList()
+    newBoard.generateMoves(newMoveList)
+    moves = newBoard.getLegalMoves(newMoveList)
 
     moveCount = len(moves)
     assert moveCount == test_count
@@ -95,7 +119,10 @@ def test_group_AH_1():
 
     newBoard = board.Board()
     newBoard.fenGameSetup(test_fen)
-    moves = newBoard.getLegalMoves()
+
+    newMoveList = board.MoveList()
+    newBoard.generateMoves(newMoveList)
+    moves = newBoard.getLegalMoves(newMoveList)
 
     moveCount = len(moves)
     assert moveCount == test_count
@@ -106,7 +133,10 @@ def test_group_AH_2():
 
     newBoard = board.Board()
     newBoard.fenGameSetup(test_fen)
-    moves = newBoard.getLegalMoves()
+
+    newMoveList = board.MoveList()
+    newBoard.generateMoves(newMoveList)
+    moves = newBoard.getLegalMoves(newMoveList)
 
     moveCount = len(moves)
     assert moveCount == test_count
@@ -117,7 +147,10 @@ def test_group_C_1():
 
     newBoard = board.Board()
     newBoard.fenGameSetup(test_fen)
-    moves = newBoard.getLegalMoves()
+
+    newMoveList = board.MoveList()
+    newBoard.generateMoves(newMoveList)
+    moves = newBoard.getLegalMoves(newMoveList)
 
     moveCount = len(moves)
     assert moveCount == test_count
@@ -128,7 +161,10 @@ def test_group_C_2():
 
     newBoard = board.Board()
     newBoard.fenGameSetup(test_fen)
-    moves = newBoard.getLegalMoves()
+
+    newMoveList = board.MoveList()
+    newBoard.generateMoves(newMoveList)
+    moves = newBoard.getLegalMoves(newMoveList)
 
     moveCount = len(moves)
     assert moveCount == test_count
@@ -139,7 +175,10 @@ def test_group_F_1():
 
     newBoard = board.Board()
     newBoard.fenGameSetup(test_fen)
-    moves = newBoard.getLegalMoves()
+
+    newMoveList = board.MoveList()
+    newBoard.generateMoves(newMoveList)
+    moves = newBoard.getLegalMoves(newMoveList)
 
     moveCount = len(moves)
     assert moveCount == test_count
@@ -150,7 +189,10 @@ def test_group_F_2():
 
     newBoard = board.Board()
     newBoard.fenGameSetup(test_fen)
-    moves = newBoard.getLegalMoves()
+
+    newMoveList = board.MoveList()
+    newBoard.generateMoves(newMoveList)
+    moves = newBoard.getLegalMoves(newMoveList)
 
     moveCount = len(moves)
     assert moveCount == test_count
@@ -161,7 +203,10 @@ def test_group_G_1():
 
     newBoard = board.Board()
     newBoard.fenGameSetup(test_fen)
-    moves = newBoard.getLegalMoves()
+
+    newMoveList = board.MoveList()
+    newBoard.generateMoves(newMoveList)
+    moves = newBoard.getLegalMoves(newMoveList)
 
     moveCount = len(moves)
     assert moveCount == test_count
@@ -172,7 +217,10 @@ def test_group_G_2():
 
     newBoard = board.Board()
     newBoard.fenGameSetup(test_fen)
-    moves = newBoard.getLegalMoves()
+
+    newMoveList = board.MoveList()
+    newBoard.generateMoves(newMoveList)
+    moves = newBoard.getLegalMoves(newMoveList)
 
     moveCount = len(moves)
     assert moveCount == test_count
@@ -183,7 +231,10 @@ def test_group_J_1():
 
     newBoard = board.Board()
     newBoard.fenGameSetup(test_fen)
-    moves = newBoard.getLegalMoves()
+
+    newMoveList = board.MoveList()
+    newBoard.generateMoves(newMoveList)
+    moves = newBoard.getLegalMoves(newMoveList)
 
     moveCount = len(moves)
     assert moveCount == test_count
@@ -194,7 +245,10 @@ def test_group_J_2():
 
     newBoard = board.Board()
     newBoard.fenGameSetup(test_fen)
-    moves = newBoard.getLegalMoves()
+
+    newMoveList = board.MoveList()
+    newBoard.generateMoves(newMoveList)
+    moves = newBoard.getLegalMoves(newMoveList)
 
     moveCount = len(moves)
     assert moveCount == test_count
@@ -205,7 +259,10 @@ def test_group_K_1():
 
     newBoard = board.Board()
     newBoard.fenGameSetup(test_fen)
-    moves = newBoard.getLegalMoves()
+
+    newMoveList = board.MoveList()
+    newBoard.generateMoves(newMoveList)
+    moves = newBoard.getLegalMoves(newMoveList)
 
     moveCount = len(moves)
     assert moveCount == test_count
@@ -216,7 +273,10 @@ def test_group_K_2():
 
     newBoard = board.Board()
     newBoard.fenGameSetup(test_fen)
-    moves = newBoard.getLegalMoves()
+
+    newMoveList = board.MoveList()
+    newBoard.generateMoves(newMoveList)
+    moves = newBoard.getLegalMoves(newMoveList)
 
     moveCount = len(moves)
     assert moveCount == test_count
@@ -227,7 +287,10 @@ def test_group_N_1():
 
     newBoard = board.Board()
     newBoard.fenGameSetup(test_fen)
-    moves = newBoard.getLegalMoves()
+
+    newMoveList = board.MoveList()
+    newBoard.generateMoves(newMoveList)
+    moves = newBoard.getLegalMoves(newMoveList)
 
     moveCount = len(moves)
     assert moveCount == test_count
@@ -238,7 +301,10 @@ def test_group_N_2():
 
     newBoard = board.Board()
     newBoard.fenGameSetup(test_fen)
-    moves = newBoard.getLegalMoves()
+
+    newMoveList = board.MoveList()
+    newBoard.generateMoves(newMoveList)
+    moves = newBoard.getLegalMoves(newMoveList)
 
     moveCount = len(moves)
     assert moveCount == test_count
@@ -249,7 +315,10 @@ def test_group_O_1():
 
     newBoard = board.Board()
     newBoard.fenGameSetup(test_fen)
-    moves = newBoard.getLegalMoves()
+
+    newMoveList = board.MoveList()
+    newBoard.generateMoves(newMoveList)
+    moves = newBoard.getLegalMoves(newMoveList)
 
     moveCount = len(moves)
     assert moveCount == test_count
@@ -260,7 +329,10 @@ def test_group_O_2():
 
     newBoard = board.Board()
     newBoard.fenGameSetup(test_fen)
-    moves = newBoard.getLegalMoves()
+
+    newMoveList = board.MoveList()
+    newBoard.generateMoves(newMoveList)
+    moves = newBoard.getLegalMoves(newMoveList)
 
     moveCount = len(moves)
     assert moveCount == test_count
@@ -271,7 +343,10 @@ def test_group_P_1():
 
     newBoard = board.Board()
     newBoard.fenGameSetup(test_fen)
-    moves = newBoard.getLegalMoves()
+
+    newMoveList = board.MoveList()
+    newBoard.generateMoves(newMoveList)
+    moves = newBoard.getLegalMoves(newMoveList)
 
     moveCount = len(moves)
     assert moveCount == test_count
@@ -282,7 +357,10 @@ def test_group_P_2():
 
     newBoard = board.Board()
     newBoard.fenGameSetup(test_fen)
-    moves = newBoard.getLegalMoves()
+
+    newMoveList = board.MoveList()
+    newBoard.generateMoves(newMoveList)
+    moves = newBoard.getLegalMoves(newMoveList)
 
     moveCount = len(moves)
     assert moveCount == test_count
@@ -293,7 +371,10 @@ def test_group_R_1():
 
     newBoard = board.Board()
     newBoard.fenGameSetup(test_fen)
-    moves = newBoard.getLegalMoves()
+
+    newMoveList = board.MoveList()
+    newBoard.generateMoves(newMoveList)
+    moves = newBoard.getLegalMoves(newMoveList)
 
     moveCount = len(moves)
     assert moveCount == test_count
@@ -304,7 +385,10 @@ def test_group_R_2():
 
     newBoard = board.Board()
     newBoard.fenGameSetup(test_fen)
-    moves = newBoard.getLegalMoves()
+
+    newMoveList = board.MoveList()
+    newBoard.generateMoves(newMoveList)
+    moves = newBoard.getLegalMoves(newMoveList)
 
     moveCount = len(moves)
     assert moveCount == test_count
@@ -315,7 +399,10 @@ def test_group_S_1():
 
     newBoard = board.Board()
     newBoard.fenGameSetup(test_fen)
-    moves = newBoard.getLegalMoves()
+
+    newMoveList = board.MoveList()
+    newBoard.generateMoves(newMoveList)
+    moves = newBoard.getLegalMoves(newMoveList)
 
     moveCount = len(moves)
     assert moveCount == test_count
@@ -326,7 +413,10 @@ def test_group_S_2():
 
     newBoard = board.Board()
     newBoard.fenGameSetup(test_fen)
-    moves = newBoard.getLegalMoves()
+
+    newMoveList = board.MoveList()
+    newBoard.generateMoves(newMoveList)
+    moves = newBoard.getLegalMoves(newMoveList)
 
     moveCount = len(moves)
     assert moveCount == test_count
@@ -337,7 +427,10 @@ def test_group_T_1():
 
     newBoard = board.Board()
     newBoard.fenGameSetup(test_fen)
-    moves = newBoard.getLegalMoves()
+
+    newMoveList = board.MoveList()
+    newBoard.generateMoves(newMoveList)
+    moves = newBoard.getLegalMoves(newMoveList)
 
     moveCount = len(moves)
     assert moveCount == test_count
@@ -348,7 +441,10 @@ def test_group_T_2():
 
     newBoard = board.Board()
     newBoard.fenGameSetup(test_fen)
-    moves = newBoard.getLegalMoves()
+
+    newMoveList = board.MoveList()
+    newBoard.generateMoves(newMoveList)
+    moves = newBoard.getLegalMoves(newMoveList)
 
     moveCount = len(moves)
     assert moveCount == test_count
@@ -359,7 +455,10 @@ def test_group_U_1():
 
     newBoard = board.Board()
     newBoard.fenGameSetup(test_fen)
-    moves = newBoard.getLegalMoves()
+
+    newMoveList = board.MoveList()
+    newBoard.generateMoves(newMoveList)
+    moves = newBoard.getLegalMoves(newMoveList)
 
     moveCount = len(moves)
     assert moveCount == test_count
@@ -370,7 +469,10 @@ def test_group_U_2():
 
     newBoard = board.Board()
     newBoard.fenGameSetup(test_fen)
-    moves = newBoard.getLegalMoves()
+
+    newMoveList = board.MoveList()
+    newBoard.generateMoves(newMoveList)
+    moves = newBoard.getLegalMoves(newMoveList)
 
     moveCount = len(moves)
     assert moveCount == test_count
@@ -381,7 +483,10 @@ def test_group_U_3():
 
     newBoard = board.Board()
     newBoard.fenGameSetup(test_fen)
-    moves = newBoard.getLegalMoves()
+
+    newMoveList = board.MoveList()
+    newBoard.generateMoves(newMoveList)
+    moves = newBoard.getLegalMoves(newMoveList)
 
     moveCount = len(moves)
     assert moveCount == test_count
@@ -392,7 +497,10 @@ def test_group_U_4():
 
     newBoard = board.Board()
     newBoard.fenGameSetup(test_fen)
-    moves = newBoard.getLegalMoves()
+
+    newMoveList = board.MoveList()
+    newBoard.generateMoves(newMoveList)
+    moves = newBoard.getLegalMoves(newMoveList)
 
     moveCount = len(moves)
     assert moveCount == test_count
@@ -403,7 +511,10 @@ def test_group_V_1():
 
     newBoard = board.Board()
     newBoard.fenGameSetup(test_fen)
-    moves = newBoard.getLegalMoves()
+
+    newMoveList = board.MoveList()
+    newBoard.generateMoves(newMoveList)
+    moves = newBoard.getLegalMoves(newMoveList)
 
     moveCount = len(moves)
     assert moveCount == test_count
@@ -414,7 +525,10 @@ def test_group_V_2():
 
     newBoard = board.Board()
     newBoard.fenGameSetup(test_fen)
-    moves = newBoard.getLegalMoves()
+
+    newMoveList = board.MoveList()
+    newBoard.generateMoves(newMoveList)
+    moves = newBoard.getLegalMoves(newMoveList)
 
     moveCount = len(moves)
     assert moveCount == test_count
@@ -425,7 +539,10 @@ def test_group_X_1():
 
     newBoard = board.Board()
     newBoard.fenGameSetup(test_fen)
-    moves = newBoard.getLegalMoves()
+
+    newMoveList = board.MoveList()
+    newBoard.generateMoves(newMoveList)
+    moves = newBoard.getLegalMoves(newMoveList)
 
     moveCount = len(moves)
     assert moveCount == test_count
@@ -436,7 +553,10 @@ def test_group_X_2():
 
     newBoard = board.Board()
     newBoard.fenGameSetup(test_fen)
-    moves = newBoard.getLegalMoves()
+
+    newMoveList = board.MoveList()
+    newBoard.generateMoves(newMoveList)
+    moves = newBoard.getLegalMoves(newMoveList)
 
     moveCount = len(moves)
     assert moveCount == test_count

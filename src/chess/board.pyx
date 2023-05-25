@@ -12,6 +12,9 @@ import src.chess.move_encoding as menc
 ###########################################################
 
 # TODO: Decouple moveList from Board Object (important for speed)
+    # 1. make a moveList class with number of moves and the movelist
+    # 2. change functions that are part of the movelist to be in the moveList itself (all printer functions, adding functions etc.)
+    # 3. change functions the movelist is part of and give the movelist argument as an input
 
 # TODO: Does loadSaveState need to include the node count? 
 # TODO: Does the movelist need to be included in the getSaveState? 
@@ -262,45 +265,96 @@ def fenToBoardInfo(fenString):
 
 ################### GLOBALS #########################
 
-class Board():
-
-    turn = white
-    enpassant = noSquare
-    castling = 0
-    halfMoves = 0
-    fullMoves = 0
-
-    # indexed by role_int enum further up
-    pieceMaps = [
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-        0,
-    ]
-
-    board_union = 0
-    white_board_union = 0
-    black_board_union = 0
-
-    moveList = []
-    moveIndex = -1
-    bestMove = None
-
-    nodeCount = 0
-
-    #list with time items
-    time = []
-    
+class MoveList:
     def __init__(self):
+        self.moves = []
+        self.moveCount = 0
+        self.bestMove = None
+
+
+    def add(self, start, target,  piece, promoted, capture, doublePush, enpassant, castling):
+        cdef int[8] move = [start, target,  piece, promoted, capture, doublePush, enpassant, castling]
+        self.moves.append(move)
+        self.moveCount += 1
+
+    def getMove(self, index):
+        return None if self.moveCount < 1 else self.moves[index]
+
+    def reset(self):
+        self.moves = []
+        self.moveCount = 0
+        self.bestMove = None
+
+    def delete(self, index):
+        if self.moveCount == 0: return
+        del self.moves[index]
+        self.moveCount -= 1
+
+    def getRandom(self):
+        if self.moveCount == 0: return [], -1
+        randIndex = random.randrange(0, self.moveCount + 1)
+        return self.moves[randIndex], randIndex
+
+    def len(self):
+        return self.moveCount
+
+    def printList(self):
+        if self.moveCount == -1:
+            print('Movelist is empty.')
+            return
+
+        print(f's->t p  + - d e c')
+        for index, move in enumerate(self.moves):
+            start, target, piece, promoted, capture, doublePush, enpassant, castling = move
+            print(
+                f'{fieldStr(start)}{fieldStr(target)} {roleUnicode(piece)}  {promoted} {capture} {doublePush} {enpassant} {castling}'
+            )
+        
+        print(f'Number of moves: {self.moveCount}')
+
+class Board:
+
+    def __init__(self):
+        
+        self.turn = white
+        self.enpassant = noSquare
+        self.castling = 0
+        self.halfMoves = 0
+        self.fullMoves = 0
+
+        # indexed by role_int enum further up
+        self.pieceMaps = [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+        ]
+
+        self.board_union = 0
+        self.white_board_union = 0
+        self.black_board_union = 0
+
+        self.moveList = []
+        self.moveIndex = -1
+        self.bestMove = None
+
+        self.nodeCount = 0
+
+        #list with time items
+        self.time = []
+
         self.resetBoard()
+    
+    # def __init__(self):
+    #     self.resetBoard()
 
     def nextTurn(self):
         self.turn = black if self.turn == white else white
@@ -333,10 +387,7 @@ class Board():
             self.board_union,
             self.white_board_union,
             self.black_board_union,
-            
-            self.moveList,
-            self.moveIndex,
-
+        
             self.time
         ]
     
@@ -365,10 +416,7 @@ class Board():
         self.white_board_union = saveState[18]
         self.black_board_union = saveState[19]
 
-        self.moveList = saveState[20]
-        self.moveIndex = saveState[21]
-
-        self.time = saveState[22]
+        self.time = saveState[20]
 
     def setPieces(self):
         self.pieceMaps[P] = maps.WHITE_PAWNS_MAP
@@ -406,9 +454,6 @@ class Board():
         self.setBoardUnion()
         self.setSideUnions()
         self.updateSliderAttacks_otf()
-
-        self.moveList = []
-        self.moveIndex = -1
 
         self.time = [3000, 3000]
 
@@ -459,7 +504,7 @@ class Board():
         self.setBoardUnion()
         self.setSideUnions()
         self.updateSliderAttacks_otf()
-        self.generateMoves()
+        # self.generateMoves()
 
     # TODO: copy with magic bitboards when implemented
     # side refers to the attacking side (side == white, get if field is attacked by white)
@@ -497,13 +542,14 @@ class Board():
             f'{fieldStr(start)}{fieldStr(target)} {roleUnicode(piece)}  {promoted} {capture} {doublePush} {enpassant} {castling}'
         )
 
-    def printMoveList(self):
+    # Deprecated
+    def printMoveList(self, MoveList):
         if self.moveIndex == -1:
             print('Movelist is empty.')
             return
 
         print(f's->t p  + - d e c')
-        for index, move in enumerate(self.moveList):
+        for index, move in enumerate(MoveList.moves):
             start, target, piece, promoted, capture, doublePush, enpassant, castling = move
             print(
                 f'{fieldStr(start)}{fieldStr(target)} {roleUnicode(piece)}  {promoted} {capture} {doublePush} {enpassant} {castling}'
@@ -511,27 +557,8 @@ class Board():
         
         print(f'Number of moves: {self.moveIndex+1}')
 
-    def addMoveToList(self, start, target,  piece, promoted, capture, doublePush, enpassant, castling):
-        cdef int[8] move = [start, target,  piece, promoted, capture, doublePush, enpassant, castling]
-        self.moveList.append(move)
-        self.moveIndex += 1
 
-    def resetMoveList(self):
-        self.moveList = []
-        self.moveIndex = -1
-
-    def deleteMove(self, index):
-        if self.moveIndex == -1: return
-        del self.moveList[index]
-        self.moveIndex -= 1
-
-        # returns moveArray and index
-    def getRandomMove(self):
-        if self.moveIndex == -1: return [], -1
-        randIndex = random.randrange(0, self.moveIndex + 1)
-        return self.moveList[randIndex], randIndex
-
-    def generateNonPawnMoves(self, pieceMap,  piece):
+    def generateNonPawnMoves(self, pieceMap,  piece, MoveList):
         while pieceMap:
             start = bit.getLsbIndex(pieceMap)
             
@@ -544,19 +571,18 @@ class Board():
                 sideBoardUnion = self.black_board_union if self.turn == white else self.white_board_union
                 noEnemy = not bit.getBit(sideBoardUnion, target)
                 if noEnemy:
-                    self.addMoveToList(start, target, piece, 0, 0, 0, 0, 0)
+                    MoveList.add(start, target, piece, 0, 0, 0, 0, 0)
                 
                 else:
-                    self.addMoveToList(start, target, piece, 0, 1, 0, 0, 0)
+                    MoveList.add(start, target, piece, 0, 1, 0, 0, 0)
                 
                 pieceAttackMoves = bit.popBit(pieceAttackMoves, target)
             
             pieceMap = bit.popBit(pieceMap, start)
 
-    def generateMoves(self):
+    def generateMoves(self, MoveList):
         cdef int start, target
-        self.moveList = []
-        self.moveIndex = -1
+        MoveList.reset()
 
         for piece, bitmap in enumerate(self.pieceMaps):
             # creating a copy to use
@@ -579,18 +605,18 @@ class Board():
                             if start >= a7 and start <= h7:
                                 #add move into move list
                                 #start, target, piece, promoted, capture, doublePush, enpassant, castling
-                                self.addMoveToList(start, target, piece, R, 0, 0, 0, 0)
-                                self.addMoveToList(start, target, piece, N, 0, 0, 0, 0)
-                                self.addMoveToList(start, target, piece, B, 0, 0, 0, 0)
-                                self.addMoveToList(start, target, piece, Q, 0, 0, 0, 0)
+                                MoveList.add(start, target, piece, R, 0, 0, 0, 0)
+                                MoveList.add(start, target, piece, N, 0, 0, 0, 0)
+                                MoveList.add(start, target, piece, B, 0, 0, 0, 0)
+                                MoveList.add(start, target, piece, Q, 0, 0, 0, 0)
  
                             else:
                                 #add single pawn move
-                                self.addMoveToList(start, target, piece, 0, 0, 0, 0, 0)
+                                MoveList.add(start, target, piece, 0, 0, 0, 0, 0)
                                 # add double pawn move 
                                 twoTargetString = fieldStr(target - 8)
                                 if (start >= a2 and start <= h2) and not bit.getBit(self.board_union, start - 16):
-                                    self.addMoveToList(start, target - 8, piece, 0, 0, 1, 0, 0)
+                                    MoveList.add(start, target - 8, piece, 0, 0, 1, 0, 0)
                                     
 
                         # create capturing moves
@@ -601,12 +627,12 @@ class Board():
 
                             #capture combined promotions
                             if start >= a7 and start <= h7:
-                                self.addMoveToList(start, captureTarget, piece, R, 1, 0, 0, 0)
-                                self.addMoveToList(start, captureTarget, piece, N, 1, 0, 0, 0)
-                                self.addMoveToList(start, captureTarget, piece, B, 1, 0, 0, 0)
-                                self.addMoveToList(start, captureTarget, piece, Q, 1, 0, 0, 0)
+                                MoveList.add(start, captureTarget, piece, R, 1, 0, 0, 0)
+                                MoveList.add(start, captureTarget, piece, N, 1, 0, 0, 0)
+                                MoveList.add(start, captureTarget, piece, B, 1, 0, 0, 0)
+                                MoveList.add(start, captureTarget, piece, Q, 1, 0, 0, 0)
                             else:
-                                self.addMoveToList(start, captureTarget, piece, 0, 1, 0, 0, 0)
+                                MoveList.add(start, captureTarget, piece, 0, 1, 0, 0, 0)
 
                             # end of this while loop
                             whiteCaptureMoves = bit.popBit(whiteCaptureMoves, captureTarget)
@@ -617,7 +643,7 @@ class Board():
 
                             if enpassantAttacks:
                                 targetEnpassant = bit.getLsbIndex(enpassantAttacks)
-                                self.addMoveToList(start, targetEnpassant, piece, 0, 1, 0, 1, 0)
+                                MoveList.add(start, targetEnpassant, piece, 0, 1, 0, 1, 0)
                         # pop the pawn, as we have calculated everything we need
                         pieceMap = bit.popBit(pieceMap, start)
 
@@ -633,7 +659,7 @@ class Board():
                             
                             rankRightUnattacked = not self.isFieldAttacked(e1, black) and not self.isFieldAttacked(f1, black)
                             if rankRightUnattacked: 
-                                self.addMoveToList(e1, g1, piece, 0, 0, 0, 0, 1)
+                                MoveList.add(e1, g1, piece, 0, 0, 0, 0, 1)
                     
                     if self.castling & wq:
 
@@ -642,7 +668,7 @@ class Board():
 
                             rankLeftUnattacked = not self.isFieldAttacked(e1, black) and not self.isFieldAttacked(d1, black)
                             if rankLeftUnattacked:
-                                self.addMoveToList(e1, c1, piece, 0, 0, 0, 0, 1)
+                                MoveList.add(e1, c1, piece, 0, 0, 0, 0, 1)
 
             else:
                 isBlackPawns = piece == p
@@ -664,16 +690,16 @@ class Board():
                             #promotion
                             if start >= a2 and start <= h2:
                                 #add move into move list
-                                self.addMoveToList(start, target, piece, r, 0, 0, 0, 0)
-                                self.addMoveToList(start, target, piece, n, 0, 0, 0, 0)
-                                self.addMoveToList(start, target, piece, b, 0, 0, 0, 0)
-                                self.addMoveToList(start, target, piece, q, 0, 0, 0, 0)
+                                MoveList.add(start, target, piece, r, 0, 0, 0, 0)
+                                MoveList.add(start, target, piece, n, 0, 0, 0, 0)
+                                MoveList.add(start, target, piece, b, 0, 0, 0, 0)
+                                MoveList.add(start, target, piece, q, 0, 0, 0, 0)
 
                             else:
-                                self.addMoveToList(start, target, piece, 0, 0, 0, 0, 0)
+                                MoveList.add(start, target, piece, 0, 0, 0, 0, 0)
                                 # double pawn move 
                                 if (start >= a7 and start <= h7) and not bit.getBit(self.board_union, start + 16):
-                                    self.addMoveToList(start, target + 8, piece, 0, 0, 1, 0, 0)
+                                    MoveList.add(start, target + 8, piece, 0, 0, 1, 0, 0)
 
                         # create capturing moves
                         blackCaptureMoves = atk.getPawnAttack(black, start) & self.white_board_union
@@ -683,12 +709,12 @@ class Board():
 
                             #capture combined promotions
                             if start >= a2 and start <= h2:
-                                self.addMoveToList(start, target, piece, r, 1, 0, 0, 0)
-                                self.addMoveToList(start, target, piece, n, 1, 0, 0, 0)
-                                self.addMoveToList(start, target, piece, b, 1, 0, 0, 0)
-                                self.addMoveToList(start, target, piece, q, 1, 0, 0, 0)
+                                MoveList.add(start, target, piece, r, 1, 0, 0, 0)
+                                MoveList.add(start, target, piece, n, 1, 0, 0, 0)
+                                MoveList.add(start, target, piece, b, 1, 0, 0, 0)
+                                MoveList.add(start, target, piece, q, 1, 0, 0, 0)
                             else:
-                                self.addMoveToList(start, target, piece, 0, 1, 0, 0, 0)
+                                MoveList.add(start, target, piece, 0, 1, 0, 0, 0)
 
                             # end of this while loop
                             blackCaptureMoves = bit.popBit(blackCaptureMoves, target)
@@ -699,7 +725,7 @@ class Board():
 
                             if enpassantAttacks:
                                 targetEnpassant = bit.getLsbIndex(enpassantAttacks)
-                                self.addMoveToList(start, targetEnpassant, piece, 0, 1, 0, 1, 0)
+                                MoveList.add(start, targetEnpassant, piece, 0, 1, 0, 1, 0)
 
                         # pop the pawn, as we have calculated everything we need
                         pieceMap = bit.popBit(pieceMap, start)
@@ -714,7 +740,7 @@ class Board():
                             
                             rankRightUnattacked = not self.isFieldAttacked(e8, white) and not self.isFieldAttacked(f8, white)
                             if rankRightUnattacked: 
-                                self.addMoveToList(e8, g8, piece, 0, 0, 0, 0, 1)
+                                MoveList.add(e8, g8, piece, 0, 0, 0, 0, 1)
                             
                     
                     if self.castling & bq:
@@ -724,27 +750,27 @@ class Board():
 
                             rankLeftUnattacked = not self.isFieldAttacked(e8, white) and not self.isFieldAttacked(d8, white)
                             if rankLeftUnattacked:
-                                self.addMoveToList(e8, c8, piece, 0, 0, 0, 0, 1)
+                                MoveList.add(e8, c8, piece, 0, 0, 0, 0, 1)
 
             isKnightPiece = piece == N if self.turn == white else piece == n
             if isKnightPiece:
-                piecemap = self.generateNonPawnMoves(pieceMap, piece)
+                piecemap = self.generateNonPawnMoves(pieceMap, piece, MoveList)
 
             isBishopPiece = piece == B if self.turn == white else piece == b
             if isBishopPiece:
-                pieceMap = self.generateNonPawnMoves(pieceMap, piece)
+                pieceMap = self.generateNonPawnMoves(pieceMap, piece, MoveList)
 
             isRookPiece = piece == R if self.turn == white else piece == r
             if isRookPiece:
-                pieceMap = self.generateNonPawnMoves(pieceMap, piece)
+                pieceMap = self.generateNonPawnMoves(pieceMap, piece, MoveList)
 
             isQueenPiece = piece == Q if self.turn == white else piece == q
             if isQueenPiece:
-                pieceMap = self.generateNonPawnMoves(pieceMap, piece)
+                pieceMap = self.generateNonPawnMoves(pieceMap, piece, MoveList)
 
             isKingPiece = piece == K if self.turn == white else piece == k
             if isKingPiece:
-                pieceMap = self.generateNonPawnMoves(pieceMap, piece)
+                pieceMap = self.generateNonPawnMoves(pieceMap, piece, MoveList)
 
     def isCheck(self, kingFieldIndex):
         return self.isFieldAttacked(kingFieldIndex, self.turn)
@@ -857,6 +883,8 @@ class Board():
     # mode 0, require movestring, mode 1, wait for user input
     def parseMove(self, mode, moveString=None):
         
+        newMoveList = MoveList()
+
         if mode:
             moveString = input('Input next move.\n')
 
@@ -885,7 +913,7 @@ class Board():
         # TODO: make sure moves are generated ahead of time
         # self.generateMoves(self.turn)
 
-        for move in self.moveList:
+        for move in newMoveList.moves:
             start, target, piece, promoted, capture, double, enpassant, castle = move
 
             correctCoordinates = inputStart == start and inputTarget == target
@@ -971,12 +999,12 @@ class Board():
 
         return score if self.turn == white else -score
 
-    def getLegalMoves(self):
+    def getLegalMoves(self, MoveList):
         legal = []
 
         saveState = self.getSaveState()
 
-        for move in self.moveList:
+        for move in MoveList.moves:
             if not self.makeMove(move, 0):
                 continue
             else:
@@ -985,12 +1013,12 @@ class Board():
 
         return legal
 
-    def getLegalMoves_withValues(self):
+    def getLegalMoves_withValues(self, MoveList):
         legal = []
 
         saveState = self.getSaveState()
 
-        for move in self.moveList:
+        for move in MoveList.moves:
             if not self.makeMove(move, 0):
                 continue
             else:
@@ -1007,9 +1035,9 @@ class Board():
         return legal
 
     # return legal moves, sorted based on score first and capture value second
-    def getSortedMoves(self):
-        moveList = self.getLegalMoves_withValues()
-        return sorted(moveList, key=itemgetter(1,2))
+    # def getSortedMoves(self):
+    #     moveList = self.getLegalMoves_withValues()
+    #     return sorted(moveList, key=itemgetter(1,2))
 
     def parsePosition(self, commandString):
         commandList = commandString.split()
@@ -1134,16 +1162,16 @@ class Board():
         return 0
 
     # sort moves in descending order score
-    def sortMoveList(self): 
-        self.moveList.sort(key=self.evaluateMove, reverse=True)
+    def sortMoveList(self, MoveList): 
+        MoveList.moves.sort(key=self.evaluateMove, reverse=True)
 
-    def printMoveList_withScores(self):
+    def printMoveList_withScores(self, MoveList):
         if self.moveIndex == -1:
             print('Movelist is empty.')
             return
 
         print(f's->t p  + - d e c v')
-        for index, move in enumerate(self.moveList):
+        for index, move in enumerate(MoveList.moves):
             captureValue = self.evaluateMove(move)
             start, target, piece, promoted, capture, doublePush, enpassant, castling = move
 
@@ -1163,9 +1191,11 @@ class Board():
         #TODO: This might be causing issues
         if score > alpha: alpha = score
 
-        self.generateMoves()
+    
+        newMoveList = MoveList()
+        self.generateMoves(newMoveList)
 
-        for i, move in enumerate(self.moveList):
+        for i, move in enumerate(newMoveList.moves):
             saveState = self.getSaveState()
 
             success = self.makeMove(move, 1)
@@ -1202,10 +1232,11 @@ class Board():
         if isCheck: self.nodeCount += 1
 
         # update the movelist 
-        self.generateMoves()
-        self.sortMoveList()
+        newMoveList = MoveList()
+        self.generateMoves(newMoveList)
+        self.sortMoveList(newMoveList)
 
-        for i, move in enumerate(self.moveList):
+        for i, move in enumerate(newMoveList.moves):
             saveState = self.getSaveState()
 
             success = self.makeMove(move, 0)
@@ -1254,39 +1285,39 @@ class Board():
 
     ################### ALPHA BETA END ###################
 
-    def parseBot(self, sleepTime):
-        print('botgame')
+    # def parseBot(self, sleepTime):
+    #     print('botgame')
 
-        self.printBoard()
-        print(f'Score: {-self.evaluateScore()}')
+    #     self.printBoard()
+    #     print(f'Score: {-self.evaluateScore()}')
 
-        if self.pieceMaps == [0,0,0,0,0,0,0,0,0,0,0,0]:
-            self.parsePosition('position startpos')
+    #     if self.pieceMaps == [0,0,0,0,0,0,0,0,0,0,0,0]:
+    #         self.parsePosition('position startpos')
 
-        while(True):
-            print(f'{"white" if self.turn == white else "black"}s turn.')
-            self.generateMoves()
-            time.sleep(sleepTime)
+    #     while(True):
+    #         print(f'{"white" if self.turn == white else "black"}s turn.')
+    #         self.generateMoves()
+    #         time.sleep(sleepTime)
 
-            # check for opposite side king hill win
-            #  if kingOfHill(opponent):
+    #         # check for opposite side king hill win
+    #         #  if kingOfHill(opponent):
 
-            # result = self.makeRandomMove()
-            result = self.makeBetterMove()
+    #         # result = self.makeRandomMove()
+    #         result = self.makeBetterMove()
 
-            if result == -1:
-                winner = 'white' if self.turn == black else 'black'
-                print(f'Winner by timeout: {winner}')
-                break 
+    #         if result == -1:
+    #             winner = 'white' if self.turn == black else 'black'
+    #             print(f'Winner by timeout: {winner}')
+    #             break 
 
-            if result == 0:
-                winner = 'white' if self.turn == black else 'black' 
-                print(f'Winner by mate or stalemate: {winner}')
-                break
-            if result == 2:
-                winner = 'white' if self.turn == black else 'black' 
-                print(f'Winner by KOTH: {winner}')
-                break
+    #         if result == 0:
+    #             winner = 'white' if self.turn == black else 'black' 
+    #             print(f'Winner by mate or stalemate: {winner}')
+    #             break
+    #         if result == 2:
+    #             winner = 'white' if self.turn == black else 'black' 
+    #             print(f'Winner by KOTH: {winner}')
+    #             break
 
     def parsePlayer(self):
         print('playerGame')

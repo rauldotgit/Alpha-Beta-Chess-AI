@@ -15,6 +15,8 @@ FEN_LATE = '1R6/3R4/P2Pk3/4P3/4KP2/8/8/8 b - - 0 0'
 #     newBoard = board.Board()
 #     newBoard.fenGameSetup(FEN_START)
 
+#     newMoveList = board.MoveList()
+
 #     newBoard.printBoard()
 
 #     legalMoves = None
@@ -22,12 +24,12 @@ FEN_LATE = '1R6/3R4/P2Pk3/4P3/4KP2/8/8/8 b - - 0 0'
 
 #     startTime = time.time()
 #     for i in range(runs + 1):
-#         newBoard.generateMoves()
-#         legalMoves = newBoard.getLegalMoves()
+#         newBoard.generateMoves(newMoveList)
+#         legalMoves = newBoard.getLegalMoves(newMoveList)
 
 #     duration = time.time() - startTime
 
-#     print(newBoard.printMoveList())
+#     print(newMoveList.printList())
 #     print(f'Bechmark start duration {runs} runs: {duration}')
     
 
@@ -36,6 +38,8 @@ FEN_LATE = '1R6/3R4/P2Pk3/4P3/4KP2/8/8/8 b - - 0 0'
 #     newBoard = board.Board()
 #     newBoard.fenGameSetup(FEN_HARD)
 
+#     newMoveList = board.MoveList()
+
 #     newBoard.printBoard()
 
 #     legalMoves = None
@@ -43,12 +47,12 @@ FEN_LATE = '1R6/3R4/P2Pk3/4P3/4KP2/8/8/8 b - - 0 0'
 
 #     startTime = time.time()
 #     for i in range(runs + 1):
-#         newBoard.generateMoves()
-#         legalMoves = newBoard.getLegalMoves()
+#         newBoard.generateMoves(newMoveList)
+#         legalMoves = newBoard.getLegalMoves(newMoveList)
 
 #     duration = time.time() - startTime
 
-#     print(newBoard.printMoveList())
+#     print(newMoveList.printList())
 #     print(f'Bechmark mid duration {runs} runs: {duration}')
 
 # def test_benchmark_movegen_late():
@@ -56,6 +60,8 @@ FEN_LATE = '1R6/3R4/P2Pk3/4P3/4KP2/8/8/8 b - - 0 0'
 #     newBoard = board.Board()
 #     newBoard.fenGameSetup(FEN_LATE)
 
+#     newMoveList = board.MoveList()
+
 #     newBoard.printBoard()
 
 #     legalMoves = None
@@ -63,10 +69,10 @@ FEN_LATE = '1R6/3R4/P2Pk3/4P3/4KP2/8/8/8 b - - 0 0'
 
 #     startTime = time.time()
 #     for i in range(runs + 1):
-#         newBoard.generateMoves()
-#         legalMoves = newBoard.getLegalMoves()
+#         newBoard.generateMoves(newMoveList)
+#         legalMoves = newBoard.getLegalMoves(newMoveList)
 
 #     duration = time.time() - startTime
 
-#     print(newBoard.printMoveList())
+#     print(newMoveList.printList())
 #     print(f'Bechmark end duration {runs} runs: {duration}')
