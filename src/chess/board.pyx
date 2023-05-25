@@ -11,6 +11,16 @@ import src.chess.move_encoding as menc
 
 ###########################################################
 
+# TODO: Decouple moveList from Board Object (important for speed)
+
+# TODO: Does loadSaveState need to include the node count? 
+# TODO: Does the movelist need to be included in the getSaveState? 
+# Does it interfere with negamax by resetting the moves?
+# TODO: Entertain the thought of using a linked list for the movelist 
+    # Makes sense with the scoring, where we can sort the movelist immediately when creating it in generateMoves
+# TODO: Check if encoding the moves is really faster
+# TODO: Write a function to log the node tree traversed
+
 cdef int noSquare = 64
 
 cdef enum color_int:
@@ -282,9 +292,9 @@ class Board():
 
     moveList = []
     moveIndex = -1
+    bestMove = None
 
-    # this will have all variables from turn ... moveIndex from the last turn
-    prevState = []
+    nodeCount = 0
 
     #list with time items
     time = []
@@ -298,97 +308,6 @@ class Board():
     def printBoard(self):
         maps.ppBitMaps(self.pieceMaps)
         print(f'T:{self.turn} C:{self.castling} E:{self.enpassant}')
-
-    def loadSaveState(self, saveState):
-        self.turn = saveState[0]
-        self.enpassant = saveState[1]
-        self.castling = saveState[2]
-        self.halfMoves = saveState[3]
-        self.fullMoves = saveState[4]
-
-        self.pieceMaps[P] = saveState[5]
-        self.pieceMaps[R] = saveState[6]
-        self.pieceMaps[N] = saveState[7]
-        self.pieceMaps[B] = saveState[8]
-        self.pieceMaps[Q] = saveState[9]
-        self.pieceMaps[K] = saveState[10]
-
-        self.pieceMaps[p] = saveState[11]
-        self.pieceMaps[r] = saveState[12]
-        self.pieceMaps[n] = saveState[13]
-        self.pieceMaps[b] = saveState[14]
-        self.pieceMaps[q] = saveState[15]
-        self.pieceMaps[k] = saveState[16]
-
-        self.board_union = saveState[17]
-        self.white_board_union = saveState[18]
-        self.black_board_union = saveState[19]
-
-        self.moveList = saveState[20]
-        self.moveIndex = saveState[21]
-
-        self.time = saveState[22]
-
-    def loadPrevState(self):
-        self.turn = self.prevState[0]
-        self.enpassant = self.prevState[1]
-        self.castling = self.prevState[2]
-        self.halfMoves = self.prevState[3]
-        self.fullMoves = self.prevState[4]
-
-        self.pieceMaps[P] = self.prevState[5]
-        self.pieceMaps[R] = self.prevState[6]
-        self.pieceMaps[N] = self.prevState[7]
-        self.pieceMaps[B] = self.prevState[8]
-        self.pieceMaps[Q] = self.prevState[9]
-        self.pieceMaps[K] = self.prevState[10]
-
-        self.pieceMaps[p] = self.prevState[11]
-        self.pieceMaps[r] = self.prevState[12]
-        self.pieceMaps[n] = self.prevState[13]
-        self.pieceMaps[b] = self.prevState[14]
-        self.pieceMaps[q] = self.prevState[15]
-        self.pieceMaps[k] = self.prevState[16]
-
-        self.board_union = self.prevState[17]
-        self.white_board_union = self.prevState[18]
-        self.black_board_union = self.prevState[19]
-
-        self.moveList = self.prevState[20]
-        self.moveIndex = self.prevState[21]
-
-        self.time = self.prevState[22]
-
-    def saveCurrentState(self):
-        self.prevState = [
-            self.turn,
-            self.enpassant,
-            self.castling,
-            self.halfMoves,
-            self.fullMoves,
-
-            self.pieceMaps[P],
-            self.pieceMaps[R],
-            self.pieceMaps[N],
-            self.pieceMaps[B],
-            self.pieceMaps[Q],
-            self.pieceMaps[K],
-            self.pieceMaps[p],
-            self.pieceMaps[r],
-            self.pieceMaps[n],
-            self.pieceMaps[b],
-            self.pieceMaps[q],
-            self.pieceMaps[k],
-
-            self.board_union,
-            self.white_board_union,
-            self.black_board_union,
-            
-            self.moveList,
-            self.moveIndex,
-
-            self.time
-        ]
 
     def getSaveState(self):
         return [
@@ -420,6 +339,36 @@ class Board():
 
             self.time
         ]
+    
+    def loadSaveState(self, saveState):
+        self.turn = saveState[0]
+        self.enpassant = saveState[1]
+        self.castling = saveState[2]
+        self.halfMoves = saveState[3]
+        self.fullMoves = saveState[4]
+
+        self.pieceMaps[P] = saveState[5]
+        self.pieceMaps[R] = saveState[6]
+        self.pieceMaps[N] = saveState[7]
+        self.pieceMaps[B] = saveState[8]
+        self.pieceMaps[Q] = saveState[9]
+        self.pieceMaps[K] = saveState[10]
+
+        self.pieceMaps[p] = saveState[11]
+        self.pieceMaps[r] = saveState[12]
+        self.pieceMaps[n] = saveState[13]
+        self.pieceMaps[b] = saveState[14]
+        self.pieceMaps[q] = saveState[15]
+        self.pieceMaps[k] = saveState[16]
+
+        self.board_union = saveState[17]
+        self.white_board_union = saveState[18]
+        self.black_board_union = saveState[19]
+
+        self.moveList = saveState[20]
+        self.moveIndex = saveState[21]
+
+        self.time = saveState[22]
 
     def setPieces(self):
         self.pieceMaps[P] = maps.WHITE_PAWNS_MAP
@@ -563,7 +512,8 @@ class Board():
         print(f'Number of moves: {self.moveIndex+1}')
 
     def addMoveToList(self, start, target,  piece, promoted, capture, doublePush, enpassant, castling):
-        self.moveList.append([start, target,  piece, promoted, capture, doublePush, enpassant, castling])
+        cdef int[8] move = [start, target,  piece, promoted, capture, doublePush, enpassant, castling]
+        self.moveList.append(move)
         self.moveIndex += 1
 
     def resetMoveList(self):
@@ -796,11 +746,11 @@ class Board():
             if isKingPiece:
                 pieceMap = self.generateNonPawnMoves(pieceMap, piece)
 
-    def isCheck(self, kingIndex):
-        return self.isFieldAttacked(kingIndex, self.turn)
+    def isCheck(self, kingFieldIndex):
+        return self.isFieldAttacked(kingFieldIndex, self.turn)
 
-    def isKOTH(self, kingIndex):
-        KOTH = kingIndex == d4 or kingIndex == d5 or kingIndex == e4 or kingIndex == e5
+    def isKOTH(self, kingFieldIndex):
+        KOTH = kingFieldIndex == d4 or kingFieldIndex == d5 or kingFieldIndex == e4 or kingFieldIndex == e5
         return True if KOTH else False 
 
     def makeMove(self, move, flag):
@@ -885,13 +835,13 @@ class Board():
             self.nextTurn()
             # self.generateMoves()
 
-            kingIndex = bit.getLsbIndex(self.pieceMaps[k]) if self.turn == white else bit.getLsbIndex(self.pieceMaps[K])
-            if self.isCheck(kingIndex):
+            kingFieldIndex = bit.getLsbIndex(self.pieceMaps[k]) if self.turn == white else bit.getLsbIndex(self.pieceMaps[K])
+            if self.isCheck(kingFieldIndex):
                 # illegal
                 self.loadSaveState(saveState)
                 return 0
             else:
-                if self.isKOTH(kingIndex):
+                if self.isKOTH(kingFieldIndex):
                     return 2
                 else:
                     return 1
@@ -972,8 +922,8 @@ class Board():
     # position fen r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1 moves e2a6 e8g8
 
     # gets a potential capture move from the movelist and returns piece index (P,p .. K,k) of captured piece
-    def getCapturedPiece(self, captureField):
-        cdef unsigned long long attackBit = 1 << captureField
+    def getCapturedPiece(self, target):
+        cdef unsigned long long attackBit = 1 << target
 
         # TODO: could be improved by just checking one side 
         for index, pieceMap in enumerate(self.pieceMaps):
@@ -982,10 +932,9 @@ class Board():
 
         return -1
 
-    def getCaptureValue(self, move):
-        captureField = move[1]
-        attackPiece = move[2]
-        capturedPiece = self.getCapturedPiece(captureField)
+    # TODO: Make sure enpassant is regarded
+    def getCaptureValue(self, target, attackPiece, enpassant):
+        capturedPiece = 0 if enpassant else self.getCapturedPiece(target)
         return MVV_LVA_ARRAY[attackPiece % 6][capturedPiece % 6]
 
     def getFieldValue(self, piece, fieldIndex):
@@ -1061,7 +1010,6 @@ class Board():
     def getSortedMoves(self):
         moveList = self.getLegalMoves_withValues()
         return sorted(moveList, key=itemgetter(1,2))
-
 
     def parsePosition(self, commandString):
         commandList = commandString.split()
@@ -1161,23 +1109,6 @@ class Board():
 
     ################### ALPHA BETA ###################
 
-    # MVV LVA [attacker][victim]
-    mvv_lva = [
-        105, 205, 305, 405, 505, 605,  105, 205, 305, 405, 505, 605,
-        104, 204, 304, 404, 504, 604,  104, 204, 304, 404, 504, 604,
-        103, 203, 303, 403, 503, 603,  103, 203, 303, 403, 503, 603,
-        102, 202, 302, 402, 502, 602,  102, 202, 302, 402, 502, 602,
-        101, 201, 301, 401, 501, 601,  101, 201, 301, 401, 501, 601,
-        100, 200, 300, 400, 500, 600,  100, 200, 300, 400, 500, 600,
-
-        105, 205, 305, 405, 505, 605,  105, 205, 305, 405, 505, 605,
-        104, 204, 304, 404, 504, 604,  104, 204, 304, 404, 504, 604,
-        103, 203, 303, 403, 503, 603,  103, 203, 303, 403, 503, 603,
-        102, 202, 302, 402, 502, 602,  102, 202, 302, 402, 502, 602,
-        101, 201, 301, 401, 501, 601,  101, 201, 301, 401, 501, 601,
-        100, 200, 300, 400, 500, 600,  100, 200, 300, 400, 500, 600
-    ]
-
     # max self.ply that we can reach within a search
     max_ply = 64
 
@@ -1193,355 +1124,133 @@ class Board():
     # PV table [self.ply][self.ply]
     pv_table = np.zeros((max_ply, max_ply))
 
-    # half move counter
-    ply = 0
-
-    # nodes
-    nodes = 0
-
-    # move -> start, target, piece, promoted, capture, doublePush, enpassant, castling
-
     # score moves
-    def scoreMove(self, move):
-        start = move[0]
-        target_field = move[1]
-        piece = move[2]
-        promotion = move[3]
-        capture = move[4]
-
-        # score capture move
-        if capture:
-            # init target_field piece
-            print("Target field: ", fieldStr(target_field))
-            print("PIECE MAPS")
-            for pMap in self.pieceMaps:
-                maps.printMap(pMap)
-            print("PIECE MAPS END")
-            
-            target_piece = self.getCapturedPiece(target_field)
-
-            if target_piece == -1:
-                print('Piece not found')
-                raise ValueError
-
-            return MVV_LVA_ARRAY[piece][target_piece] + 10000 # TODO: maybe move[2] needs to be converted to int        
+    def evaluateMove(self, move):
+        start, target, piece, promoted, capture, double, enpassant, castle = move
         
-        # score quiet move
-        else:
-            # score 1st killer move
-            if (self.killer_moves[0][self.ply] == menc.encode(*move)): 
-                return 9000
-            
-            # score 2nd killer move
-            elif (self.killer_moves[1][self.ply] == menc.encode(*move)):
-                return 8000
-            
-            # score history move
-            else:
-                print("Piece: ", piece)
-                print("Target Field: ", target_field)
-                histMove = self.history_moves[piece][target_field]
-                print("DEBUGGING SCOREMOVE(): ")
-                print("history_moves: ", histMove)
-                return histMove # TODO: maybe move[2] needs to be converted to int
-        
+        if capture: return self.getCaptureValue(target, piece, enpassant)
+        else: pass
+
         return 0
 
-    # sort moves in descending order
-    def sortMoves(self): 
-        # move scores
-        move_scores = np.zeros(len(self.moveList))
-        print("DEBUGGING SORTMOVES():")
-        print("self.moveList :", self.moveList)
-        
-        # score all the moves within a move list
+    # sort moves in descending order score
+    def sortMoveList(self): 
+        self.moveList.sort(key=self.evaluateMove, reverse=True)
+
+    def printMoveList_withScores(self):
+        if self.moveIndex == -1:
+            print('Movelist is empty.')
+            return
+
+        print(f's->t p  + - d e c v')
         for index, move in enumerate(self.moveList):
-            print("DEBUGGING SORTMOVES() LOOP:")
-            print("move: ", move)
-            # score move
-            moveScore = self.scoreMove(move)
-            print("DEBUGGING SORTMOVES() LOOP:")
-            print(moveScore)
-            move_scores[index] = moveScore
-        
-        # loop over current move within a move list
-        for current_index, current_move in enumerate(self.moveList):
-            # loop over next move within a move list
-            for next_index, next_move in enumerate(self.moveList[1:]):
-                # compare current and next move scores
-                if (move_scores[current_index] < move_scores[next_index]):
-                    # swap scores
-                    temp_score = move_scores[current_index]
-                    move_scores[current_index] = move_scores[next_index]
-                    move_scores[next_index] = temp_score
-                    
-                    # swap moves
-                    temp_move = current_move
-                    current_move = next_move
-                    next_move = temp_move
+            captureValue = self.evaluateMove(move)
+            start, target, piece, promoted, capture, doublePush, enpassant, castling = move
 
-    # print move scores
-    def printMoveScores(self): 
-        print("     Move scores:\n\n");
-            
-        # loop over moves within a move list
-        for move in self.moveList:
-            print("     move: ")
-            self.printMove(move) 
-            print(f' score: {self.scoreMove(move)} \n')
+            print(
+                f'{fieldStr(start)}{fieldStr(target)} {roleUnicode(piece)}  {promoted} {capture} {doublePush} {enpassant} {castling} {captureValue}'
+            )
+        
+        print(f'Number of moves: {self.moveIndex+1}')
 
-    # quiescence search
-    def quiescence(self, alpha, beta):
-        # increment nodes count
-        self.nodes+=1
+    # basically negamax but only on capture moves to avoid event horizon problem
+    def quiescenceSearch(self, alpha, beta):
+        cdef int score = self.evaluateScore()
+        self.nodeCount += 1
 
-        # evaluate position
-        evaluation = self.evaluateScore()
-        
-        # fail-hard beta cutoff
-        if (evaluation >= beta):
-            # node (move) fails high
-            return beta
-        
-        # found a better move
-        if (evaluation > alpha):
-            # PV node (move)
-            alpha = evaluation
-        
-        # create move list instance
-        #move_list = self.moveList
-        
-        # generate moves
-        #generate_moves(move_list)
+        if score >= beta: return beta
+
+        #TODO: This might be causing issues
+        if score > alpha: alpha = score
+
         self.generateMoves()
-        print("DEBUGGING QUIESCENE():")
-        print("generated moves: ", self.moveList)
-        
-        # sort moves
-        #sort_moves(move_list)
-        self.sortMoves()
-        
-        # loop over moves within a movelist
-        for move in self.moveList:
-            # preserve board state
-            self.saveCurrentState()
-            
-            # increment self.ply
-            self.ply+=1
-            
-            # make sure to make only legal moves
-            if self.makeMove(move, 1) == 0:
-                # decrement self.ply
-                self.ply-=1
-                
-                # skip to next move
-                continue
 
-            # score current move
-            score = -self.quiescence(-beta, -alpha)
-            
-            # decrement self.ply
-            self.ply-=1
+        for i, move in enumerate(self.moveList):
+            saveState = self.getSaveState()
 
-            # take move back
-            self.loadPrevState()
-            
-            # fail-hard beta cutoff
-            if score >= beta:
-                # node (move) fails high
-                return beta
-            
-            # found a better move
-            if score > alpha:
-                # PV node (move)
-                alpha = score
-        
-        # node (move) fails low
+            success = self.makeMove(move, 1)
+            if success: 
+                self.halfMoves += 1 
+            else: continue
+
+            newScore = -self.quiescenceSearch(-beta, -alpha)
+
+            # TODO: I'd much rather have this in getSaveState
+            self.halfMoves -= 1
+            self.loadSaveState(saveState)
+
+            if newScore >= beta: return beta
+            if newScore > alpha: alpha = newScore
+
         return alpha
 
     # negamax alpha beta search
     def negamax(self, alpha, beta, depth):
-        # init PV length
-        self.pv_length[self.ply] = self.ply
 
-        # recursion escape condition
-        if depth == 0:
-            # run quiescence search
-            return self.quiescence(alpha, beta)
-        
-        # we are too deep, hence there's an overflow of arrays relying on max self.ply constant
-        if (self.ply > self.max_ply - 1):
-            # evaluate position
-            return self.evaluateScore()
-        
-        # increment nodes count
-        self.nodes+=1
-        
-        # is king in check
-        kingIndex = bit.getLsbIndex(self.pieceMaps[k]) if self.turn == white else bit.getLsbIndex(self.pieceMaps[K])
-        in_check = self.isCheck(kingIndex)
-        
-        # increase search depth if the king has been exposed into a check
-        if in_check: 
-            depth+=1
-        
-        # legal moves counter
-        legal_moves = 0
-        
-        # create move list instance
-        #moves move_list[1];
-        
-        # generate moves
-        #generate_moves(move_list);
+        if depth == 0: return self.quiescenceSearch(alpha, beta)
+        self.nodeCount += 1 
+
+        cdef int[8] betterMove
+        cdef int legalMovesCount = 0
+        cdef int prevAlpha = alpha
+
+        # TODO: Make sure this check for the right turn side  
+        kingFieldIndex = bit.getLsbIndex(self.pieceMaps[K]) if self.turn == white else bit.getLsbIndex(self.pieceMaps[k])
+        cdef bint isCheck = self.isCheck(kingFieldIndex) 
+
+        # TODO: Uncheck this later
+        if isCheck: self.nodeCount += 1
+
+        # update the movelist 
         self.generateMoves()
-        
-        # sort moves
-        #sort_moves(move_list);
-        self.sortMoves()
-        
-        # loop over moves within a movelist
-        for move in self.moveList:
-            # preserve board state
-            self.saveCurrentState()
-            
-            # increment self.ply
-            self.ply+=1
-            
-            # make sure to make only legal moves
-            if self.makeMove(move, 0) == 0:
-                # decrement self.ply
-                self.ply-=1
-                
-                # skip to next move
-                continue
-            
-            # increment legal moves
-            legal_moves+=1
-            
-            # score current move
-            score = -self.negamax(-beta, -alpha, depth - 1)
-            
-            # decrement self.ply
-            self.ply-=1
+        self.sortMoveList()
 
-            # take move back
-            self.loadPrevState()
-            
-            # fail-hard beta cutoff
+        for i, move in enumerate(self.moveList):
+            saveState = self.getSaveState()
+
+            success = self.makeMove(move, 0)
+            if success: 
+                self.halfMoves += 1 
+                legalMovesCount += 1
+            else: continue
+
+            score = -self.negamax(-beta, -alpha, depth-1)
+
+            # TODO: I'd much rather have this in getSaveState
+            self.halfMoves -= 1
+            self.loadSaveState(saveState)
+
+            # fail high beta cutoff
             if score >= beta:
-                # on quiet moves
-                if not move[4]:
-                    # store killer moves
-                    self.killer_moves[1][self.ply] = self.killer_moves[0][self.ply]
-                    self.killer_moves[0][self.ply] = menc.encode(*move)
-                
-                # node (move) fails high
                 return beta
-            
-            # found a better move
+
+            # better move
             if score > alpha:
-                # on quiet moves
-                if not move[4]:
-                    # store history moves
-                    print("depth: ", depth)
-                    self.history_moves[move[2]][move[1]] += depth # TODO: maybe move[2] needs to be converted to int
-                
-                # PV node (move)
                 alpha = score
-                
-                # write PV move
-                self.pv_table[self.ply][self.ply] = menc.encode(*move)
-                
-                # loop over the next self.ply
-                #for (int next_ply = self.ply + 1; next_ply < self.pv_length[self.ply + 1]; next_ply++) 
-                for next_ply in self.pv_length[self.ply+1:]:
-                    # copy move from deeper self.ply into a current self.ply's line
-                    self.pv_table[self.ply][next_ply] = self.pv_table[self.ply + 1][next_ply]
-                
-                # adjust PV length
-                self.pv_length[self.ply] = self.pv_length[self.ply + 1]
-        
-        # we don't have any legal moves to make in the current postion
-        if legal_moves == 0:
-            # king is in check
-            if in_check:
-                # return mating score (assuming closest distance to mating position)
-                return -49000 + self.ply
-            
-            # king is not in check
+
+                if self.halfMoves == 0:
+                    betterMove = move
+
+        if not legalMovesCount:
+
+            if isCheck:
+                return -49000 + self.halfMoves
             else:
-                # return stalemate score
                 return 0
-        
-        # node (move) fails low
+
+        if prevAlpha != alpha:
+            self.bestMove = betterMove
+
+        # move fails low 
         return alpha
 
     # search position for the best move
     def searchPosition(self, depth):
-        # define best score variable
-        score = 0
-        
-        # reset nodes counter
-        self.nodes = 0
-        
-        # clear helper data structures for search
-        self.killer_moves = np.zeros((2, 64))
-        self.history_moves = np.zeros((12, 64))
-        self.pv_table = np.zeros((64, 64))
-        self.pv_length = [0 for i in range(64)]
-        
-        # iterative deepening
-        for current_depth in range(1, depth):
-            self.nodes = 0
-            
-            # find best move within a given position
-            score = self.negamax(-50000, 50000, current_depth)
-            
-            print(f'info score cp {score} depth {current_depth} nodes {self.nodes} pv ')
-            
-            # loop over the moves within a PV line
-            for count in range(0, len(self.pv_length)):
-                # print PV move
-                print("printMove") # self.printMove(self.pv_table[0][count]) # TODO printMove takes move
-                print(" ")
-            
-            # print new line
-            print("\n")
+        cdef int score = self.negamax(-50000, 50000, depth)
 
-        # best move placeholder
-        print("bestmove ")
-        print("printMove") # self.printMove(self.pv_table[0][0]) # TODO printMove takes move
-        print("\n")
-        
-        
-        
-        # reset nodes counter
-        self.nodes = 0
-        
-        # clear helper data structures for search
-        self.killer_moves = np.zeros((2, 64))
-        self.history_moves = np.zeros((12, 64))
-        self.pv_table = np.zeros((64, 64))
-        self.pv_length = [0 for i in range(64)]
-        
-        # find best move within a given position
-        score = self.negamax(-50000, 50000, depth)
-        
-        print(f'info score cp {score} depth {current_depth} nodes {self.nodes} pv ')
-        
-        # loop over the moves within a PV line
-        for count in range(0, len(self.pv_length)):
-            # print PV move
-            print("printMove") # self.printMove(self.pv_table[0][count]) # TODO printMove takes move
-            print(" ")
-        
-        # print new line
-        print("\n")
-
-        # best move placeholder
-        print("bestmove ")
-        print("printMove") # self.printMove(pv_table[0][0]) # TODO printMove takes move
-        print("\n")
+        print('Negamax best move: ')
+        self.printMove(self.bestMove)
+        print('\n')
 
     ################### ALPHA BETA END ###################
 
