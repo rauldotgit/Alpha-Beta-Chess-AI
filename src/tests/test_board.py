@@ -157,6 +157,13 @@ def test_score_move():
 #     newBoard.sortMoveList()
 #     newBoard.printMoveList_withScores()
 
+# def test_minimax():
 
+#     newBoard = board.Board()
+#     newBoard.fenGameSetup(maps.FEN_START)
 
-
+#     for i in range(1, 5):
+#         newBoard.minimax(i)
+#         print(f'Depth {i}, best found move:')
+#         newBoard.printMove(newBoard.bestMove)
+#         print(f'Nodes searched: {newBoard.nodeCount}')
