@@ -11,18 +11,14 @@ import src.chess.move_encoding as menc
 
 ###########################################################
 
-# TODO: Decouple moveList from Board Object (important for speed)
-    # 1. make a moveList class with number of moves and the movelist
-    # 2. change functions that are part of the movelist to be in the moveList itself (all printer functions, adding functions etc.)
-    # 3. change functions the movelist is part of and give the movelist argument as an input
-
-# TODO: Does loadSaveState need to include the node count? 
-# TODO: Does the movelist need to be included in the getSaveState? 
-# Does it interfere with negamax by resetting the moves?
+# TODO: make sure storing self.bestMove in the board isn't dumb
 # TODO: Entertain the thought of using a linked list for the movelist 
     # Makes sense with the scoring, where we can sort the movelist immediately when creating it in generateMoves
-# TODO: Check if encoding the moves is really faster
+# TODO: Check if encoding the moves offers speed improvements
 # TODO: Write a function to log the node tree traversed
+
+# TODO: define functions as cdef functions after testing and make sure to have static typing
+# TODO: use libc.stdlib low level functions wherever applicable to speed up stuff
 
 cdef int noSquare = 64
 
@@ -269,8 +265,7 @@ class MoveList:
     def __init__(self):
         self.moves = []
         self.moveCount = 0
-        self.bestMove = None
-
+        # self.bestMove = None
 
     def add(self, start, target,  piece, promoted, capture, doublePush, enpassant, castling):
         cdef int[8] move = [start, target,  piece, promoted, capture, doublePush, enpassant, castling]
@@ -283,7 +278,7 @@ class MoveList:
     def reset(self):
         self.moves = []
         self.moveCount = 0
-        self.bestMove = None
+        # self.bestMove = None
 
     def delete(self, index):
         if self.moveCount == 0: return
@@ -963,7 +958,7 @@ class Board:
     # TODO: Make sure enpassant is regarded
     def getCaptureValue(self, target, attackPiece, enpassant):
         capturedPiece = 0 if enpassant else self.getCapturedPiece(target)
-        return MVV_LVA_ARRAY[attackPiece % 6][capturedPiece % 6]
+        return MVV_LVA_ARRAY[attackPiece % 6][capturedPiece % 6] + 10000
 
     def getFieldValue(self, piece, fieldIndex):
         pieceScore = 0
@@ -976,12 +971,12 @@ class Board:
         elif piece == Q: pieceScore = queenScores[fieldIndex] 
         elif piece == K: pieceScore = kingScores[fieldIndex] 
 
-        elif piece == p: pieceScore = -pawnScores[mirrorFieldIndex] 
-        elif piece == r: pieceScore = -rookScores[mirrorFieldIndex] 
-        elif piece == n: pieceScore = -knightScores[mirrorFieldIndex] 
-        elif piece == b: pieceScore = -bishopScores[mirrorFieldIndex] 
-        elif piece == q: pieceScore = -queenScores[mirrorFieldIndex] 
-        elif piece == k: pieceScore = -kingScores[mirrorFieldIndex] 
+        elif piece == p: pieceScore = -1 * pawnScores[mirrorFieldIndex] 
+        elif piece == r: pieceScore = -1 * rookScores[mirrorFieldIndex] 
+        elif piece == n: pieceScore = -1 * knightScores[mirrorFieldIndex] 
+        elif piece == b: pieceScore = -1 * bishopScores[mirrorFieldIndex] 
+        elif piece == q: pieceScore = -1 * queenScores[mirrorFieldIndex] 
+        elif piece == k: pieceScore = -1 * kingScores[mirrorFieldIndex] 
 
         return pieceScore
 
@@ -998,6 +993,7 @@ class Board:
                 pieceMap = bit.popBit(pieceMap, fieldIndex)
 
         return score if self.turn == white else -score
+        # return score 
 
     def getLegalMoves(self, MoveList):
         legal = []
@@ -1044,7 +1040,6 @@ class Board:
         cmdlen = len(commandList)
         
         # close your eyes here if you're a python dev
-
         cmd1 = forceGet(commandList, 1)
 
         if cmd1 and cmd1 == 'startpos':
@@ -1134,30 +1129,13 @@ class Board:
             self.printBoard()
             return 2
 
-
-    ################### ALPHA BETA ###################
-
-    # max self.ply that we can reach within a search
-    max_ply = 64
-
-    # killer moves [id][self.ply]
-    killer_moves = np.zeros((2, max_ply), dtype=int)
-
-    # history moves [piece][square]
-    history_moves = np.zeros((12, 64))
-
-    # PV length [self.ply]
-    pv_length = [0 for i in range(max_ply)]
-
-    # PV table [self.ply][self.ply]
-    pv_table = np.zeros((max_ply, max_ply))
-
     # score moves
     def evaluateMove(self, move):
         start, target, piece, promoted, capture, double, enpassant, castle = move
         
-        if capture: return self.getCaptureValue(target, piece, enpassant)
-        else: pass
+        if capture: 
+            captureValue = self.getCaptureValue(target, piece, enpassant)
+            return captureValue
 
         return 0
 
@@ -1187,11 +1165,8 @@ class Board:
         self.nodeCount += 1
 
         if score >= beta: return beta
-
-        #TODO: This might be causing issues
         if score > alpha: alpha = score
 
-    
         newMoveList = MoveList()
         self.generateMoves(newMoveList)
 
@@ -1276,12 +1251,53 @@ class Board:
         return alpha
 
     # search position for the best move
-    def searchPosition(self, depth):
-        cdef int score = self.negamax(-50000, 50000, depth)
+    # iterative deepening added
+    def searchPosition(self, depth, timeInSec=10):
+        cdef int score = -1
+        startTime = time.time()
 
-        print('Negamax best move: ')
-        self.printMove(self.bestMove)
-        print('\n')
+        foundMove = []
+        foundScore = -1
+
+        prevTime = -1
+        prevTimeFactor = 2
+        timeFactorList = []
+
+        for iterDepth in range(1, depth + 1):
+            estimatedTime = prevTime * prevTimeFactor
+
+            if estimatedTime >= timeInSec:
+                print(f'Time out - est. next duration: {round(estimatedTime, 2)}s')
+                break
+
+            self.nodeCount = 0  
+            score = self.negamax(-50000, 50000, iterDepth)
+
+            print(f'Run {iterDepth} best move: ')
+            self.printMove(self.bestMove)
+            print(f'With score {score}')
+            print(f'Traversed Nodes: {self.nodeCount}')
+
+            currTime = time.time() - startTime
+            # involving last iterations factor
+            if iterDepth != 1: 
+                currTimeFactor = currTime / prevTime
+                timeFactorList.append(currTimeFactor)
+                prevTimeFactor = sum(timeFactorList) / len(timeFactorList)
+
+            prevTime = currTime
+
+            print(f'Duration {currTime}')
+            print(f'Time Factor: {prevTimeFactor}')
+            print('\n')
+
+            if score > foundScore:
+                foundScore = score
+                foundMove = self.bestMove
+
+        print(f'Overall best move: ')
+        self.printMove(foundMove)
+        print(f'With score {foundScore}')
 
     ################### ALPHA BETA END ###################
 
@@ -1410,11 +1426,6 @@ class Board:
                     print('id name somebot')
                     print('id name somebody')
                     print('uciok')
-    
-
-
-
-
 
         
         

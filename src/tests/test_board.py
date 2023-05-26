@@ -135,13 +135,14 @@ def test_evaluate_score_2():
 def test_score_move():
     pass
 
-# def test_search_move():
-#     newBoard = board.Board()
-#     newBoard.fenGameSetup(maps.FEN_HARD)
+def test_search_move():
+    newBoard = board.Board()
+    newBoard.fenGameSetup(maps.FEN_HARD)
 
-#     newBoard.printBoard()
+    newBoard.printBoard()
 
-#     newBoard.searchPosition(4)
+    newBoard.searchPosition(5, 30)
+    # print(newBoard.nodeCount)
 
 # def test_sort_move_list():
 #     newBoard = board.Board()
@@ -157,6 +158,8 @@ def test_score_move():
 #     newBoard.sortMoveList()
 #     newBoard.printMoveList_withScores()
 
+# 3.86, 14.97, 3.1, 10.45 = 8.09
+# 
 
 
 

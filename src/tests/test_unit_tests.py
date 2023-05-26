@@ -2,6 +2,8 @@ import src.chess.board as board
 import src.chess.maps as maps
 import numpy as np
 
+import random
+
 def test_demon():
     test_fen = "1R6/3R4/P2Pk3/4P3/4KP2/8/8/8 b - - 0 0"
     test_count = 1
