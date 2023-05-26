@@ -27,7 +27,7 @@ Implementation of a Alpha-Beta Search Chess AI using the bitboard representation
 
 The final goal of this project is to implement a Chess Engine using Alpha-Beta Search and further improve on its strength and efficiency. In this case, a chess variation called "King Of The Hill" has been chosen, wherein players win based on classic chess conditions, or by reaching the center of the chess board with their king.
 
-Milestone I - Basic Chess Engine: (current)
+Milestone I - Basic Chess Engine: (done)
 
 - Board representation and chess logic
 - Dummy AI, able to play games using random moves
@@ -40,6 +40,11 @@ Milestone II - Simple AI: (current)
 - Minimax
 - Alpha-Beta Search
 - Simple Move-Sorting and Iterative Deepening
+
+Milestone III - Advanced AI: (next)
+
+- Principal Variation Search
+- Better Move-Sorting, Evaluation function, etc.
 
 ### Screenshots
 
