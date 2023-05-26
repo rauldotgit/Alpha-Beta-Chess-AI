@@ -35,6 +35,12 @@ Milestone I - Basic Chess Engine: (current)
 - Simple evaluation function
 - Time management
 
+Milestone II - Simple AI: (current)
+
+- Minimax
+- Alpha-Beta Search
+- Simple Move-Sorting and Iterative Deepening
+
 ### Screenshots
 
 ### Links
