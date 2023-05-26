@@ -161,5 +161,11 @@ def test_search_move():
 # 3.86, 14.97, 3.1, 10.45 = 8.09
 # 
 
+#     newBoard = board.Board()
+#     newBoard.fenGameSetup(maps.FEN_START)
 
-
+#     for i in range(1, 5):
+#         newBoard.minimax(i)
+#         print(f'Depth {i}, best found move:')
+#         newBoard.printMove(newBoard.bestMove)
+#         print(f'Nodes searched: {newBoard.nodeCount}')

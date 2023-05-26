@@ -1250,6 +1250,43 @@ class Board:
         # move fails low 
         return alpha
 
+    # simple minimax search
+    def minimax(self, depth):
+        if depth == 0:
+            return self.evaluateScore()	
+
+        self.nodeCount += 1
+
+        cdef int[8] betterMove
+
+        # update the movelist 
+        newMoveList = MoveList()
+        self.generateMoves(newMoveList)
+
+        best = -50000
+
+        for next_move in newMoveList.moves:
+
+            saveState = self.getSaveState()
+
+            success = self.makeMove(next_move, 0)
+            if not success:
+                continue
+
+            score = self.minimax(depth-1)
+
+            # found better move
+            if(score > best):
+                best = score
+                betterMove = next_move
+
+            self.loadSaveState(saveState)
+
+        # update best move
+        self.bestMove = betterMove
+        return best
+
+
     # search position for the best move
     # iterative deepening added
     def searchPosition(self, depth, timeInSec=10):
