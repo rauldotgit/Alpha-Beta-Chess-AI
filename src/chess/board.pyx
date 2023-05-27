@@ -259,6 +259,13 @@ def fenToBoardInfo(fenString):
 
     return [pieceMaps, turn, castling, enpassant, halfMoves, fullMoves]
 
+
+def raund(someFloat, decimals):
+    power = 10**decimals
+    if decimals < 1:
+        print('Round not designed for whole numbers')
+    return int(someFloat * power + 0.5) / power
+
 ################### GLOBALS #########################
 
 class MoveList:
@@ -1293,7 +1300,7 @@ class Board:
         cdef int score = -1
         startTime = time.time()
 
-        foundMove = []
+        foundMove = -1
         foundScore = -1
 
         prevTime = -1

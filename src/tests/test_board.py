@@ -158,9 +158,6 @@ def test_search_move():
 #     newBoard.sortMoveList()
 #     newBoard.printMoveList_withScores()
 
-# 3.86, 14.97, 3.1, 10.45 = 8.09
-# 
-
 #     newBoard = board.Board()
 #     newBoard.fenGameSetup(maps.FEN_START)
 
