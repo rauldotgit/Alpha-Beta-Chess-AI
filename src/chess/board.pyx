@@ -1259,12 +1259,12 @@ class Board:
 
     # simple minimax search
     def minimax(self, depth):
+
+        self.nodeCount += 1
         if depth == 0:
             return self.evaluateScore()	
 
-        self.nodeCount += 1
-
-        cdef int[8] betterMove
+        cdef unsigned long long betterMove
 
         # update the movelist 
         newMoveList = MoveList()
@@ -1280,7 +1280,7 @@ class Board:
             if not success:
                 continue
 
-            score = self.minimax(depth-1)
+            score = -self.minimax(depth-1)
 
             # found better move
             if(score > best):
