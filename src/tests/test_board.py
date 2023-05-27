@@ -50,11 +50,8 @@ def test_move_gen():
     # print(newBoard.castling & 1)
     pass
 
-def test_save_current_state():
-    newBoard = board.Board()
-    newBoard.saveCurrentState()
-
-    # print(newBoard.prevState)
+def test_get_save_state():
+    pass
 
 def test_fen_to_board_info():
     
@@ -125,16 +122,47 @@ def test_evaluate_score():
     assumed_score = 0
     assert score == assumed_score
 
-def test_evaluate_score():
+def test_evaluate_score_2():
     fenString = 'rnbqkbnr/pppppppp/8/8/8/8/8/RNBQKBNR b KQkq - 0 1'
 
     newBoard = board.Board()
     newBoard.fenGameSetup(fenString)
 
     score = newBoard.evaluateScore()
-    assumed_score = -800
+    assumed_score = 810
     assert score == assumed_score
 
+def test_score_move():
+    pass
 
+def test_search_move():
+    newBoard = board.Board()
+    newBoard.fenGameSetup(maps.FEN_HARD)
 
-    
+    newBoard.printBoard()
+
+    newBoard.searchPosition(5, 30)
+    # print(newBoard.nodeCount)
+
+# def test_sort_move_list():
+#     newBoard = board.Board()
+#     newBoard.fenGameSetup(maps.FEN_HARD)
+
+#     newBoard.printBoard()
+
+#     print("Unsorted\n")
+#     newBoard.printMoveList_withScores()
+#     print("\n")
+
+#     print("Sorted\n")
+#     newBoard.sortMoveList()
+#     newBoard.printMoveList_withScores()
+
+#     newBoard = board.Board()
+#     newBoard.fenGameSetup(maps.FEN_HARD)
+
+#     for i in range(1, 5):
+#         newBoard.minimax(i)
+#         print(f'Depth {i}, best found move:')
+#         newBoard.printMove(newBoard.bestMove)
+#         print(f'Nodes searched: {newBoard.nodeCount}')
