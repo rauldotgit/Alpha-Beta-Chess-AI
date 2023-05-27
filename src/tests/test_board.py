@@ -162,7 +162,7 @@ def test_search_move():
 # 
 
 #     newBoard = board.Board()
-#     newBoard.fenGameSetup(maps.FEN_START)
+#     newBoard.fenGameSetup(maps.FEN_HARD)
 
 #     for i in range(1, 5):
 #         newBoard.minimax(i)
