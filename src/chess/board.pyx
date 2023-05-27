@@ -544,6 +544,10 @@ class Board:
             f'{fieldStr(start)}{fieldStr(target)} {roleUnicode(piece)}  {promoted} {capture} {doublePush} {enpassant} {castling}'
         )
 
+    def getParsedMove(self, move):
+        start, target = menc.decode(move)[:2]
+        return fieldStr(start)+fieldStr(target)
+
     # Deprecated
     def printMoveList(self, MoveList):
         if self.moveIndex == -1:
