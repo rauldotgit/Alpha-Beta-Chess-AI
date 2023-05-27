@@ -222,7 +222,7 @@ def printOtherMoveList(moveList):
 
     print(f's->t p  + - d e c')
     for index, move in enumerate(moveList):
-        start, target, piece, promoted, capture, doublePush, enpassant, castling = move
+        start, target, piece, promoted, capture, doublePush, enpassant, castling = menc.decode(move)
         print(
             f'{fieldStr(start)}{fieldStr(target)} {roleUnicode(piece)}  {promoted} {capture} {doublePush} {enpassant} {castling}'
         )
@@ -268,8 +268,8 @@ class MoveList:
         # self.bestMove = None
 
     def add(self, start, target,  piece, promoted, capture, doublePush, enpassant, castling):
-        cdef int[8] move = [start, target,  piece, promoted, capture, doublePush, enpassant, castling]
-        self.moves.append(move)
+        cdef unsigned long long encodedMove = menc.encode(start, target,  piece, promoted, capture, doublePush, enpassant, castling)  
+        self.moves.append(encodedMove)
         self.moveCount += 1
 
     def getMove(self, index):
@@ -300,7 +300,7 @@ class MoveList:
 
         print(f's->t p  + - d e c')
         for index, move in enumerate(self.moves):
-            start, target, piece, promoted, capture, doublePush, enpassant, castling = move
+            start, target, piece, promoted, capture, doublePush, enpassant, castling = menc.decode(move)
             print(
                 f'{fieldStr(start)}{fieldStr(target)} {roleUnicode(piece)}  {promoted} {capture} {doublePush} {enpassant} {castling}'
             )
@@ -531,7 +531,7 @@ class Board:
         return False
 
     def printMove(self, move):
-        start, target, piece, promoted, capture, doublePush, enpassant, castling = move
+        start, target, piece, promoted, capture, doublePush, enpassant, castling = menc.decode(move)
         print(
             f's->t p  + - d e c\n'
             f'{fieldStr(start)}{fieldStr(target)} {roleUnicode(piece)}  {promoted} {capture} {doublePush} {enpassant} {castling}'
@@ -545,7 +545,7 @@ class Board:
 
         print(f's->t p  + - d e c')
         for index, move in enumerate(MoveList.moves):
-            start, target, piece, promoted, capture, doublePush, enpassant, castling = move
+            start, target, piece, promoted, capture, doublePush, enpassant, castling = menc.decode(move)
             print(
                 f'{fieldStr(start)}{fieldStr(target)} {roleUnicode(piece)}  {promoted} {capture} {doublePush} {enpassant} {castling}'
             )
@@ -780,7 +780,7 @@ class Board:
         if flag == 0:
             
             # make sure this does what it should
-            start, target, piece, promoted, capture, double, enpassant, castle = move
+            start, target, piece, promoted, capture, double, enpassant, castle = menc.decode(move)
             # self.saveCurrentState()
             saveState = self.getSaveState()
             # print(self.pieceMaps[piece])
@@ -868,7 +868,7 @@ class Board:
                     return 1
 
         else:
-            capture = move[4]
+            capture = menc.getCapture(move)
             if capture: 
                 self.makeMove(move, 0)
             else:
@@ -906,10 +906,10 @@ class Board:
         # print(f'Start: {startString} Target: {targetString} Promotion: {promoString}')
 
         # TODO: make sure moves are generated ahead of time
-        # self.generateMoves(self.turn)
+        self.generateMoves(newMoveList)
 
         for move in newMoveList.moves:
-            start, target, piece, promoted, capture, double, enpassant, castle = move
+            start, target, promoted = menc.getStart(move), menc.getTarget(move), menc.getPromoted(move)
 
             correctCoordinates = inputStart == start and inputTarget == target
             if correctCoordinates:
@@ -1020,7 +1020,7 @@ class Board:
             else:
                 score = self.evaluateScore()
                 captureValue = 0
-                isCapture = move[4]
+                isCapture = menc.getCapture(move)
 
                 if isCapture:
                     captureValue = self.getCaptureValue(move)    
@@ -1131,7 +1131,7 @@ class Board:
 
     # score moves
     def evaluateMove(self, move):
-        start, target, piece, promoted, capture, double, enpassant, castle = move
+        target, piece, capture, enpassant = menc.getTarget(move), menc.getPiece(move), menc.getCapture(move), menc.getEnpassant(move)
         
         if capture: 
             captureValue = self.getCaptureValue(target, piece, enpassant)
@@ -1151,7 +1151,7 @@ class Board:
         print(f's->t p  + - d e c v')
         for index, move in enumerate(MoveList.moves):
             captureValue = self.evaluateMove(move)
-            start, target, piece, promoted, capture, doublePush, enpassant, castling = move
+            start, target, piece, promoted, capture, doublePush, enpassant, castling = menc.decode(move)
 
             print(
                 f'{fieldStr(start)}{fieldStr(target)} {roleUnicode(piece)}  {promoted} {capture} {doublePush} {enpassant} {castling} {captureValue}'
@@ -1195,7 +1195,7 @@ class Board:
         if depth == 0: return self.quiescenceSearch(alpha, beta)
         self.nodeCount += 1 
 
-        cdef int[8] betterMove
+        cdef unsigned long long betterMove
         cdef int legalMovesCount = 0
         cdef int prevAlpha = alpha
 
