@@ -441,7 +441,7 @@ class Board:
             self.turn,
             self.enpassant,
             self.castling,
-            self.halfMoves,
+            # self.halfMoves,
             self.fullMoves,
 
             self.pieceMaps[P],
@@ -461,35 +461,35 @@ class Board:
             self.white_board_union,
             self.black_board_union,
         
-            self.time
+            # self.time
         ]
     
     def loadSaveState(self, saveState):
         self.turn = saveState[0]
         self.enpassant = saveState[1]
         self.castling = saveState[2]
-        self.halfMoves = saveState[3]
-        self.fullMoves = saveState[4]
+        # self.halfMoves = saveState[3]
+        self.fullMoves = saveState[3]
 
-        self.pieceMaps[P] = saveState[5]
-        self.pieceMaps[R] = saveState[6]
-        self.pieceMaps[N] = saveState[7]
-        self.pieceMaps[B] = saveState[8]
-        self.pieceMaps[Q] = saveState[9]
-        self.pieceMaps[K] = saveState[10]
+        self.pieceMaps[P] = saveState[4]
+        self.pieceMaps[R] = saveState[5]
+        self.pieceMaps[N] = saveState[6]
+        self.pieceMaps[B] = saveState[7]
+        self.pieceMaps[Q] = saveState[8]
+        self.pieceMaps[K] = saveState[9]
 
-        self.pieceMaps[p] = saveState[11]
-        self.pieceMaps[r] = saveState[12]
-        self.pieceMaps[n] = saveState[13]
-        self.pieceMaps[b] = saveState[14]
-        self.pieceMaps[q] = saveState[15]
-        self.pieceMaps[k] = saveState[16]
+        self.pieceMaps[p] = saveState[10]
+        self.pieceMaps[r] = saveState[11]
+        self.pieceMaps[n] = saveState[12]
+        self.pieceMaps[b] = saveState[13]
+        self.pieceMaps[q] = saveState[14]
+        self.pieceMaps[k] = saveState[15]
 
-        self.board_union = saveState[17]
-        self.white_board_union = saveState[18]
-        self.black_board_union = saveState[19]
+        self.board_union = saveState[16]
+        self.white_board_union = saveState[17]
+        self.black_board_union = saveState[18]
 
-        self.time = saveState[20]
+        # self.time = saveState[20]
 
     def setPieces(self):
         self.pieceMaps[P] = maps.WHITE_PAWNS_MAP
@@ -659,6 +659,7 @@ class Board:
 
     def generateMoves(self, MoveList):
         cdef int start, target
+        self.updateSliderAttacks_otf()
         MoveList.reset()
 
         for piece, bitmap in enumerate(self.pieceMaps):
@@ -944,10 +945,11 @@ class Board:
                 self.loadSaveState(saveState)
                 return 0
             else:
-                if self.isKOTH(kingFieldIndex):
-                    return 2
-                else:
-                    return 1
+                # if self.isKOTH(kingFieldIndex):
+                #     return 2
+                # else:
+                #     return 1
+                return 1
 
         else:
             capture = menc.getCapture(move)
@@ -1387,14 +1389,17 @@ class Board:
         self.generateMoves(newMoveList)
         self.sortMoveList(newMoveList)
 
-        for i, move in enumerate(newMoveList.moves):
+        for move in newMoveList.moves:
+            # [ ] Check if this takes all the arguments necessary
             saveState = self.getSaveState()
+            self.halfMoves += 1 
 
             success = self.makeMove(move, 0)
-            if success: 
-                self.halfMoves += 1 
-                legalMovesCount += 1
-            else: continue
+            if not success: 
+                self.halfMoves -= 1
+                continue
+
+            legalMovesCount += 1
 
             score = -self.negamax(-beta, -alpha, depth-1)
 
@@ -1413,7 +1418,7 @@ class Board:
                 if self.halfMoves == 0:
                     betterMove = move
 
-        if not legalMovesCount:
+        if legalMovesCount == 0:
 
             if isCheck:
                 return -49000 + self.halfMoves
