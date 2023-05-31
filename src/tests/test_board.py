@@ -137,7 +137,7 @@ def test_score_move():
 
 def test_search_move():
     newBoard = board.Board()
-    newBoard.fenGameSetup(maps.FEN_HARD)
+    newBoard.fenGameSetup("r2qk2r/p1ppn1pp/bpnb1p2/4p3/4P3/2NPBN2/PPP1BPPP/R2Q1RK1 w kq - - -")
 
     newBoard.printBoard()
 
