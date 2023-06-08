@@ -3,6 +3,7 @@ import numpy as np
 import cython
 import random
 import time 
+import math
 
 import src.chess.maps as maps
 import src.chess.bitmethods as bit
@@ -324,6 +325,13 @@ class Board:
         self.halfMoves = 0
         self.fullMoves = 0
 
+        # for MCTS
+        self.visits = 0
+        self.score = 0
+        self.move = None
+        self.parent = None
+        self.children = []
+
         # indexed by role_int enum further up
         self.pieceMaps = [
             0,
@@ -357,6 +365,19 @@ class Board:
     
     # def __init__(self):
     #     self.resetBoard()
+
+    def createChild(self, move):
+        child = Board()
+        child.parent = self
+        # save move that leads to new position
+        child.move = move
+        # set pieces 
+        child.loadSaveState(self.getSaveState())
+        child.makeMove(move, 0)
+        # add child to children list
+        self.children.append(child)
+
+        return child
 
     def nextTurn(self):
         self.turn = black if self.turn == white else white
@@ -1347,7 +1368,80 @@ class Board:
         self.printMove(foundMove)
         print(f'With score {foundScore}')
 
-    ################### ALPHA BETA END ###################
+    ################### MONTE CARLO TREE SEARCH ###################
+
+    def UCT(self):
+        # calculating exploration/ expansion value of a position
+        exploration_param = 1.4
+
+        if self.visits == 0:
+            return 50000
+
+        exploitation = self.score / self.visits
+        exploration = math.sqrt(math.log(self.parent.visits) / self.visits)
+        return exploitation + exploration * exploration_param
+
+    def select(self, depth, max_depth):
+        while self.children: 
+            selected = max(self.children, key= lambda position: position.UCT())
+            if depth >= max_depth: 
+                return selected
+            self = selected
+            depth+=1
+        return self 
+
+    def expand(self):
+        # expanding position -> new position for every possible move
+        newMoveList = MoveList()
+        self.generateMoves(newMoveList)
+
+        for move in newMoveList.moves:
+            newPosition = self.createChild(move)
+            #newPosition.printMove(move)
+            #print("\n ----->")
+            #newPosition.printBoard()
+
+    def simulate(self):
+        # simulating random move and returning score
+        newMoveList = MoveList()
+        self.generateMoves(newMoveList)
+        if newMoveList.len() > 0:
+            random_move = random.choice(newMoveList.moves)
+            self.makeMove(random_move, 0)
+        return self.evaluateScore()
+
+    def backpropagate(self, score):
+        while self is not None:
+            self.visits += 1
+            self.score += score
+            self = self.parent
+
+    def MCTS_UCT(self, iterations, max_depth, max_time):
+        # TODO: play with number of iterations and depth
+        start_time = time.time()
+        end_time = start_time + max_time
+
+        for i in range(iterations):
+            if time.time() >= end_time:
+                break
+
+            depth = 0
+            selected = self.select(depth, max_depth)
+
+            if depth >= max_depth:
+                continue
+
+            if selected.visits == 0:
+                selected.expand()
+
+            simulation_pos = random.choice(selected.children)
+            score = simulation_pos.simulate()
+            simulation_pos.backpropagate(score)
+        
+        # position with most visits is most stable
+        bestChild = max(self.children, key = lambda pos: pos.visits) 
+        self.bestMove = bestChild.move
+
 
     # def parseBot(self, sleepTime):
     #     print('botgame')

@@ -9,7 +9,9 @@ import src.chess.board as board
 #     newBoard.printBoard()
 
 #     #newBoard.minimax(3)
-#     newBoard.searchPosition(5, 30)
+#     #newBoard.searchPosition(5, 30)
+#     print("\n ----- TESTING MCTS ----- \n")
+#     newBoard.MCTS_UCT(20, 10, 60)
 #     best_move = newBoard.getParsedMove(newBoard.bestMove)
 #     print("best move: ", best_move)
 
