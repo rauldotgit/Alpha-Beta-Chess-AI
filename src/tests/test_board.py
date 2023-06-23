@@ -132,6 +132,21 @@ def test_evaluate_score_2():
     assumed_score = 810
     assert score == assumed_score
 
+#import src.chess.bitmethods as bit
+def test_evaluate_score3():
+    fenString = 'rnbqkbnr/3ppppp/1p6/8/8/8/3PPPPP/RNBQKBNR b KQkq - 0 1'
+
+    newBoard = board.Board()
+    newBoard.fenGameSetup(fenString)
+
+    score = newBoard.evaluateScore()
+
+    newBoard.printBoard()
+
+    print("\n Score passed pawn:", score)
+    # count = bit.countBits()
+    #print("\n testing bitcount: ", count)
+
 def test_score_move():
     pass
 
