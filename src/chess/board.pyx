@@ -185,7 +185,7 @@ cdef int isolatedPawnPenalty = -10
 cdef int[8] passedPawnBonus = [0, 10, 30, 50, 75, 100, 150, 200]
 
 def setFileRankMasks(file_, rank_):
-    mask = bit.ZEROULL
+    mask = 0
 
     for r in range(7):
         for f in range(7):
@@ -577,7 +577,7 @@ class Board:
         self.updateSliderAttacks_otf()
         # self.generateMoves()
 
-    # TODO: copy with magic bitboards when implemented
+    # TODO: copy with magic pieceMaps when implemented
     # side refers to the attacking side (side == white, get if field is attacked by white)
     def isFieldAttacked(self, fieldIndex, side):
         
@@ -1071,7 +1071,7 @@ class Board:
 
         for piece, pieceMap in enumerate(self.pieceMaps):
             while not pieceMap == 0:
-                print("in while")
+                #print("in while")
                 fieldIndex = bit.getLsbIndex(pieceMap)
 
                 score += SCORE_ARRAY[piece]
@@ -1091,10 +1091,10 @@ class Board:
                         score += passedPawnBonus[getRank[fieldIndex]]
 
                 if(piece == p):
-                    print("Pawn, ", fieldIndex + "\n passed pawn mask \n")
-                    maps.printMap(blackPassedPawnMasks[fieldIndex])
-                    print("\n white pawn piece maps \n")
-                    maps.printBoard(self.pieceMaps[P])
+                    #print("Pawn, ", fieldIndex , "\n passed pawn mask \n")
+                    #maps.printMap(blackPassedPawnMasks[fieldIndex])
+                    #print("\n white pawn piece maps \n")
+                    #maps.printMap(self.pieceMaps[P])
                     doublePawns = bit.countBits(self.pieceMaps[p] & fileMasks[fieldIndex])
                     if(doublePawns > 1):
                         score -= doublePawns*doublePawnPenalty
@@ -1108,28 +1108,28 @@ class Board:
 
                 # open files penalties and bonuses (rook and king)
                 if(piece == R):
-                    if(self.bitboards[P] & fileMasks[fieldIndex] == 0):
+                    if(self.pieceMaps[P] & fileMasks[fieldIndex] == 0):
                         score += semiOpenScore
-                    if((self.bitboards[P] | self.bitboards[p]) & fileMasks[fieldIndex] == 0):
+                    if((self.pieceMaps[P] | self.pieceMaps[p]) & fileMasks[fieldIndex] == 0):
                         score += openScore
 
                 if(piece == K):
-                    if(self.bitboards[P] & fileMasks[fieldIndex] == 0):
+                    if(self.pieceMaps[P] & fileMasks[fieldIndex] == 0):
                         score -= semiOpenScore
-                    if((self.bitboards[P] | self.bitboards[p]) & fileMasks[fieldIndex] == 0):
+                    if((self.pieceMaps[P] | self.pieceMaps[p]) & fileMasks[fieldIndex] == 0):
                         score -= openScore
                     score += bit.countBits(atk.getPawnAttack(white, fieldIndex) & self.white_board_union) # TODO check if working (experimental)
 
                 if(piece == r):
-                    if(self.bitboards[p] & fileMasks[fieldIndex] == 0):
+                    if(self.pieceMaps[p] & fileMasks[fieldIndex] == 0):
                         score -= semiOpenScore
-                    if((self.bitboards[P] | self.bitboards[p]) & fileMasks[fieldIndex] == 0):
+                    if((self.pieceMaps[P] | self.pieceMaps[p]) & fileMasks[fieldIndex] == 0):
                         score -= openScore
 
                 if(piece == k):
-                    if(self.bitboards[p] & fileMasks[fieldIndex] == 0):
+                    if(self.pieceMaps[p] & fileMasks[fieldIndex] == 0):
                         score += semiOpenScore
-                    if((self.bitboards[P] | self.bitboards[p]) & fileMasks[fieldIndex] == 0):
+                    if((self.pieceMaps[P] | self.pieceMaps[p]) & fileMasks[fieldIndex] == 0):
                         score += openScore
                     score -= bit.countBits(atk.getPawnAttack(black, fieldIndex) & self.black_board_union) # TODO check if working (experimental)
 
