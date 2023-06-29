@@ -1381,9 +1381,12 @@ class Board:
         exploration = math.sqrt(math.log(self.parent.visits) / self.visits)
         return exploitation + exploration * exploration_param
 
-    def select(self, depth, max_depth):
+    def select(self, max_depth):
+        print("-- new iteration --\n")
+        depth = 1
         while self.children: 
             selected = max(self.children, key= lambda position: position.UCT())
+            print(f"selected: {self.getParsedMove(selected.move)}")
             if depth >= max_depth: 
                 return selected
             self = selected
@@ -1425,18 +1428,19 @@ class Board:
             if time.time() >= end_time:
                 break
 
-            depth = 0
-            selected = self.select(depth, max_depth)
-
-            if depth >= max_depth:
-                continue
+            selected = self.select(max_depth)
 
             if selected.visits == 0:
                 selected.expand()
 
-            simulation_pos = random.choice(selected.children)
-            score = simulation_pos.simulate()
-            simulation_pos.backpropagate(score)
+            if selected.children:
+                simulation_pos = random.choice(selected.children)
+                score = simulation_pos.simulate()
+                simulation_pos.backpropagate(score)
+            else:
+                print(f"No children after move: {self.getParsedMove(selected.move)}")
+                print("Trying to expand")
+                selected.expand()
         
         # position with most visits is most stable
         bestChild = max(self.children, key = lambda pos: pos.visits) 
