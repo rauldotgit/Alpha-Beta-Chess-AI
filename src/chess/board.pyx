@@ -162,6 +162,77 @@ cdef int[64] kingScores =  [
     -50,-30,-30,-30,-30,-30,-30,-50
 ]
 
+### For pawn structure evaluation ###
+cdef unsigned long long[64] fileMasks 
+cdef unsigned long long[64] rankMasks 
+cdef unsigned long long[64] whitePassedPawnMasks
+cdef unsigned long long[64] blackPassedPawnMasks
+cdef unsigned long long[64] isolatedPawnMasks 
+
+cdef int[64] getRank = [
+    7, 7, 7, 7, 7, 7, 7, 7,
+    6, 6, 6, 6, 6, 6, 6, 6, 
+    5, 5, 5, 5, 5, 5, 5, 5, 
+    4, 4, 4, 4, 4, 4, 4, 4, 
+    3, 3, 3, 3, 3, 3, 3, 3, 
+    2, 2, 2, 2, 2, 2, 2, 2, 
+    1, 1, 1, 1, 1, 1, 1, 1, 
+    0, 0, 0, 0, 0, 0, 0, 0
+]
+
+cdef int doublePawnPenalty = -10
+cdef int isolatedPawnPenalty = -10
+cdef int[8] passedPawnBonus = [0, 10, 30, 50, 75, 100, 150, 200]
+
+def setFileRankMasks(file_, rank_):
+    mask = 0
+
+    for r in range(8):
+        for f in range(8):
+            square = r*8 + f
+            if not file_ == -1:
+                if f == file_:
+                    mask |= bit.setBit(mask, square)
+            elif not rank_ == -1:
+                if r == rank_:
+                    mask |= bit.setBit(mask, square)
+
+    return mask
+
+def initEvaluationMasks():
+    #cdef unsigned long long mask = setFileRankMasks(0, 0)
+
+    for r in range(8):
+        for f in range(8):
+            square = r*8 + f
+            # init rank masks
+            rankMasks[square] |= setFileRankMasks(-1, r)
+            # init file masks
+            fileMasks[square] |= setFileRankMasks(f, -1)
+            # init isolated pawn masks
+            isolatedPawnMasks[square] |= setFileRankMasks(f-1, -1)
+            isolatedPawnMasks[square] |= setFileRankMasks(f+1, -1)
+            # init passed pawn masks
+            whitePassedPawnMasks[square] |= setFileRankMasks(f-1, -1) 
+            whitePassedPawnMasks[square] |= setFileRankMasks(f, -1) 
+            whitePassedPawnMasks[square] |= setFileRankMasks(f+1, -1) 
+
+            blackPassedPawnMasks[square] |= setFileRankMasks(f-1, -1) 
+            blackPassedPawnMasks[square] |= setFileRankMasks(f, -1) 
+            blackPassedPawnMasks[square] |= setFileRankMasks(f+1, -1) 
+
+            for i in range(8-r):
+                whitePassedPawnMasks[square] &= ~rankMasks[(7-i)*8 + f]
+
+            for i in range(r+1):
+                blackPassedPawnMasks[square] &= ~rankMasks[i*8 + f]
+
+### Open Files ###
+cdef int semiOpenScore = 9
+cdef int openScore = 15
+
+cdef int kingSafetyScore = 5
+
 cdef int[6][6] MVV_LVA_ARRAY = [
     [105, 205, 305, 405, 505, 605],
     [104, 204, 304, 404, 504, 604],
@@ -508,7 +579,7 @@ class Board:
         self.updateSliderAttacks_otf()
         # self.generateMoves()
 
-    # TODO: copy with magic bitboards when implemented
+    # TODO: copy with magic pieceMaps when implemented
     # side refers to the attacking side (side == white, get if field is attacked by white)
     def isFieldAttacked(self, fieldIndex, side):
         
@@ -992,19 +1063,113 @@ class Board:
         return pieceScore
 
     def evaluateScore(self):
+
+        #print("EVALUATING SCORE")
+
+        initEvaluationMasks() 
+        oldScore = 0
         score = 0
 
+        doublePawns = 0
+
         for piece, pieceMap in enumerate(self.pieceMaps):
-            while pieceMap:
+            while not pieceMap == 0:
                 fieldIndex = bit.getLsbIndex(pieceMap)
 
                 score += SCORE_ARRAY[piece]
                 score += self.getFieldValue(piece, fieldIndex)
 
-                pieceMap = bit.popBit(pieceMap, fieldIndex)
+                oldScore += SCORE_ARRAY[piece]
+                oldScore += self.getFieldValue(piece, fieldIndex)
 
+                # pawn penalties and bonuses
+                if(piece == P):
+                    doublePawns = bit.countBits(self.pieceMaps[P] & fileMasks[fieldIndex])
+                    if(doublePawns > 1):
+                        #print(f"Found white double pawns: {doublePawns}")
+                        score += doublePawns*doublePawnPenalty
+
+                    if(self.pieceMaps[P] & isolatedPawnMasks[fieldIndex] == 0):
+                        #print("Found white isolated pawn")
+                        score += isolatedPawnPenalty
+
+                    if(whitePassedPawnMasks[fieldIndex] & self.pieceMaps[p] == 0):
+                        #print("Found white passed pawn")
+                        score += passedPawnBonus[getRank[fieldIndex]]
+
+                if(piece == p):
+                    doublePawns = bit.countBits(self.pieceMaps[p] & fileMasks[fieldIndex])
+                    if(doublePawns > 1):
+                        #print(f"Found black double pawns: {doublePawns}")
+                        score -= doublePawns*doublePawnPenalty
+
+                    if(self.pieceMaps[p] & isolatedPawnMasks[fieldIndex] == 0):
+                        #print("Found black isolated pawn")
+                        score -= isolatedPawnPenalty
+
+                    if(blackPassedPawnMasks[fieldIndex] & self.pieceMaps[P] == 0):
+                        #print("Found black passed pawn")
+                        score -= passedPawnBonus[getRank[MIRROR_FIELD_ARRAY[fieldIndex]]]
+
+                # open files penalties and bonuses (rook and king)
+                if(piece == R):
+                    if(self.pieceMaps[P] & fileMasks[fieldIndex] == 0):
+                        score += semiOpenScore
+                        #print(f"White bonus semiOpen Rook: {semiOpenScore}")
+                    if((self.pieceMaps[P] | self.pieceMaps[p]) & fileMasks[fieldIndex] == 0):
+                        score += openScore
+                        #print(f"White bonus Open Rook: {openScore}")
+
+                if(piece == K):
+                    if(self.pieceMaps[P] & fileMasks[fieldIndex] == 0):
+                        score -= semiOpenScore
+                        #print(f"White penalty semiOpen King: {-semiOpenScore}")
+                    if((self.pieceMaps[P] | self.pieceMaps[p]) & fileMasks[fieldIndex] == 0):
+                        score -= openScore
+                        #print(f"White penalty Open King: {-openScore}")
+                    score += kingSafetyScore * bit.countBits(atk.getPawnAttack(white, fieldIndex) & self.white_board_union) # TODO fine tuning
+                    #print(f"White King Safety: {kingSafetyScore * bit.countBits(atk.getPawnAttack(white, fieldIndex) & self.white_board_union)}")
+
+                if(piece == r):
+                    if(self.pieceMaps[p] & fileMasks[fieldIndex] == 0):
+                        score -= semiOpenScore
+                        #print(f"Black bonus semiOpen Rook: {semiOpenScore}")
+                    if((self.pieceMaps[P] | self.pieceMaps[p]) & fileMasks[fieldIndex] == 0):
+                        score -= openScore
+                        #print(f"Black bonus Open Rook: {openScore}")
+
+                if(piece == k):
+                    if(self.pieceMaps[p] & fileMasks[fieldIndex] == 0):
+                        score += semiOpenScore
+                        #print(f"Black penalty semiOpen King: {-semiOpenScore}")
+                    if((self.pieceMaps[P] | self.pieceMaps[p]) & fileMasks[fieldIndex] == 0):
+                        score += openScore
+                        #print(f"Black penalty Open King: {-openScore}")
+                    score -= kingSafetyScore * bit.countBits(atk.getPawnAttack(black, fieldIndex) & self.black_board_union) # TODO fine tuning
+                    #print(f"Black King Safety: {kingSafetyScore * bit.countBits(atk.getPawnAttack(black, fieldIndex) & self.black_board_union)}")
+
+                # mobility bonus (bishop)
+                if(piece == B):
+                    score += bit.countBits(atk.getBishopAttack_otf(fieldIndex) & ~self.board_union) 
+                    #print(f"White bishop mobility: {bit.countBits(atk.getBishopAttack_otf(fieldIndex) & ~self.board_union)}")
+
+                if(piece == b):
+                    score -= bit.countBits(atk.getBishopAttack_otf(fieldIndex) & ~self.board_union) 
+                    #print(f"Black bishop mobility: {bit.countBits(atk.getBishopAttack_otf(fieldIndex) & ~self.board_union)}")
+
+                # mobility bonus (queen)
+                if(piece == Q):
+                    score += bit.countBits(atk.getQueenAttack_otf(fieldIndex) & ~self.board_union) 
+                    print(f"White queen mobility: {bit.countBits(atk.getBishopAttack_otf(fieldIndex) & ~self.board_union)}")
+
+                if(piece == q):
+                    score -= bit.countBits(atk.getQueenAttack_otf(fieldIndex) & ~self.board_union) 
+                    print(f"Black queen mobility: {bit.countBits(atk.getBishopAttack_otf(fieldIndex) & ~self.board_union)}")
+
+                pieceMap = bit.popBit(pieceMap, fieldIndex)
+        print(f"old score: {oldScore}") if self.turn == white else print(f"old score: {-oldScore}")
         return score if self.turn == white else -score
-        # return score 
+
 
     def getLegalMoves(self, MoveList):
         legal = []
