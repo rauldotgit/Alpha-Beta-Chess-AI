@@ -76,6 +76,15 @@ def getBitIndices(bitmap):
             indexArray.append(i)
     return indexArray
 
+def countBits(bitmap):
+    cdef int count = 0
+    
+    while (bitmap):
+        count+=1
+        bitmap &= bitmap - 1
+
+    return count
+
 def ONEULL():
     cdef unsigned long long one = 1
     return one
