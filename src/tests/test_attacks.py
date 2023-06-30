@@ -2,6 +2,7 @@ import numpy as np
 import src.chess.board as board
 import src.chess.bitmethods as bit
 import src.chess.attacks as atk
+import src.chess.maps as maps
 
 FIELD_OBJ = board.FIELD_OBJ
 
@@ -437,3 +438,18 @@ def test_single_queen_attacks_blocked():
 #         permutationMap = atk.attackPermutations(i, attackMap)
 #         maps.printMap(permutationMap)
 
+# def test_generate_slider_attacks_magic():
+#     atk.generateSliderAttacks_magic()
+
+# def test_magic():
+    # print(atk.getRookAttack_magic())
+    # print(atk.getBishopAttacks_magic())
+    # rook_field = board.FIELD_OBJ['a1']
+    # bishop_field = board.FIELD_OBJ['e3']
+
+    # newBoard = board.Board()
+    # newBoard.fenGameSetup("r2qk2r/p1ppn1pp/bpnb1p2/4p3/4P3/2NPBN2/PPP1BPPP/R2Q1RK1 w kq - - -")
+
+    # newBoard.printBoard()
+    # maps.printMap(atk.getBishopAttack_magic(bishop_field, newBoard.board_union))
+    # maps.printMap(atk.getRookAttack_magic(rook_field, newBoard.board_union))
