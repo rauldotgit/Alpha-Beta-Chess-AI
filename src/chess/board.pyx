@@ -20,6 +20,11 @@ import src.chess.move_encoding as menc
 # TODO: define functions as cdef functions after testing and make sure to have static typing
 # TODO: use libc.stdlib low level functions wherever applicable to speed up stuff
 
+
+# [ ] remove all instances of update slider attacks otf and init all attacks on "render"
+# [ ] replace all getAttack instances 
+# [x] remove instances of getPieceAttacks_otf
+
 cdef int noSquare = 64
 
 cdef enum color_int:
@@ -344,8 +349,6 @@ class Board:
         self.white_board_union = 0
         self.black_board_union = 0
 
-        self.moveList = []
-        self.moveIndex = -1
         self.bestMove = None
 
         self.nodeCount = 0
@@ -521,6 +524,7 @@ class Board:
         
         rooksMap = self.pieceMaps[R] if side == white else self.pieceMaps[r]
         if atk.getRookAttack_otf(fieldIndex) & rooksMap: return True
+        # if atk.getRookAttack_magic(fieldIndex, self.board_union) & rooksMap: return True
 
         # a field is attacked by knights, if there are nights around the field in the shape of night attacks (oof)
         knightsMap = self.pieceMaps[N] if side == white else self.pieceMaps[n]
@@ -528,9 +532,11 @@ class Board:
 
         bishopsMap = self.pieceMaps[B] if side == white else self.pieceMaps[b]
         if atk.getBishopAttack_otf(fieldIndex) & bishopsMap: return True
+        # if atk.getBishopAttack_magic(fieldIndex, self.board_union) & bishopsMap: return True
 
         queensMap = self.pieceMaps[Q] if side == white else self.pieceMaps[q]
         if atk.getQueenAttack_otf(fieldIndex) & queensMap: return True
+        # if atk.getQueenAttack_magic(fieldIndex, self.board_union) & queensMap: return True
 
         kingsMap = self.pieceMaps[K] if side == white else self.pieceMaps[k]
         if atk.getKingAttack(fieldIndex) & kingsMap: return True
@@ -550,27 +556,28 @@ class Board:
 
     # Deprecated
     def printMoveList(self, MoveList):
-        if self.moveIndex == -1:
+        if len(MoveList) == 0:
             print('Movelist is empty.')
             return
 
         print(f's->t p  + - d e c')
-        for index, move in enumerate(MoveList.moves):
+        for index, move in enumerate(MoveList):
             start, target, piece, promoted, capture, doublePush, enpassant, castling = menc.decode(move)
             print(
                 f'{fieldStr(start)}{fieldStr(target)} {roleUnicode(piece)}  {promoted} {capture} {doublePush} {enpassant} {castling}'
             )
         
-        print(f'Number of moves: {self.moveIndex+1}')
+        print(f'Number of moves: {len(MoveList)}')
 
 
-    def generateNonPawnMoves(self, pieceMap,  piece, MoveList):
+    def generateNonPawnMoves(self, pieceMap, piece, MoveList):
         while pieceMap:
             start = bit.getLsbIndex(pieceMap)
             
             reverseSideBoardUnion = ~self.white_board_union if self.turn == white else ~self.black_board_union
-            pieceAttackMoves = atk.getPieceAttacks_otf(piece)[start] & reverseSideBoardUnion
-            
+            pieceAttackMoves = atk.getAllPieceAttacks_otf(piece)[start] & reverseSideBoardUnion
+            # pieceAttackMoves = atk.getPieceAttack_magic(piece, start, self.board_union) & reverseSideBoardUnion
+
             while pieceAttackMoves:
                 target = bit.getLsbIndex(pieceAttackMoves)   
                 
@@ -1157,7 +1164,7 @@ class Board:
         MoveList.moves.sort(key=self.evaluateMove, reverse=True)
 
     def printMoveList_withScores(self, MoveList):
-        if self.moveIndex == -1:
+        if MoveList.moveCount == 0:
             print('Movelist is empty.')
             return
 
@@ -1170,7 +1177,7 @@ class Board:
                 f'{fieldStr(start)}{fieldStr(target)} {roleUnicode(piece)}  {promoted} {capture} {doublePush} {enpassant} {castling} {captureValue}'
             )
         
-        print(f'Number of moves: {self.moveIndex+1}')
+        print(f'Number of moves: {MoveList.moveCount}')
 
     # basically negamax but only on capture moves to avoid event horizon problem
     def quiescenceSearch(self, alpha, beta):
@@ -1305,7 +1312,7 @@ class Board:
 
     # search position for the best move
     # iterative deepening added
-    def searchPosition(self, depth, timeInSec=10):
+    def searchPosition(self, depth, timeInSec=60):
         cdef int score = -1
         startTime = time.time()
 
@@ -1316,7 +1323,7 @@ class Board:
         prevTimeFactor = 2
         timeFactorList = []
 
-        for iterDepth in range(1, depth + 1):
+        for iterDepth in range(0, depth):
             estimatedTime = prevTime * prevTimeFactor
 
             if estimatedTime >= timeInSec:
