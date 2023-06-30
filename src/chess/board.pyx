@@ -1181,14 +1181,14 @@ class Board:
                 # mobility bonus (queen)
                 if(piece == Q):
                     score += bit.countBits(atk.getQueenAttack_otf(fieldIndex) & ~self.board_union) 
-                    print(f"White queen mobility: {bit.countBits(atk.getBishopAttack_otf(fieldIndex) & ~self.board_union)}")
+                    #print(f"White queen mobility: {bit.countBits(atk.getBishopAttack_otf(fieldIndex) & ~self.board_union)}")
 
                 if(piece == q):
                     score -= bit.countBits(atk.getQueenAttack_otf(fieldIndex) & ~self.board_union) 
-                    print(f"Black queen mobility: {bit.countBits(atk.getBishopAttack_otf(fieldIndex) & ~self.board_union)}")
+                    #print(f"Black queen mobility: {bit.countBits(atk.getBishopAttack_otf(fieldIndex) & ~self.board_union)}")
 
                 pieceMap = bit.popBit(pieceMap, fieldIndex)
-        print(f"old score: {oldScore}") if self.turn == white else print(f"old score: {-oldScore}")
+        #print(f"old score: {oldScore}") if self.turn == white else print(f"old score: {-oldScore}")
         return score if self.turn == white else -score
 
 
@@ -1447,6 +1447,66 @@ class Board:
         # move fails low 
         return alpha
 
+    def negamaxWithoutQS(self, alpha, beta, depth):
+
+        if depth == 0: return self.evaluateScore()
+        self.nodeCount += 1 
+
+        cdef unsigned long long betterMove
+        cdef int legalMovesCount = 0
+        cdef int prevAlpha = alpha
+
+        # TODO: Make sure this check for the right turn side  
+        kingFieldIndex = bit.getLsbIndex(self.pieceMaps[K]) if self.turn == white else bit.getLsbIndex(self.pieceMaps[k])
+        cdef bint isCheck = self.isCheck(kingFieldIndex) 
+
+        # TODO: Uncheck this later
+        if isCheck: self.nodeCount += 1
+
+        # update the movelist 
+        newMoveList = MoveList()
+        self.generateMoves(newMoveList)
+        self.sortMoveList(newMoveList)
+
+        for i, move in enumerate(newMoveList.moves):
+            saveState = self.getSaveState()
+
+            success = self.makeMove(move, 0)
+            if success: 
+                self.halfMoves += 1 
+                legalMovesCount += 1
+            else: continue
+
+            score = -self.negamax(-beta, -alpha, depth-1)
+
+            # TODO: I'd much rather have this in getSaveState
+            self.halfMoves -= 1
+            self.loadSaveState(saveState)
+
+            # fail high beta cutoff
+            if score >= beta:
+                return beta
+
+            # better move
+            if score > alpha:
+                alpha = score
+
+                if self.halfMoves == 0:
+                    betterMove = move
+
+        if not legalMovesCount:
+
+            if isCheck:
+                return -49000 + self.halfMoves
+            else:
+                return 0
+
+        if prevAlpha != alpha:
+            self.bestMove = betterMove
+
+        # move fails low 
+        return alpha
+
     # simple minimax search
     def minimax(self, depth):
 
@@ -1547,15 +1607,16 @@ class Board:
         return exploitation + exploration * exploration_param
 
     def select(self, max_depth):
-        print("-- new iteration --\n")
+        #print("-- new iteration --\n")
         depth = 1
         while self.children: 
             selected = max(self.children, key= lambda position: position.UCT())
-            print(f"selected: {self.getParsedMove(selected.move)}")
+            #print(f"selected: {self.getParsedMove(selected.move)}")
             if depth >= max_depth: 
                 return selected
             self = selected
             depth+=1
+        if depth > 10: print(f"depth: {depth}")
         return self 
 
     def expand(self):
@@ -1602,7 +1663,7 @@ class Board:
                 simulation_pos = random.choice(selected.children)
                 score = simulation_pos.simulate()
                 simulation_pos.backpropagate(score)
-            else:
+            else: #TODO Fix this
                 print(f"No children after move: {self.getParsedMove(selected.move)}")
                 print("Trying to expand")
                 selected.expand()

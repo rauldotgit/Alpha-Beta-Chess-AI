@@ -1,114 +1,181 @@
 import src.chess.board as board
+import src.chess.maps as maps
+import time
 
-def test_group_N_1():
-    test_fen = "r3kb1r/1p1nqp1p/p2p1np1/P1p1p3/2P1P3/2N1K1PP/1P1P1P2/R1BQ1B1R w kq - 1 11"
-    test_move = "Kf3"
+# def test_QS_1():
+#     print("\n")
+#     test_fen = "r2qk2r/p1ppn1pp/bpnb1p2/4p3/4P3/2NPBN2/PPP1BPPP/R2Q1RK1 w Qkq - - -"
+#     newBoard = board.Board()
+#     newBoard.fenGameSetup(test_fen)
+
+#     newBoard2 = board.Board()
+#     newBoard2.fenGameSetup(test_fen)
+
+#     start_time = time.time()
+#     newBoard.negamax(-50000, 50000, 5)
+#     best_move_With = newBoard.getParsedMove(newBoard.bestMove)
+#     print("QS_1, with QS best move: ", best_move_With)
+#     print("Nodes searched: ", newBoard.nodeCount)
+#     print("Time: ", (time.time()-start_time))
+
+#     start_time = time.time()
+#     newBoard2.negamaxWithoutQS(-50000, 50000, 5)
+#     best_move_Without = newBoard2.getParsedMove(newBoard2.bestMove)
+#     print("QS_1, without QS best move: ", best_move_Without)
+#     print("Nodes searched: ", newBoard2.nodeCount)
+#     print("Time: ", (time.time()-start_time))
+
+def test_QS_2():
+    print("\n")
+    test_fen = "3r3k/pQ2R2p/6p1/3Pbp2/8/1Pq3P1/P4P1P/6K1 w - - 0 31"
     newBoard = board.Board()
     newBoard.fenGameSetup(test_fen)
 
-    newBoard.printBoard()
+    newBoard2 = board.Board()
+    newBoard2.fenGameSetup(test_fen)
 
-#     #newBoard.minimax(3)
-#     #newBoard.searchPosition(5, 30)
-#     print("\n ----- TESTING MCTS ----- \n")
-    newBoard.MCTS_UCT(30, 16, 60)
-    best_move = newBoard.getParsedMove(newBoard.bestMove)
-    print("Group N_1, MCTS best move: ", best_move)
+    start_time = time.time()
+    newBoard.negamax(-50000, 50000, 4)
+    best_move_With = newBoard.getParsedMove(newBoard.bestMove)
+    print("QS_2, with QS best move: ", best_move_With)
+    print("Nodes searched: ", newBoard.nodeCount)
+    print("Time: ", (time.time()-start_time))
+
+    start_time = time.time()
+    newBoard2.negamaxWithoutQS(-50000, 50000, 4)
+    best_move_Without = newBoard2.getParsedMove(newBoard2.bestMove)
+    print("QS_2, without QS best move: ", best_move_Without)
+    print("Nodes searched: ", newBoard2.nodeCount)
+    print("Time: ", (time.time()-start_time))
+
+# def test_group_N_1():
+#     test_fen = maps.FEN_START
+#     test_move = "Kf3"
+#     newBoard = board.Board()
+#     newBoard.fenGameSetup(test_fen)
+
+#     newBoard2 = board.Board()
+#     newBoard2.fenGameSetup(test_fen)
+
+#     newBoard.printBoard()
+
+#     start_time = time.time()
+
+#     print(f"Position eval before: {newBoard.evaluateScore()}")
+
+#     print("\n ----- TESTING ALPHA BETA ----- \n")
+#     newBoard.negamax(-50000, 50000, 5)
+#     best_move_AlphaBeta = newBoard.getParsedMove(newBoard.bestMove)
+#     print("Group N_1, AlphaBeta best move: ", best_move_AlphaBeta)
+#     newBoard.makeMove(newBoard.bestMove, 0)
+#     print(f"Position eval after: {newBoard.evaluateScore()}")
+
+#     print(f"Time after AlphaBeta: {time.time() - start_time}")
+#     start_time = time.time()
+
+    # print("\n ----- TESTING MCTS ----- \n")
+    # newBoard2.MCTS_UCT(20000, 16, 600)
+    # best_move_MCTS = newBoard2.getParsedMove(newBoard2.bestMove)
+    # print("Group N_1, MCTS best move: ", best_move_MCTS)
+    # newBoard2.makeMove(newBoard2.bestMove, 0)
+    # print(f"Position eval after: {newBoard2.evaluateScore()}")
+
+    # print(f"Time after MCTS: {time.time() - start_time}")
 
 #     assert test_move == best_move
 
 
-def test_group_N_2():
-    test_fen = "r1bqkbnr/p2ppppp/2p5/1p4N1/2B1P3/8/PPQP1PPP/RNB1K2R w KQkq b6 0 1"
-    test_move = "c4f7"
-    newBoard = board.Board()
-    newBoard.fenGameSetup(test_fen)
+# def test_group_N_2():
+#     test_fen = "r1bqkbnr/p2ppppp/2p5/1p4N1/2B1P3/8/PPQP1PPP/RNB1K2R w KQkq b6 0 1"
+#     test_move = "c4f7"
+#     newBoard = board.Board()
+#     newBoard.fenGameSetup(test_fen)
 
-    newBoard.printBoard()
+#     newBoard.printBoard()
 
-    newBoard.MCTS_UCT(30, 16, 60)
-    best_move = newBoard.getParsedMove(newBoard.bestMove)
-    print("Group N_2, MCTS best move: ", best_move)
-
-#     #newBoard.minimax(3)
-#     newBoard.searchPosition(5, 30)
+#     newBoard.MCTS_UCT(30, 16, 60)
 #     best_move = newBoard.getParsedMove(newBoard.bestMove)
-#     print("best move: ", best_move)
+#     print("Group N_2, MCTS best move: ", best_move)
 
-#     assert test_move == best_move
+# #     #newBoard.minimax(3)
+# #     newBoard.searchPosition(5, 30)
+# #     best_move = newBoard.getParsedMove(newBoard.bestMove)
+# #     print("best move: ", best_move)
+
+# #     assert test_move == best_move
 
 
-def test_group_A_1():
-    test_fen = "r2qk2r/p1ppn1pp/bpnb1p2/4p3/4P3/2NPBN2/PPP1BPPP/R2Q1RK1 w Qkq - - -"
-    test_move = "a1c1"
-    newBoard = board.Board()
-    newBoard.fenGameSetup(test_fen)
+# def test_group_A_1():
+#     test_fen = "r2qk2r/p1ppn1pp/bpnb1p2/4p3/4P3/2NPBN2/PPP1BPPP/R2Q1RK1 w Qkq - - -"
+#     test_move = "a1c1"
+#     newBoard = board.Board()
+#     newBoard.fenGameSetup(test_fen)
 
-    newBoard.printBoard()
+#     newBoard.printBoard()
 
-    newBoard.MCTS_UCT(30, 16, 60)
-    best_move = newBoard.getParsedMove(newBoard.bestMove)
-    print("Group A_1, MCTS best move: ", best_move)
-
-#     #newBoard.minimax(3)
-#     newBoard.searchPosition(5, 30)
+#     newBoard.MCTS_UCT(30, 16, 60)
 #     best_move = newBoard.getParsedMove(newBoard.bestMove)
-#     print("best move: ", best_move)
+#     print("Group A_1, MCTS best move: ", best_move)
 
-#     assert test_move == best_move
+# #     #newBoard.minimax(3)
+# #     newBoard.searchPosition(5, 30)
+# #     best_move = newBoard.getParsedMove(newBoard.bestMove)
+# #     print("best move: ", best_move)
+
+# #     assert test_move == best_move
 
 
-def test_group_A_2():
-    test_fen = "8/1k6/1r3rp1/8/4R2P/2K5/3R4/8 w - - - -"
-    test_move = "c3d3"
-    newBoard = board.Board()
-    newBoard.fenGameSetup(test_fen)
+# def test_group_A_2():
+#     test_fen = "8/1k6/1r3rp1/8/4R2P/2K5/3R4/8 w - - - -"
+#     test_move = "c3d3"
+#     newBoard = board.Board()
+#     newBoard.fenGameSetup(test_fen)
 
-    newBoard.printBoard()
+#     newBoard.printBoard()
 
-    newBoard.MCTS_UCT(30, 16, 60)
-    best_move = newBoard.getParsedMove(newBoard.bestMove)
-    print("Group A_2, MCTS best move: ", best_move)
-
-#     #newBoard.minimax(3)
-#     newBoard.searchPosition(5, 30)
+#     newBoard.MCTS_UCT(30, 16, 60)
 #     best_move = newBoard.getParsedMove(newBoard.bestMove)
-#     print("best move: ", best_move)
+#     print("Group A_2, MCTS best move: ", best_move)
 
-#     assert test_move == best_move
+# #     #newBoard.minimax(3)
+# #     newBoard.searchPosition(5, 30)
+# #     best_move = newBoard.getParsedMove(newBoard.bestMove)
+# #     print("best move: ", best_move)
+
+# #     assert test_move == best_move
 
 
-def test_group_B_1():
-    test_fen = "r1bq1rk1/pp1nbppp/2pp1n2/4p3/P1BPP3/2N2N2/1PP2PPP/R1BQ1RK1 w - - 0 1"
-    test_move = "h2h3"
-    newBoard = board.Board()
-    newBoard.fenGameSetup(test_fen)
+# def test_group_B_1():
+#     test_fen = "r1bq1rk1/pp1nbppp/2pp1n2/4p3/P1BPP3/2N2N2/1PP2PPP/R1BQ1RK1 w - - 0 1"
+#     test_move = "h2h3"
+#     newBoard = board.Board()
+#     newBoard.fenGameSetup(test_fen)
 
-    newBoard.printBoard()
+#     newBoard.printBoard()
 
-    newBoard.MCTS_UCT(30, 16, 60)
-    best_move = newBoard.getParsedMove(newBoard.bestMove)
-    print("Group B_1, MCTS best move: ", best_move)
-
-#     #newBoard.minimax(3)
-#     newBoard.searchPosition(5, 30)
+#     newBoard.MCTS_UCT(30, 16, 60)
 #     best_move = newBoard.getParsedMove(newBoard.bestMove)
-#     print("best move: ", best_move)
+#     print("Group B_1, MCTS best move: ", best_move)
 
-#     assert test_move == best_move
+# #     #newBoard.minimax(3)
+# #     newBoard.searchPosition(5, 30)
+# #     best_move = newBoard.getParsedMove(newBoard.bestMove)
+# #     print("best move: ", best_move)
+
+# #     assert test_move == best_move
 
 
-def test_group_B_2():
-    test_fen = "4K3/4P1k1/8/8/8/8/7R/5r2 w - - 0 1"
-    test_move = "h2e2"
-    newBoard = board.Board()
-    newBoard.fenGameSetup(test_fen)
+# def test_group_B_2():
+#     test_fen = "4K3/4P1k1/8/8/8/8/7R/5r2 w - - 0 1"
+#     test_move = "h2e2"
+#     newBoard = board.Board()
+#     newBoard.fenGameSetup(test_fen)
 
-    newBoard.printBoard()
+#     newBoard.printBoard()
 
-    newBoard.MCTS_UCT(50, 16, 60)
-    best_move = newBoard.getParsedMove(newBoard.bestMove)
-    print("Group B_2, MCTS best move: ", best_move)
+#     newBoard.MCTS_UCT(50, 16, 60)
+#     best_move = newBoard.getParsedMove(newBoard.bestMove)
+#     print("Group B_2, MCTS best move: ", best_move)
 
 #     #newBoard.minimax(3)
 #     newBoard.searchPosition(5, 30)
