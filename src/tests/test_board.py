@@ -179,14 +179,6 @@ def test_evaluate_score6():
 def test_score_move():
     pass
 
-# def test_search_move():
-#     newBoard = board.Board()
-#     newBoard.fenGameSetup(maps.FEN_HARD)
-
-#     newBoard.printBoard()
-
-#     newBoard.searchPosition(5, 30)
-    # print(newBoard.nodeCount)
 
 # def test_sort_move_list():
 #     newBoard = board.Board()
@@ -210,3 +202,12 @@ def test_score_move():
 #         print(f'Depth {i}, best found move:')
 #         newBoard.printMove(newBoard.bestMove)
 #         print(f'Nodes searched: {newBoard.nodeCount}')
+
+
+# def test_search_move():
+#     newBoard = board.Board()
+#     newBoard.fenGameSetup(maps.FEN_HARD)
+
+#     newBoard.printBoard()
+
+#     newBoard.searchPosition(5, 30)
