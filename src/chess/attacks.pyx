@@ -186,11 +186,11 @@ cdef int[64] bishopAttackfieldCount = [
 ]
 
 
-def singlePawnAttacks(fieldIndex, turn):
+def singlePawnAttacks(field, turn):
     cdef unsigned long long attacks = 0
     cdef unsigned long long bitmap = 0
 
-    bitmap = bit.setBit(bitmap, fieldIndex)
+    bitmap = bit.setBit(bitmap, field)
 
     if turn == 0:
         if ((bitmap >> 7 & NOT_FILE_A)):
@@ -206,11 +206,11 @@ def singlePawnAttacks(fieldIndex, turn):
 
     return attacks 
 
-def singleKnightAttacks(fieldIndex):
+def singleKnightAttacks(field):
     cdef unsigned long long attacks = 0
     cdef unsigned long long bitmap = 0
 
-    bitmap = bit.setBit(bitmap, fieldIndex)
+    bitmap = bit.setBit(bitmap, field)
 
     if (bitmap >> 17) & NOT_FILE_H:
         attacks |= (bitmap >> 17)
@@ -233,11 +233,11 @@ def singleKnightAttacks(fieldIndex):
 
     return attacks
 
-def singleKingAttacks(fieldIndex):
+def singleKingAttacks(field):
     cdef unsigned long long attacks = 0
     cdef unsigned long long bitmap = 0
 
-    bitmap = bit.setBit(bitmap, fieldIndex)
+    bitmap = bit.setBit(bitmap, field)
 
     if bitmap >> 8:
         attacks |= (bitmap >> 8)
@@ -260,11 +260,11 @@ def singleKingAttacks(fieldIndex):
     return attacks 
 
 
-def singleBishopMask(fieldIndex):
+def singleBishopMask(field):
     cdef unsigned long long attacks = 0
     cdef int r, f;
-    cdef int fieldRank = fieldIndex / 8
-    cdef int fieldFile = fieldIndex % 8
+    cdef int fieldRank = field / 8
+    cdef int fieldFile = field % 8
 
     r = fieldRank + 1
     f = fieldFile + 1
@@ -300,12 +300,12 @@ def singleBishopMask(fieldIndex):
 
     return attacks
 
-def singleBishopAttacks_otf(fieldIndex, blockMap):
+def singleBishopAttacks_otf(field, blockMap):
     cdef unsigned long long attacks = 0
     cdef unsigned long long one = 1
     cdef int r, f;
-    cdef int fieldRank = fieldIndex / 8
-    cdef int fieldFile = fieldIndex % 8
+    cdef int fieldRank = field / 8
+    cdef int fieldFile = field % 8
 
     r = fieldRank + 1
     f = fieldFile + 1
@@ -345,11 +345,11 @@ def singleBishopAttacks_otf(fieldIndex, blockMap):
 
     return attacks
 
-def singleRookMask(fieldIndex):
+def singleRookMask(field):
     cdef unsigned long long attacks = 0
     cdef int r, f
-    cdef int fieldRank = fieldIndex / 8
-    cdef int fieldFile = fieldIndex % 8
+    cdef int fieldRank = field / 8
+    cdef int fieldFile = field % 8
 
     r = fieldRank + 1
     while r <= 6:
@@ -373,11 +373,11 @@ def singleRookMask(fieldIndex):
 
     return attacks
 
-def singleRookAttacks_otf(fieldIndex, blockMap):
+def singleRookAttacks_otf(field, blockMap):
     cdef unsigned long long attacks = 0
     cdef int r, f
-    cdef int fieldRank = fieldIndex / 8
-    cdef int fieldFile = fieldIndex % 8
+    cdef int fieldRank = field / 8
+    cdef int fieldFile = field % 8
 
     r = fieldRank + 1
     while r <= 7:
@@ -406,11 +406,11 @@ def singleRookAttacks_otf(fieldIndex, blockMap):
     return attacks
 
 # for testing purposes
-def singleQueenMask(fieldIndex):
-    return singleRookMask(fieldIndex) | singleBishopMask(fieldIndex)
+def singleQueenMask(field):
+    return singleRookMask(field) | singleBishopMask(field)
 
-def singleQueenAttacks_otf(fieldIndex, blockMap):
-    return singleRookAttacks_otf(fieldIndex, blockMap) | singleBishopAttacks_otf(fieldIndex, blockMap) 
+def singleQueenAttacks_otf(field, blockMap):
+    return singleRookAttacks_otf(field, blockMap) | singleBishopAttacks_otf(field, blockMap) 
 
 # attack_maps = [pawn_attacks, rook_attacks, knight_attacks, bishop_attacks, queen_attacks, king_attacks]
 # all [2][64] sized: 2 sizes (black / white), 64 attack maps for each field 
@@ -467,30 +467,35 @@ def attackPermutations(index, attackMap):
 
 def generateSliderAttacks_magic():
 
+    cdef unsigned long long rookAttackPermutations
+    cdef unsigned long long bishopAttackPermutations
+    cdef unsigned long long rook_magicIndex
+    cdef unsigned long long bishop_magicIndex
+
     for field in range(64):
 
-        rookMasks = singleRookMask(field)
-        bishopMasks = singleBishopMask(field)
+        rookMasks[field] = singleRookMask(field)
+        bishopMasks[field] = singleBishopMask(field)
 
-        rookBitIndices = bit.getBitIndices(rookMasks)
-        bishopBitIndices = bit.getBitIndices(bishopMasks)
+        rookBitCount = len(bit.getBitIndices(rookMasks[field]))
+        bishopBitCount = len(bit.getBitIndices(bishopMasks[field]))
 
-        rookFieldIndices = (bit.ONEULL() << len(rookBitIndices))
-        bishopFieldIndices = (bit.ONEULL() << len(bishopBitIndices))
+        rookFieldIndices = (bit.ONEULL() << rookBitCount)
+        bishopFieldIndices = (bit.ONEULL() << bishopBitCount)
 
         r = 0
         b = 0
 
         while r < rookFieldIndices:
-            rookAttackPermutations = attackPermutations(r, rookMasks)
-            magicIndex = (rookAttackPermutations * rook_magic_numbers[field]) >> (64 - rookAttackfieldCount[field])
-            rookAttacks_magic[field][magicIndex] = singleRookAttacks_otf(field, rookAttackPermutations)
+            rookAttackPermutations = attackPermutations(r, rookMasks[field])
+            rook_magicIndex = (rookAttackPermutations * rook_magic_numbers[field]) >> (64 - rookAttackfieldCount[field])
+            rookAttacks_magic[field][rook_magicIndex] = singleRookAttacks_otf(field, rookAttackPermutations)
             r += 1
 
         while b < bishopFieldIndices:
-            bishopAttackPermutations = attackPermutations(b, bishopMasks)
-            magicIndex = (bishopAttackPermutations * bishop_magic_numbers[field]) >> (64 - bishopAttackfieldCount[field])
-            bishopAttacks_magic[field][magicIndex] = singleBishopAttacks_otf(field, bishopAttackPermutations)
+            bishopAttackPermutations = attackPermutations(b, bishopMasks[field])
+            bishop_magicIndex = (bishopAttackPermutations * bishop_magic_numbers[field]) >> (64 - bishopAttackfieldCount[field])
+            bishopAttacks_magic[field][bishop_magicIndex] = singleBishopAttacks_otf(field, bishopAttackPermutations)
             b += 1
 
 def getAllPawnAttacks(color):
@@ -511,26 +516,57 @@ def getAllBishopAttacks_otf():
 def getAllQueenAttacks_otf():
     return queenAttacks_otf
 
-def getPawnAttack(color, fieldIndex):
-    return pawnAttacks[color][fieldIndex]
+def getAllRookAttacks_magic():
+    return rookAttacks_magic
 
-def getKnightAttack(fieldIndex):
-    return knightAttacks[fieldIndex]
+def getAllBishopAttacks_magic():
+    return bishopAttacks_magic
 
-def getKingAttack(fieldIndex):
-    return kingAttacks[fieldIndex]
+def getPawnAttack(color, field):
+    return pawnAttacks[color][field]
+
+def getKnightAttack(field):
+    return knightAttacks[field]
+
+def getKingAttack(field):
+    return kingAttacks[field]
 
 # make sure to have the otf ones updated 
-def getRookAttack_otf(fieldIndex):
-    return rookAttacks_otf[fieldIndex]
+def getRookAttack_otf(field):
+    return rookAttacks_otf[field]
 
-def getBishopAttack_otf(fieldIndex):
-    return bishopAttacks_otf[fieldIndex]
+def getBishopAttack_otf(field):
+    return bishopAttacks_otf[field]
 
-def getQueenAttack_otf(fieldIndex):
-    return queenAttacks_otf[fieldIndex]
+def getQueenAttack_otf(field):
+    return queenAttacks_otf[field]
 
-def getPieceAttacks_otf(piece):
+def getRookAttack_magic(field, blockMap):
+    attackFields = blockMap & rookMasks[field]
+    magicOneDIndex = (attackFields * rook_magic_numbers[field]) >> (64 - rookAttackfieldCount[field])
+    magicIndex = magicOneDIndex % 4096
+    return rookAttacks_magic[field][magicIndex]
+
+def getBishopAttack_magic(field, blockMap):
+    attackFields = blockMap & bishopMasks[field]
+    magicOneDIndex = (attackFields * bishop_magic_numbers[field]) >> (64 - bishopAttackfieldCount[field])
+    magicIndex = magicOneDIndex % 512
+    return bishopAttacks_magic[field][magicIndex]
+
+def getQueenAttack_magic(field, blockMap):
+    return getRookAttack_magic(field, blockMap) | getBishopAttack_magic(field, blockMap)
+
+def getPieceAttack_magic(piece, field, blockMap):
+        if piece == P: return getPawnAttack(0, field)
+        elif piece == p: return getPawnAttack(1, field)
+        elif piece == R or piece == r: return getRookAttack_magic(field, blockMap)
+        elif piece == N or piece == n: return getKnightAttack(field)
+        elif piece == B or piece == b: return getBishopAttack_magic(field, blockMap)
+        elif piece == Q or piece == q: return getQueenAttack_magic(field, blockMap)
+        elif piece == K or piece == k: return getKingAttack(field)
+        else: return None
+
+def getAllPieceAttacks_otf(piece):
         if piece == P: return pawnAttacks[0]
         elif piece == p: return pawnAttacks[1]
         elif piece == R or piece == r: return rookAttacks_otf
@@ -550,4 +586,5 @@ def generateAttackMaps_magic():
 
 ###################### Generate ###############
 # generateAttackMaps_magic()
+# print("Attacks initialized!")
 generateAttackMaps_otf(maps.START_UNION_MAP)
