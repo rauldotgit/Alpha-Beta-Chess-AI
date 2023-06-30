@@ -395,6 +395,7 @@ class Board:
         self.castling = 0
         self.halfMoves = 0
         self.fullMoves = 0
+        self.greatestDepthReached = 0
 
         # for MCTS
         self.visits = 0
@@ -1606,20 +1607,20 @@ class Board:
         exploration = math.sqrt(math.log(self.parent.visits) / self.visits)
         return exploitation + exploration * exploration_param
 
-    greatestDepthReached = 0
+    
     def select(self, max_depth):
         #print("-- new iteration --\n")
         depth = 1
         while self.children: 
             selected = max(self.children, key= lambda position: position.UCT())
             #print(f"selected: {self.getParsedMove(selected.move)}")
-            #if depth >= max_depth: 
-                #return selected
-            #self = selected
-            #depth+=1
+            if depth >= max_depth: 
+                return selected
+            self = selected
+            depth+=1
         #if depth > 10: print(f"depth: {depth}")
-        if depth > greatestDepthReached:
-            greatestDepthReached = depth
+            if depth > self.greatestDepthReached:
+                self.greatestDepthReached = depth
         return self 
 
     def expand(self):
