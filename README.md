@@ -35,16 +35,23 @@ Milestone I - Basic Chess Engine: (done)
 - Simple evaluation function
 - Time management
 
-Milestone II - Simple AI: (current)
+Milestone II - Simple AI: (done)
 
 - Minimax
 - Alpha-Beta Search
 - Simple Move-Sorting and Iterative Deepening
 
-Milestone III - Advanced AI: (next)
+Milestone III - Advanced AI: (done)
 
 - Principal Variation Search
 - Better Move-Sorting, Evaluation function, etc.
+- Quiescence Search
+- Monte Carlo Tree Search
+
+Milestone IV - Optimized AI: (current)
+
+- Connection to Game Server
+- Testing, Optimizing, Bug-fixing
 
 ### Screenshots
 
