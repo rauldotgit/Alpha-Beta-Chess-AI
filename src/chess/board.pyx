@@ -1087,6 +1087,12 @@ class Board:
     def evaluateScore(self):
 
         #print("EVALUATING SCORE")
+        # checkmate
+        newMoveList = MoveList()
+        self.generateMoves(newMoveList)
+        moves = self.getLegalMoves(newMoveList)
+        if len(moves) <= 0:
+            return 50000 if self.turn == white else -50000 
 
         initEvaluationMasks() 
         oldScore = 0
@@ -1173,20 +1179,20 @@ class Board:
                 # mobility bonus (bishop)
                 if(piece == B):
                     score += bit.countBits(atk.getBishopAttack_otf(fieldIndex) & ~self.board_union) 
-                    #print(f"White bishop mobility: {bit.countBits(atk.getBishopAttack_otf(fieldIndex) & ~self.board_union)}")
+                    #print(f"White Bishop mobility: {bit.countBits(atk.getBishopAttack_otf(fieldIndex) & ~self.board_union)}")
 
                 if(piece == b):
                     score -= bit.countBits(atk.getBishopAttack_otf(fieldIndex) & ~self.board_union) 
-                    #print(f"Black bishop mobility: {bit.countBits(atk.getBishopAttack_otf(fieldIndex) & ~self.board_union)}")
+                    #print(f"Black Bishop mobility: {bit.countBits(atk.getBishopAttack_otf(fieldIndex) & ~self.board_union)}")
 
                 # mobility bonus (queen)
                 if(piece == Q):
                     score += bit.countBits(atk.getQueenAttack_otf(fieldIndex) & ~self.board_union) 
-                    #print(f"White queen mobility: {bit.countBits(atk.getBishopAttack_otf(fieldIndex) & ~self.board_union)}")
+                    #print(f"White Queen mobility: {bit.countBits(atk.getBishopAttack_otf(fieldIndex) & ~self.board_union)}")
 
                 if(piece == q):
                     score -= bit.countBits(atk.getQueenAttack_otf(fieldIndex) & ~self.board_union) 
-                    #print(f"Black queen mobility: {bit.countBits(atk.getBishopAttack_otf(fieldIndex) & ~self.board_union)}")
+                    #print(f"Black Queen mobility: {bit.countBits(atk.getBishopAttack_otf(fieldIndex) & ~self.board_union)}")
 
                 pieceMap = bit.popBit(pieceMap, fieldIndex)
         #print(f"old score: {oldScore}") if self.turn == white else print(f"old score: {-oldScore}")
@@ -1627,8 +1633,9 @@ class Board:
         # expanding position -> new position for every possible move
         newMoveList = MoveList()
         self.generateMoves(newMoveList)
+        moves = self.getLegalMoves(newMoveList)
 
-        for move in newMoveList.moves:
+        for move in moves:
             newPosition = self.createChild(move)
             #newPosition.printMove(move)
             #print("\n ----->")
@@ -1638,8 +1645,9 @@ class Board:
         # simulating random move and returning score
         newMoveList = MoveList()
         self.generateMoves(newMoveList)
-        if newMoveList.len() > 0:
-            random_move = random.choice(newMoveList.moves)
+        moves = self.getLegalMoves(newMoveList)
+        if len(moves) > 0:
+            random_move = random.choice(moves)
             self.makeMove(random_move, 0)
         return self.evaluateScore()
 
@@ -1667,10 +1675,11 @@ class Board:
                 simulation_pos = random.choice(selected.children)
                 score = simulation_pos.simulate()
                 simulation_pos.backpropagate(score)
-            else: #TODO Fix this
+            else: #TODO Fix this, kinda works for now
+                selected.visits = 50000
+                break
                 #print(f"No children after move: {self.getParsedMove(selected.move)}")
-                #print("Trying to expand")
-                selected.expand()
+                #selected.expand()
         
         # position with most visits is most stable
         bestChild = max(self.children, key = lambda pos: pos.visits) 
