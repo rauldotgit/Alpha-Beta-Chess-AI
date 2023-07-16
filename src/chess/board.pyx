@@ -3,6 +3,7 @@ import numpy as np
 import cython
 import random
 import time 
+import math
 
 import src.chess.maps as maps
 import src.chess.bitmethods as bit
@@ -399,6 +400,14 @@ class Board:
         self.castling = 0
         self.halfMoves = 0
         self.fullMoves = 0
+        self.greatestDepthReached = 0
+
+        # for MCTS
+        self.visits = 0
+        self.score = 0
+        self.move = None
+        self.parent = None
+        self.children = []
 
         # indexed by role_int enum further up
         self.pieceMaps = [
@@ -431,6 +440,19 @@ class Board:
     
     # def __init__(self):
     #     self.resetBoard()
+
+    def createChild(self, move):
+        child = Board()
+        child.parent = self
+        # save move that leads to new position
+        child.move = move
+        # set pieces 
+        child.loadSaveState(self.getSaveState())
+        child.makeMove(move, 0)
+        # add child to children list
+        self.children.append(child)
+
+        return child
 
     def nextTurn(self):
         self.turn = black if self.turn == white else white
@@ -1074,6 +1096,12 @@ class Board:
     def evaluateScore(self):
 
         #print("EVALUATING SCORE")
+        # checkmate
+        newMoveList = MoveList()
+        self.generateMoves(newMoveList)
+        moves = self.getLegalMoves(newMoveList)
+        if len(moves) <= 0:
+            return 50000 if self.turn == white else -50000 
 
         initEvaluationMasks() 
         oldScore = 0
@@ -1160,23 +1188,23 @@ class Board:
                 # mobility bonus (bishop)
                 if(piece == B):
                     score += bit.countBits(atk.getBishopAttack_otf(fieldIndex) & ~self.board_union) 
-                    #print(f"White bishop mobility: {bit.countBits(atk.getBishopAttack_otf(fieldIndex) & ~self.board_union)}")
+                    #print(f"White Bishop mobility: {bit.countBits(atk.getBishopAttack_otf(fieldIndex) & ~self.board_union)}")
 
                 if(piece == b):
                     score -= bit.countBits(atk.getBishopAttack_otf(fieldIndex) & ~self.board_union) 
-                    #print(f"Black bishop mobility: {bit.countBits(atk.getBishopAttack_otf(fieldIndex) & ~self.board_union)}")
+                    #print(f"Black Bishop mobility: {bit.countBits(atk.getBishopAttack_otf(fieldIndex) & ~self.board_union)}")
 
                 # mobility bonus (queen)
                 if(piece == Q):
                     score += bit.countBits(atk.getQueenAttack_otf(fieldIndex) & ~self.board_union) 
-                    print(f"White queen mobility: {bit.countBits(atk.getBishopAttack_otf(fieldIndex) & ~self.board_union)}")
+                    #print(f"White Queen mobility: {bit.countBits(atk.getBishopAttack_otf(fieldIndex) & ~self.board_union)}")
 
                 if(piece == q):
                     score -= bit.countBits(atk.getQueenAttack_otf(fieldIndex) & ~self.board_union) 
-                    print(f"Black queen mobility: {bit.countBits(atk.getBishopAttack_otf(fieldIndex) & ~self.board_union)}")
+                    #print(f"Black Queen mobility: {bit.countBits(atk.getBishopAttack_otf(fieldIndex) & ~self.board_union)}")
 
                 pieceMap = bit.popBit(pieceMap, fieldIndex)
-        print(f"old score: {oldScore}") if self.turn == white else print(f"old score: {-oldScore}")
+        #print(f"old score: {oldScore}") if self.turn == white else print(f"old score: {-oldScore}")
         return score if self.turn == white else -score
 
 
@@ -1438,6 +1466,66 @@ class Board:
         # move fails low 
         return alpha
 
+    def negamaxWithoutQS(self, alpha, beta, depth):
+
+        if depth == 0: return self.evaluateScore()
+        self.nodeCount += 1 
+
+        cdef unsigned long long betterMove
+        cdef int legalMovesCount = 0
+        cdef int prevAlpha = alpha
+
+        # TODO: Make sure this check for the right turn side  
+        kingFieldIndex = bit.getLsbIndex(self.pieceMaps[K]) if self.turn == white else bit.getLsbIndex(self.pieceMaps[k])
+        cdef bint isCheck = self.isCheck(kingFieldIndex) 
+
+        # TODO: Uncheck this later
+        if isCheck: self.nodeCount += 1
+
+        # update the movelist 
+        newMoveList = MoveList()
+        self.generateMoves(newMoveList)
+        self.sortMoveList(newMoveList)
+
+        for i, move in enumerate(newMoveList.moves):
+            saveState = self.getSaveState()
+
+            success = self.makeMove(move, 0)
+            if success: 
+                self.halfMoves += 1 
+                legalMovesCount += 1
+            else: continue
+
+            score = -self.negamax(-beta, -alpha, depth-1)
+
+            # TODO: I'd much rather have this in getSaveState
+            self.halfMoves -= 1
+            self.loadSaveState(saveState)
+
+            # fail high beta cutoff
+            if score >= beta:
+                return beta
+
+            # better move
+            if score > alpha:
+                alpha = score
+
+                if self.halfMoves == 0:
+                    betterMove = move
+
+        if not legalMovesCount:
+
+            if isCheck:
+                return -49000 + self.halfMoves
+            else:
+                return 0
+
+        if prevAlpha != alpha:
+            self.bestMove = betterMove
+
+        # move fails low 
+        return alpha
+
     # simple minimax search
     def minimax(self, depth):
 
@@ -1524,7 +1612,91 @@ class Board:
         self.printMove(foundMove)
         print(f'With score {foundScore}')
 
-    ################### ALPHA BETA END ###################
+    ################### MONTE CARLO TREE SEARCH ###################
+
+    def UCT(self):
+        # calculating exploration/ expansion value of a position
+        exploration_param = 1.4
+
+        if self.visits == 0:
+            return 50000
+
+        exploitation = self.score / self.visits
+        exploration = math.sqrt(math.log(self.parent.visits) / self.visits)
+        return exploitation + exploration * exploration_param
+
+    
+    def select(self, max_depth):
+        #print("-- new iteration --\n")
+        depth = 1
+        while self.children: 
+            selected = max(self.children, key= lambda position: position.UCT())
+            #print(f"selected: {self.getParsedMove(selected.move)}")
+            if depth >= max_depth: 
+                return selected
+            self = selected
+            depth+=1
+        #if depth > 10: print(f"depth: {depth}")
+            if depth > self.greatestDepthReached:
+                self.greatestDepthReached = depth
+        return self 
+
+    def expand(self):
+        # expanding position -> new position for every possible move
+        newMoveList = MoveList()
+        self.generateMoves(newMoveList)
+        moves = self.getLegalMoves(newMoveList)
+
+        for move in moves:
+            newPosition = self.createChild(move)
+            #newPosition.printMove(move)
+            #print("\n ----->")
+            #newPosition.printBoard()
+
+    def simulate(self):
+        # simulating random move and returning score
+        newMoveList = MoveList()
+        self.generateMoves(newMoveList)
+        moves = self.getLegalMoves(newMoveList)
+        if len(moves) > 0:
+            random_move = random.choice(moves)
+            self.makeMove(random_move, 0)
+        return self.evaluateScore()
+
+    def backpropagate(self, score):
+        while self is not None:
+            self.visits += 1
+            self.score += score
+            self = self.parent
+
+    def MCTS_UCT(self, iterations, max_depth, max_time):
+        # TODO: play with number of iterations and depth
+        start_time = time.time()
+        end_time = start_time + max_time
+
+        for i in range(iterations):
+            if time.time() >= end_time:
+                break
+
+            selected = self.select(max_depth)
+
+            if selected.visits == 0:
+                selected.expand()
+
+            if selected.children:
+                simulation_pos = random.choice(selected.children)
+                score = simulation_pos.simulate()
+                simulation_pos.backpropagate(score)
+            else: #TODO Fix this, kinda works for now
+                selected.visits = 50000
+                break
+                #print(f"No children after move: {self.getParsedMove(selected.move)}")
+                #selected.expand()
+        
+        # position with most visits is most stable
+        bestChild = max(self.children, key = lambda pos: pos.visits) 
+        self.bestMove = bestChild.move
+
 
     # def parseBot(self, sleepTime):
     #     print('botgame')

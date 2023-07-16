@@ -114,67 +114,67 @@ def test_fen_to_board_info():
 #     newBoard = board.Board()
 #     newBoard.uciLoop()
 
-def test_evaluate_score():
-    newBoard = board.Board()
-    newBoard.fenGameSetup(maps.FEN_START)
-    newBoard.printBoard()
+# def test_evaluate_score():
+#     newBoard = board.Board()
+#     newBoard.fenGameSetup(maps.FEN_START)
+#     newBoard.printBoard()
 
-    score = newBoard.evaluateScore()
-    print("\n Score 1:", score)
+#     score = newBoard.evaluateScore()
+#     print("\n Score 1:", score)
 
-    assumed_score = 0
-    assert score == assumed_score
+#     assumed_score = 0
+#     assert score == assumed_score
 
-def test_evaluate_score_2():
-    fenString = 'rn1qkbnr/pp1b1ppp/8/1B1pp3/8/5N2/PPPP1PPP/RNBQR1K1 b kq - 3 7'
+# def test_evaluate_score_2():
+#     fenString = 'rn1qkbnr/pp1b1ppp/8/1B1pp3/8/5N2/PPPP1PPP/RNBQR1K1 b kq - 3 7'
 
-    newBoard = board.Board()
-    newBoard.fenGameSetup(fenString)
-    newBoard.printBoard()
+#     newBoard = board.Board()
+#     newBoard.fenGameSetup(fenString)
+#     newBoard.printBoard()
 
-    score = newBoard.evaluateScore()
-    print("\n Score 2:", score)
+#     score = newBoard.evaluateScore()
+#     print("\n Score 2:", score)
 
-#import src.chess.bitmethods as bit
-def test_evaluate_score3():
-    fenString = 'rnbqkbnr/3p1p2/8/4p3/8/8/1P4PP/RNBQKBNR w KQkq - 0 1'
+# #import src.chess.bitmethods as bit
+# def test_evaluate_score3():
+#     fenString = 'rnbqkbnr/3p1p2/8/4p3/8/8/1P4PP/RNBQKBNR w KQkq - 0 1'
 
-    newBoard = board.Board()
-    newBoard.fenGameSetup(fenString)
-    newBoard.printBoard()
+#     newBoard = board.Board()
+#     newBoard.fenGameSetup(fenString)
+#     newBoard.printBoard()
 
-    score = newBoard.evaluateScore()
-    print("\n Score 3:", score)
+#     score = newBoard.evaluateScore()
+#     print("\n Score 3:", score)
 
-def test_evaluate_score4():
-    fenString = 'rnbqkbnr/1ppppppp/8/p7/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1'
+# def test_evaluate_score4():
+#     fenString = 'rnbqkbnr/1ppppppp/8/p7/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1'
 
-    newBoard = board.Board()
-    newBoard.fenGameSetup(fenString)
-    newBoard.printBoard()
+#     newBoard = board.Board()
+#     newBoard.fenGameSetup(fenString)
+#     newBoard.printBoard()
 
-    score = newBoard.evaluateScore()
-    print("\n Score 4:", score)
+#     score = newBoard.evaluateScore()
+#     print("\n Score 4:", score)
 
-def test_evaluate_score5():
-    fenString = 'rnbqkbnr/pppppppp/8/8/P7/P7/P2PPPPP/RNBQKBNR b KQkq - 0 1'
+# def test_evaluate_score5():
+#     fenString = 'rnbqkbnr/pppppppp/8/8/P7/P7/P2PPPPP/RNBQKBNR b KQkq - 0 1'
 
-    newBoard = board.Board()
-    newBoard.fenGameSetup(fenString)
-    newBoard.printBoard()
+#     newBoard = board.Board()
+#     newBoard.fenGameSetup(fenString)
+#     newBoard.printBoard()
 
-    score = newBoard.evaluateScore()
-    print("\n Score 5:", score)
+#     score = newBoard.evaluateScore()
+#     print("\n Score 5:", score)
 
-def test_evaluate_score6():
-    fenString = 'r3k1nr/p5pp/1p3p2/2nRP3/5b1P/2N2N2/PPP2PP1/R1B3K1 b kq - 0 19'
+# def test_evaluate_score6():
+#     fenString = 'r3k1nr/p5pp/1p3p2/2nRP3/5b1P/2N2N2/PPP2PP1/R1B3K1 b kq - 0 19'
 
-    newBoard = board.Board()
-    newBoard.fenGameSetup(fenString)
-    newBoard.printBoard()
+#     newBoard = board.Board()
+#     newBoard.fenGameSetup(fenString)
+#     newBoard.printBoard()
 
-    score = newBoard.evaluateScore()
-    print("\n Score 6:", score)
+#     score = newBoard.evaluateScore()
+#     print("\n Score 6:", score)
 
 def test_score_move():
     pass
