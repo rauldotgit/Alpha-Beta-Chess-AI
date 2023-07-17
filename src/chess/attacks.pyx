@@ -2,25 +2,26 @@ import cython
 import src.chess.bitmethods as bit
 import src.chess.maps as maps
 
+ctypedef unsigned long long ULL
 
-cdef unsigned long long[2][64] pawnAttacks
-cdef unsigned long long[64] knightAttacks
-cdef unsigned long long[64] kingAttacks
+cdef ULL[2][64] pawnAttacks
+cdef ULL[64] knightAttacks
+cdef ULL[64] kingAttacks
 
-cdef unsigned long long[64] rookMasks
-cdef unsigned long long[64] bishopMasks
+cdef ULL[64] rookMasks
+cdef ULL[64] bishopMasks
 
-cdef unsigned long long[64][4096] rookAttacks_magic
-cdef unsigned long long[64][512] bishopAttacks_magic
+cdef ULL[64][4096] rookAttacks
+cdef ULL[64][512] bishopAttacks
 
-cdef unsigned long long[64] rookAttacks_otf
-cdef unsigned long long[64] bishopAttacks_otf
-cdef unsigned long long[64] queenAttacks_otf
+cdef ULL[64] rookAttacks_otf
+cdef ULL[64] bishopAttacks_otf
+cdef ULL[64] queenAttacks_otf
 
-cdef unsigned long long NOT_FILE_H = 9187201950435737471
-cdef unsigned long long NOT_FILE_GH = 4557430888798830399
-cdef unsigned long long NOT_FILE_AB = 18229723555195321596
-cdef unsigned long long NOT_FILE_A = 18374403900871474942
+cdef ULL NOT_FILE_H = 9187201950435737471
+cdef ULL NOT_FILE_GH = 4557430888798830399
+cdef ULL NOT_FILE_AB = 18229723555195321596
+cdef ULL NOT_FILE_A = 18374403900871474942
 
 cdef enum role_int:
     P, R, N, B, Q, K, p, r, n, b, q, k
@@ -29,7 +30,7 @@ cdef enum color_int:
     white, black
 
 #stolen from the internet lol
-cdef unsigned long long[64] rook_magic_numbers = [
+cdef ULL[64] rook_magic_numbers = [
     0x8a80104000800020,
     0x140002000100040,
     0x2801880a0017001,
@@ -96,7 +97,7 @@ cdef unsigned long long[64] rook_magic_numbers = [
     0x1004081002402
 ]
 
-cdef unsigned long long[64] bishop_magic_numbers = [
+cdef ULL[64] bishop_magic_numbers = [
     0x40040844404084,
     0x2004208a004208,
     0x10190041080202,
@@ -163,7 +164,7 @@ cdef unsigned long long[64] bishop_magic_numbers = [
     0x4010011029020020
 ]
 
-cdef int[64] rookAttackfieldCount = [
+cdef int[64] rookFieldCount = [
     12, 11, 11, 11, 11, 11, 11, 12, 
     11, 10, 10, 10, 10, 10, 10, 11, 
     11, 10, 10, 10, 10, 10, 10, 11, 
@@ -174,7 +175,7 @@ cdef int[64] rookAttackfieldCount = [
     12, 11, 11, 11, 11, 11, 11, 12
 ]
 
-cdef int[64] bishopAttackfieldCount = [
+cdef int[64] bishopFieldCount = [
     6, 5, 5, 5, 5, 5, 5, 6, 
     5, 5, 5, 5, 5, 5, 5, 5, 
     5, 5, 7, 7, 7, 7, 5, 5, 
@@ -186,11 +187,11 @@ cdef int[64] bishopAttackfieldCount = [
 ]
 
 
-def singlePawnAttacks(fieldIndex, turn):
-    cdef unsigned long long attacks = 0
-    cdef unsigned long long bitmap = 0
+cdef ULL pawnAttackMap_cy(int field, int turn):
+    cdef ULL attacks = 0
+    cdef ULL bitmap = 0
 
-    bitmap = bit.setBit(bitmap, fieldIndex)
+    bitmap = bit.setBit(bitmap, field)
 
     if turn == 0:
         if ((bitmap >> 7 & NOT_FILE_A)):
@@ -206,11 +207,11 @@ def singlePawnAttacks(fieldIndex, turn):
 
     return attacks 
 
-def singleKnightAttacks(fieldIndex):
-    cdef unsigned long long attacks = 0
-    cdef unsigned long long bitmap = 0
+cdef ULL knightAttackMap_cy(int field):
+    cdef ULL attacks = 0
+    cdef ULL bitmap = 0
 
-    bitmap = bit.setBit(bitmap, fieldIndex)
+    bitmap = bit.setBit(bitmap, field)
 
     if (bitmap >> 17) & NOT_FILE_H:
         attacks |= (bitmap >> 17)
@@ -233,11 +234,11 @@ def singleKnightAttacks(fieldIndex):
 
     return attacks
 
-def singleKingAttacks(fieldIndex):
-    cdef unsigned long long attacks = 0
-    cdef unsigned long long bitmap = 0
+cdef ULL kingAttackMap_cy(int field):
+    cdef ULL attacks = 0
+    cdef ULL bitmap = 0
 
-    bitmap = bit.setBit(bitmap, fieldIndex)
+    bitmap = bit.setBit(bitmap, field)
 
     if bitmap >> 8:
         attacks |= (bitmap >> 8)
@@ -260,11 +261,11 @@ def singleKingAttacks(fieldIndex):
     return attacks 
 
 
-def singleBishopMask(fieldIndex):
-    cdef unsigned long long attacks = 0
+cdef ULL bishopAttackMask_cy(int field):
+    cdef ULL attacks = 0
     cdef int r, f;
-    cdef int fieldRank = fieldIndex / 8
-    cdef int fieldFile = fieldIndex % 8
+    cdef int fieldRank = int(field / 8)
+    cdef int fieldFile = field % 8
 
     r = fieldRank + 1
     f = fieldFile + 1
@@ -300,12 +301,16 @@ def singleBishopMask(fieldIndex):
 
     return attacks
 
-def singleBishopAttacks_otf(fieldIndex, blockMap):
-    cdef unsigned long long attacks = 0
-    cdef unsigned long long one = 1
+cdef void initRookMasks_cy():
+    for field in range(64):
+        rookMasks[field] = rookAttackMask_cy(field)
+
+cdef ULL bishopAttackMap_otf_cy(int field, ULL blockMap):
+    cdef ULL attacks = 0
+    cdef ULL one = 1
     cdef int r, f;
-    cdef int fieldRank = fieldIndex / 8
-    cdef int fieldFile = fieldIndex % 8
+    cdef int fieldRank = int(field / 8)
+    cdef int fieldFile = field % 8
 
     r = fieldRank + 1
     f = fieldFile + 1
@@ -345,11 +350,11 @@ def singleBishopAttacks_otf(fieldIndex, blockMap):
 
     return attacks
 
-def singleRookMask(fieldIndex):
-    cdef unsigned long long attacks = 0
+cdef ULL rookAttackMask_cy(int field):
+    cdef ULL attacks = 0
     cdef int r, f
-    cdef int fieldRank = fieldIndex / 8
-    cdef int fieldFile = fieldIndex % 8
+    cdef int fieldRank = int(field / 8)
+    cdef int fieldFile = field % 8
 
     r = fieldRank + 1
     while r <= 6:
@@ -373,11 +378,15 @@ def singleRookMask(fieldIndex):
 
     return attacks
 
-def singleRookAttacks_otf(fieldIndex, blockMap):
-    cdef unsigned long long attacks = 0
+cdef void initBishopMasks_cy():
+    for field in range(64):
+        bishopMasks[field] = bishopAttackMask_cy(field)
+
+cdef ULL rookAttackMap_otf_cy(int field, ULL blockMap):
+    cdef ULL attacks = 0
     cdef int r, f
-    cdef int fieldRank = fieldIndex / 8
-    cdef int fieldFile = fieldIndex % 8
+    cdef int fieldRank = int(field / 8)
+    cdef int fieldFile = field % 8
 
     r = fieldRank + 1
     while r <= 7:
@@ -406,131 +415,182 @@ def singleRookAttacks_otf(fieldIndex, blockMap):
     return attacks
 
 # for testing purposes
-def singleQueenMask(fieldIndex):
-    return singleRookMask(fieldIndex) | singleBishopMask(fieldIndex)
+cdef ULL queenAttackMask_cy(int field):
+    return rookAttackMask_cy(field) | bishopAttackMask_cy(field)
 
-def singleQueenAttacks_otf(fieldIndex, blockMap):
-    return singleRookAttacks_otf(fieldIndex, blockMap) | singleBishopAttacks_otf(fieldIndex, blockMap) 
+cdef ULL queenAttackMap_otf_cy(int field, int blockMap):
+    return rookAttackMap_otf_cy(field, blockMap) | bishopAttackMap_otf_cy(field, blockMap) 
 
 # attack_maps = [pawn_attacks, rook_attacks, knight_attacks, bishop_attacks, queen_attacks, king_attacks]
 # all [2][64] sized: 2 sizes (black / white), 64 attack maps for each field 
-def generateLeaperAttacks():
+cdef void genLeaperAttacks_cy():
 
     for field in range(64):
-        pawnAttacks[0][field] = singlePawnAttacks(field, 0)
-        pawnAttacks[1][field] = singlePawnAttacks(field, 1)
-        knightAttacks[field] = singleKnightAttacks(field)
-        kingAttacks[field] = singleKingAttacks(field)
+        pawnAttacks[0][field] = pawnAttackMap_cy(field, 0)
+        pawnAttacks[1][field] = pawnAttackMap_cy(field, 1)
+        knightAttacks[field] = knightAttackMap_cy(field)
+        kingAttacks[field] = kingAttackMap_cy(field)
 
-def generateSliderAttacks_otf(blockMap):
+cdef void genSliderAttacks_otf_cy(ULL blockMap):
 
     for field in range(64):
-        rookAttacks_otf[field] = singleRookAttacks_otf(field, blockMap)
-        bishopAttacks_otf[field] = singleBishopAttacks_otf(field, blockMap)
+        rookAttacks_otf[field] = rookAttackMap_otf_cy(field, blockMap)
+        bishopAttacks_otf[field] = bishopAttackMap_otf_cy(field, blockMap)
         queenAttacks_otf[field] = rookAttacks_otf[field] | bishopAttacks_otf[field]
 
 
 # def allAttacks_blocked(blockMap):
 
-#     cdef unsigned long long[2][64] pawn_attacks
-#     cdef unsigned long long[64] knight_attacks
-#     cdef unsigned long long[64] king_attacks
+#     cdef ULL[2][64] pawn_attacks
+#     cdef ULL[64] knight_attacks
+#     cdef ULL[64] king_attacks
 
-#     cdef unsigned long long[64] rook_attacks
-#     cdef unsigned long long[64] bishop_attacks
-#     cdef unsigned long long[64] queen_attacks
+#     cdef ULL[64] rook_attacks
+#     cdef ULL[64] bishop_attacks
+#     cdef ULL[64] queen_attacks
 
 #     for field in range(64):
-#         pawn_attacks[0][field] = singlePawnAttacks(field, 0)
-#         pawn_attacks[1][field] = singlePawnAttacks(field, 1)
-#         knight_attacks[field] = singleKnightAttacks(field)
-#         king_attacks[field] = singleKingAttacks(field)
+#         pawn_attacks[0][field] = pawnAttackMap_cy(field, 0)
+#         pawn_attacks[1][field] = pawnAttackMap_cy(field, 1)
+#         knight_attacks[field] = knightAttackMap_cy(field)
+#         king_attacks[field] = kingAttackMap_cy(field)
 
-#         rook_attacks[field] = singleRookAttacks_otf(field, blockMap)
-#         bishop_attacks[field] = singleBishopAttacks_otf(field, blockMap)
+#         rook_attacks[field] = rookAttackMap_otf_cy(field, blockMap)
+#         bishop_attacks[field] = bishopAttackMap_otf_cy(field, blockMap)
 #         queen_attacks[field] = rook_attacks[field] | bishop_attacks[field]
         
 
 #     attack_maps = [pawn_attacks, rook_attacks, knight_attacks, bishop_attacks, queen_attacks, king_attacks]
 #     return attack_maps
 
-def attackPermutations(index, attackMap):
-    cdef unsigned long long permutationMap = 0
+cdef ULL genBlockMap_cy(int index, int bitCount, ULL attackMap):
+    cdef ULL permutationMap = 0
 
-    bitIndices = bit.getBitIndices(attackMap)
+    for i in range(bitCount):
 
-    for i, field in enumerate(bitIndices):
+        field = bit.getLsbIndex(attackMap)
+        attackMap = bit.popBit(attackMap, field)
+
         if index & (bit.ONEULL() << i):
             permutationMap |= (bit.ONEULL() << field)
 
     return permutationMap 
 
-def generateSliderAttacks_magic():
+
+cdef void genSliderAttackMaps_cy():
+
+    cdef ULL rookBitCount
+    cdef ULL bishopBitCount
+
+    cdef ULL rookFieldIndices
+    cdef ULL bishopFieldIndices
+
+    cdef ULL rookAttackPermutations
+    cdef ULL bishopAttackPermutations
+    cdef ULL rook_magicIndex
+    cdef ULL rookLeft
+    cdef ULL rookRight
+    
+    cdef ULL bishop_magicIndex
+    cdef ULL bishopLeft
+    cdef ULL bishopRight
+
+    cdef ULL sixtyFour = 64
+
+    initRookMasks_cy()
+    initBishopMasks_cy()
 
     for field in range(64):
 
-        rookMasks = singleRookMask(field)
-        bishopMasks = singleBishopMask(field)
+        rookBitCount = len(bit.getBitIndices(rookMasks[field]))
+        bishopBitCount = len(bit.getBitIndices(bishopMasks[field]))
 
-        rookBitIndices = bit.getBitIndices(rookMasks)
-        bishopBitIndices = bit.getBitIndices(bishopMasks)
-
-        rookFieldIndices = (bit.ONEULL() << len(rookBitIndices))
-        bishopFieldIndices = (bit.ONEULL() << len(bishopBitIndices))
+        rookFieldIndices = (bit.ONEULL() << rookBitCount)
+        bishopFieldIndices = (bit.ONEULL() << bishopBitCount)
 
         r = 0
         b = 0
 
         while r < rookFieldIndices:
-            rookAttackPermutations = attackPermutations(r, rookMasks)
-            magicIndex = (rookAttackPermutations * rook_magic_numbers[field]) >> (64 - rookAttackfieldCount[field])
-            rookAttacks_magic[field][magicIndex] = singleRookAttacks_otf(field, rookAttackPermutations)
+            rookAttackPermutations = genBlockMap_cy(r, rookBitCount, rookMasks[field])
+
+            # if field == 56:
+            #     maps.printMap(rookAttackPermutations)
+
+            rookLeft = rookAttackPermutations * rook_magic_numbers[field]
+            rookRight = sixtyFour - rookFieldCount[field]
+
+            rook_magicIndex = rookLeft >> rookRight 
+
+            rookAttacks[field][rook_magicIndex] = rookAttackMap_otf_cy(field, rookAttackPermutations)
             r += 1
 
         while b < bishopFieldIndices:
-            bishopAttackPermutations = attackPermutations(b, bishopMasks)
-            magicIndex = (bishopAttackPermutations * bishop_magic_numbers[field]) >> (64 - bishopAttackfieldCount[field])
-            bishopAttacks_magic[field][magicIndex] = singleBishopAttacks_otf(field, bishopAttackPermutations)
+            bishopAttackPermutations = genBlockMap_cy(b, bishopBitCount, bishopMasks[field])
+            bishopLeft = bishopAttackPermutations * bishop_magic_numbers[field]
+            bishopRight = sixtyFour - bishopFieldCount[field]
+
+            bishop_magicIndex = bishopLeft >> bishopRight
+            bishopAttacks[field][bishop_magicIndex] = bishopAttackMap_otf_cy(field, bishopAttackPermutations)
             b += 1
 
-def getAllPawnAttacks(color):
-    return pawnAttacks[color]
+        # rookBitCount = 0
+        # bishopBitCount = 0
+        # rookFieldIndices = 0
+        # bishopFieldIndices = 0
 
-def getAllKnightAttacks():
-    return knightAttacks
+cdef ULL getRookAttackMap_cy(int field, ULL blockMap):
+    cdef ULL attackFields
+    cdef ULL magicOneDIndex
+    cdef ULL magicIndex
 
-def getAllKingAttacks():
-    return kingAttacks
+    if isinstance(blockMap, list):
+        print("getRookAttackMap_cy: TypeError - received array instead of bitmap")
 
-def getAllRookAttacks_otf():
-    return rookAttacks_otf
+    attackFields = blockMap & rookMasks[field]
+    magicOneDIndex = (attackFields * rook_magic_numbers[field]) >> (64 - rookFieldCount[field])
+    magicIndex = magicOneDIndex % 4096
 
-def getAllBishopAttacks_otf():
-    return bishopAttacks_otf
+    return rookAttacks[field][magicIndex]
 
-def getAllQueenAttacks_otf():
-    return queenAttacks_otf
+cdef ULL getBishopAttackMap_cy(int field, ULL blockMap):
+    cdef ULL attackFields
+    cdef ULL magicOneDIndex
+    cdef ULL magicIndex
 
-def getPawnAttack(color, fieldIndex):
-    return pawnAttacks[color][fieldIndex]
+    if isinstance(blockMap, list):
+        print("getBishopAttackMap_cy: TypeError - received array instead of bitmap")
 
-def getKnightAttack(fieldIndex):
-    return knightAttacks[fieldIndex]
+    attackFields = blockMap & bishopMasks[field]
+    magicOneDIndex = (attackFields * bishop_magic_numbers[field]) >> (64 - bishopFieldCount[field])
+    magicIndex = magicOneDIndex % 512
 
-def getKingAttack(fieldIndex):
-    return kingAttacks[fieldIndex]
+    return bishopAttacks[field][magicIndex]
 
-# make sure to have the otf ones updated 
-def getRookAttack_otf(fieldIndex):
-    return rookAttacks_otf[fieldIndex]
+cdef ULL getQueenAttackMap_cy(int field, ULL blockMap):
+    return getRookAttackMap_cy(field, blockMap) | getBishopAttackMap_cy(field, blockMap)
 
-def getBishopAttack_otf(fieldIndex):
-    return bishopAttacks_otf[fieldIndex]
+cdef ULL getPieceAttackMap_cy(int piece, int field, ULL blockMap):
+        if piece == P: return getPawnAttackMap(0, field)
+        elif piece == p: return getPawnAttackMap(1, field)
+        elif piece == R or piece == r: return getRookAttackMap_cy(field, blockMap)
+        elif piece == N or piece == n: return getKnightAttackMap(field)
+        elif piece == B or piece == b: return getBishopAttackMap_cy(field, blockMap)
+        elif piece == Q or piece == q: return getQueenAttackMap_cy(field, blockMap)
+        elif piece == K or piece == k: return getKingAttackMap(field)
+        else: return 0
 
-def getQueenAttack_otf(fieldIndex):
-    return queenAttacks_otf[fieldIndex]
+cdef ULL getPieceAttackMap_otf_cy(int piece, int field):
+        if piece == P: return pawnAttacks[0][field]
+        elif piece == p: return pawnAttacks[1][field]
+        elif piece == R or piece == r: return rookAttacks_otf[field]
+        elif piece == N or piece == n: return knightAttacks[field]
+        elif piece == B or piece == b: return bishopAttacks_otf[field]
+        elif piece == Q or piece == q: return queenAttacks_otf[field]
+        elif piece == K or piece == k: return kingAttacks[field]
+        else: return 0
 
-def getPieceAttacks_otf(piece):
+cdef getAllPieceAttackMaps_otf_cy(int piece):
         if piece == P: return pawnAttacks[0]
         elif piece == p: return pawnAttacks[1]
         elif piece == R or piece == r: return rookAttacks_otf
@@ -538,16 +598,94 @@ def getPieceAttacks_otf(piece):
         elif piece == B or piece == b: return bishopAttacks_otf
         elif piece == Q or piece == q: return queenAttacks_otf
         elif piece == K or piece == k: return kingAttacks
-        else: return None
+        else: return []
 
-def generateAttackMaps_otf(blockMap):
-    generateLeaperAttacks()
-    generateSliderAttacks_otf(blockMap)
+cdef void updateAttackMaps_otf_cy(ULL blockMap):
+    genSliderAttacks_otf_cy(blockMap)
 
-def generateAttackMaps_magic():
-    generateLeaperAttacks()
-    generateSliderAttacks_magic()
+cdef void genAttackMaps_otf_cy(ULL blockMap):
+    genLeaperAttacks_cy()
+    genSliderAttacks_otf_cy(blockMap)
+
+cdef void genAttackMaps_cy():
+    genLeaperAttacks_cy()
+    genSliderAttackMaps_cy()
+
+##################### Proxies with outside access #######################
+
+# Magic
+def getPawnAttackMap(color, field):
+    return pawnAttacks[color][field]
+
+def getRookAttackMap(field, blockMap):
+    return getRookAttackMap_cy(field, blockMap)
+
+def getKnightAttackMap(field):
+    return knightAttacks[field]
+
+def getBishopAttackMap(field, blockMap):
+    return getBishopAttackMap_cy(field, blockMap)
+
+def getQueenAttackMap(field, blockMap):
+    return getQueenAttackMap_cy(field, blockMap)
+
+def getKingAttackMap(field):
+    return kingAttacks[field]
+
+def getPieceAttackMap(piece, field, blockMap):
+    return getPieceAttackMap_cy(piece, field, blockMap)
+
+def getAllPawnAttackMaps(color):
+    return pawnAttacks[color]
+
+def getAllKnightAttackMaps():
+    return knightAttacks
+
+def getAllKingAttackMaps():
+    return kingAttacks
+
+def getAllRookAttackMaps():
+    return rookAttacks
+
+def getAllBishopAttackMaps():
+    return bishopAttacks
+
+def genAttackMaps():
+    genAttackMaps_cy()
+
+# On the fly
+
+def getRookAttackMap_otf(field):
+    return rookAttacks_otf[field]
+
+def getBishopAttackMap_otf(field):
+    return bishopAttacks_otf[field]
+
+def getQueenAttackMap_otf(field):
+    return queenAttacks_otf[field]
+
+def getPieceAttackMap_otf(piece, field):
+    return getPieceAttackMap_otf_cy(piece, field)
+
+def getAllRookAttackMaps_otf():
+    return rookAttacks_otf
+
+def getAllBishopAttackMaps_otf():
+    return bishopAttacks_otf
+
+def getAllQueenAttackMaps_otf():
+    return queenAttacks_otf
+
+def getAllPieceAttackMaps_otf(int piece):
+    return getAllPieceAttackMaps_otf_cy(piece)
+
+def updateAttackMaps_otf(blockMap):
+    updateAttackMaps_otf_cy(blockMap)
+
+def genAttackMaps_otf(blockMap):
+    genAttackMaps_otf_cy(blockMap)
 
 ###################### Generate ###############
-# generateAttackMaps_magic()
-generateAttackMaps_otf(maps.START_UNION_MAP)
+genAttackMaps_cy()
+print("\n Attacks initialized!")
+# genAttackMaps_otf_cy(maps.START_UNION_MAP)

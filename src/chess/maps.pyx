@@ -18,6 +18,8 @@ WHITE_KING_MAP = 1152921504606846976
 
 START_UNION_MAP = 18446462598732906495
 
+FULL_MAP = 18446744073709551615
+
 WHITE_MAPS = [
 	WHITE_PAWNS_MAP,
 	WHITE_ROOKS_MAP,
@@ -64,6 +66,17 @@ EMPTY = np.array([
 	0, 0, 0, 0, 0, 0, 0, 0,
 	0, 0, 0, 0, 0, 0, 0, 0,
 	0, 0, 0, 0, 0, 0, 0, 0,
+], dtype=np.byte)
+
+FULL = np.array([
+	1, 1, 1, 1, 1, 1, 1, 1,
+	1, 1, 1, 1, 1, 1, 1, 1,
+	1, 1, 1, 1, 1, 1, 1, 1,
+	1, 1, 1, 1, 1, 1, 1, 1,
+	1, 1, 1, 1, 1, 1, 1, 1,
+	1, 1, 1, 1, 1, 1, 1, 1,
+	1, 1, 1, 1, 1, 1, 1, 1,
+	1, 1, 1, 1, 1, 1, 1, 1,
 ], dtype=np.byte)
 
 INDEX_ARRAY = np.array([
@@ -325,6 +338,10 @@ BLACK_UNICODES = [
 	BLACK_KING_UNICODE 
 ]
 
+PIECE_ARRAY = [
+	'P', 'R', 'N', 'B', 'Q', 'K', 'p', 'r', 'n', 'b', 'q', 'k', 
+]
+
 FEN_EMPTY = '8/8/8/8/8/8/8/8 w - - '
 FEN_START = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1'
 FEN_START_BOARD = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR'
@@ -334,6 +351,7 @@ FEN_HARD = 'r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R b KQkq - 0 1
 FEN_VERY_HARD = 'rnbqkb1r/pp1p1pPp/8/2p1pP2/1P1P4/3P3P/P1P1P3/RNBQKBNR w KQkq e6 0 1'
 FEN_CMK = 'r2q1rk1/ppp2ppp/2n1bn2/2b1p3/3pP3/3P1NPP/PPP1NPB1/R1BQ1RK1 b - - 0 9'
 FEN_PROBLEM = '1R6/3R4/P2PK3/4P3/4KP2/8/8/8 b - - 0 0'
+
 
 def printArray(bitarray):
 		numbit = np.array(bitarray)
