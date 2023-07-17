@@ -149,9 +149,9 @@ cdef int[64] knightScores =  [
     -30,  0, 10, 15, 15, 10,  0,-30,
     -30,  5, 15, 20, 20, 15,  5,-30,
     -30,  0, 15, 20, 20, 15,  0,-30,
-    -30,  5, 10, 15, 15, 10,  5,-30,
+    -30,  5,  9, 15, 15,  9,  5,-30,
     -40,-20,  0,  5,  5,  0,-20,-40,
-    -50,-40,-30,-30,-30,-30,-40,-50,
+    -50,-30,-30,-30,-30,-30,-30,-50,
 ]
 
 cdef int[64] bishopScores =  [
@@ -1235,13 +1235,13 @@ class Board:
         copy_white = self.pieceMaps[P]
         while copy_white:
             white_pawn = bit.getLsbIndex(copy_white)
-            white_pawn_atk |= atk.getPawnAttack(white, white_pawn)
+            white_pawn_atk |= atk.getPawnAttackMap(white, white_pawn)
             copy_white = bit.popBit(copy_white, white_pawn)
         black_pawn_atk = 0
         copy_black = self.pieceMaps[p]
         while copy_black:
             black_pawn = bit.getLsbIndex(copy_black)
-            black_pawn_atk |= atk.getPawnAttack(black, black_pawn)
+            black_pawn_atk |= atk.getPawnAttackMap(black, black_pawn)
             copy_black = bit.popBit(copy_black, black_pawn)
 
         white_stops = self.pieceMaps[P] >> 8
@@ -1639,10 +1639,8 @@ class Board:
         if legalMovesCount == 0:
 
             if isCheck:
-                print("Checkmate!")
                 return -49000 + self.halfMoves
             else:
-                print("Stalemate!")
                 return 0
 
         if prevAlpha != alpha:
@@ -1836,21 +1834,18 @@ class Board:
             else:
                 return 0
 
-        if depth >= 5:
-            print("\n Move Order After \n")
-            self.printMoveList_withScores(newMoveList)
-
-        if depth >= 5:
-            print("\n Move Order After \n")
-            self.printMoveList_withScores(newMoveList)
-            print("\n PV table \n")
-            self.printSavedMoves(pv_table, 0)
-            print("\n Killer 1")
-            self.printSavedMoves(killer_moves, 0)
-            print("\n Killer 2")
-            self.printSavedMoves(killer_moves, 1)
-
         return alpha
+
+    # Helper for testing
+    def getBestMove(self):
+        global pv_table
+        return pv_table[0][0]
+    # Helper for testing 
+    def resetBoards(self):
+        reset_cython_array(killer_moves, 2, 64)
+        reset_cython_array(history_moves, 12, 64)
+        reset_cython_array(pv_table, 64, 64)
+        reset_cython_array(pv_length, 64, 1)
 
 
     # search position for the best move
