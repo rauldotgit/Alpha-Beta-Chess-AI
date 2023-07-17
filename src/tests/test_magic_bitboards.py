@@ -17,13 +17,13 @@ def test_magic_attacks():
     boardTwo.fenGameSetup(test_fen)
     # boardOne.printBoard()
 
-    atk.generateAttackMaps_magic()
-    atk.generateAttackMaps_otf(boardOne.board_union)
+    atk.genAttackMaps()
+    atk.genAttackMaps_otf(boardOne.board_union)
 
     for piece in range(12):
         for field in range(64):
-            magicMap = atk.getPieceAttack_magic(piece, field, boardOne.board_union)
-            otfMap = atk.getPieceAttacks_otf(piece, field)
+            magicMap = atk.getPieceAttackMap(piece, field, boardOne.board_union)
+            otfMap = atk.getPieceAttackMap_otf(piece, field)
 
             if magicMap != otfMap:
                 print('Piece: ', maps.PIECE_ARRAY[piece])
@@ -44,13 +44,13 @@ def test_magic_attacks_2():
     boardTwo.fenGameSetup(test_fen)
     # boardOne.printBoard()
 
-    atk.generateAttackMaps_magic()
-    atk.generateAttackMaps_otf(boardOne.board_union)
+    atk.genAttackMaps()
+    atk.genAttackMaps_otf(boardOne.board_union)
 
     for piece in range(12):
         for field in range(64):
-            magicMap = atk.getPieceAttack_magic(piece, field, boardOne.board_union)
-            otfMap = atk.getPieceAttacks_otf(piece, field)
+            magicMap = atk.getPieceAttackMap(piece, field, boardOne.board_union)
+            otfMap = atk.getPieceAttackMap_otf(piece, field)
 
             if magicMap != otfMap:
                 print('Piece: ', maps.PIECE_ARRAY[piece])
@@ -71,13 +71,13 @@ def test_magic_attacks_3():
     boardTwo.fenGameSetup(test_fen)
     # boardOne.printBoard()
 
-    atk.generateAttackMaps_magic()
-    atk.generateAttackMaps_otf(boardOne.board_union)
+    atk.genAttackMaps()
+    atk.genAttackMaps_otf(boardOne.board_union)
 
     for piece in range(12):
         for field in range(64):
-            magicMap = atk.getPieceAttack_magic(piece, field, boardOne.board_union)
-            otfMap = atk.getPieceAttacks_otf(piece, field)
+            magicMap = atk.getPieceAttackMap(piece, field, boardOne.board_union)
+            otfMap = atk.getPieceAttackMap_otf(piece, field)
 
             if magicMap != otfMap:
                 print('Piece: ', maps.PIECE_ARRAY[piece])
@@ -98,13 +98,13 @@ def test_magic_attacks_4():
     boardTwo.fenGameSetup(test_fen)
     # boardOne.printBoard()
 
-    atk.generateAttackMaps_magic()
-    atk.generateAttackMaps_otf(boardOne.board_union)
+    atk.genAttackMaps()
+    atk.genAttackMaps_otf(boardOne.board_union)
 
     for piece in range(12):
         for field in range(64):
-            magicMap = atk.getPieceAttack_magic(piece, field, boardOne.board_union)
-            otfMap = atk.getPieceAttacks_otf(piece, field)
+            magicMap = atk.getPieceAttackMap(piece, field, boardOne.board_union)
+            otfMap = atk.getPieceAttackMap_otf(piece, field)
 
             if magicMap != otfMap:
                 print('Piece: ', maps.PIECE_ARRAY[piece])
@@ -125,13 +125,13 @@ def test_magic_attacks_5():
     boardTwo.fenGameSetup(test_fen)
     # boardOne.printBoard()
 
-    atk.generateAttackMaps_magic()
-    atk.generateAttackMaps_otf(boardOne.board_union)
+    atk.genAttackMaps()
+    atk.genAttackMaps_otf(boardOne.board_union)
 
     for piece in range(12):
         for field in range(64):
-            magicMap = atk.getPieceAttack_magic(piece, field, boardOne.board_union)
-            otfMap = atk.getPieceAttacks_otf(piece, field)
+            magicMap = atk.getPieceAttackMap(piece, field, boardOne.board_union)
+            otfMap = atk.getPieceAttackMap_otf(piece, field)
 
             if magicMap != otfMap:
                 print('Piece: ', maps.PIECE_ARRAY[piece])
@@ -151,7 +151,7 @@ def test_magic_vs_otf():
     print('\n')
 
     sTime = time.time()
-    atk.generateAttackMaps_otf(newBoard.board_union)
+    atk.genAttackMaps_otf(newBoard.board_union)
     eTime = time.time()
 
     print("OTF Startup time: ", eTime - sTime)
@@ -160,8 +160,8 @@ def test_magic_vs_otf():
     newBoard.fenGameSetup(test_fen)
 
     sTime = time.time()
-    for i in range(20000):
-        otfAttack = atk.getQueenAttack_otf(43)
+    for i in range(20000): 
+        atk.getQueenAttackMap_otf(43)
         atk.updateAttackMaps_otf(newBoard.board_union)
 
     eTime = time.time()
@@ -169,7 +169,7 @@ def test_magic_vs_otf():
     print("OTF time: ", eTime - sTime)
     
     sTime = time.time()
-    atk.generateAttackMaps_magic()
+    atk.genAttackMaps()
     eTime = time.time()
 
     print("MAGIC Startup time: ", eTime - sTime)
@@ -179,7 +179,7 @@ def test_magic_vs_otf():
 
     sTime = time.time()
     for j in range(20000):
-        magicAttack = atk.getQueenAttack_magic(43, newBoard.board_union)
+        atk.getQueenAttackMap(43, newBoard.board_union)
 
     eTime = time.time()
 

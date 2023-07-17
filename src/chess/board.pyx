@@ -19,6 +19,7 @@ import src.chess.move_encoding as menc
 # TODO: define functions as cdef functions after testing and make sure to have static typing
 # TODO: use libc.stdlib low level functions wherever applicable to speed up stuff
 
+ctypedef unsigned long long ULL
 
 cdef int noSquare = 64
 
@@ -163,11 +164,11 @@ cdef int[64] kingScores =  [
 ]
 
 ### For pawn structure evaluation ###
-cdef unsigned long long[64] fileMasks 
-cdef unsigned long long[64] rankMasks 
-cdef unsigned long long[64] whitePassedPawnMasks
-cdef unsigned long long[64] blackPassedPawnMasks
-cdef unsigned long long[64] isolatedPawnMasks 
+cdef ULL[64] fileMasks 
+cdef ULL[64] rankMasks 
+cdef ULL[64] whitePassedPawnMasks
+cdef ULL[64] blackPassedPawnMasks
+cdef ULL[64] isolatedPawnMasks 
 
 cdef int[64] getRank = [
     7, 7, 7, 7, 7, 7, 7, 7,
@@ -184,7 +185,7 @@ cdef int doublePawnPenalty = -10
 cdef int isolatedPawnPenalty = -10
 cdef int[8] passedPawnBonus = [0, 10, 30, 50, 75, 100, 150, 200]
 
-def setFileRankMasks(file_, rank_):
+cdef ULL setFileRankMasks(int file_, int rank_):
     mask = 0
 
     for r in range(8):
@@ -200,7 +201,7 @@ def setFileRankMasks(file_, rank_):
     return mask
 
 def initEvaluationMasks():
-    #cdef unsigned long long mask = setFileRankMasks(0, 0)
+    #cdef ULL mask = setFileRankMasks(0, 0)
 
     for r in range(8):
         for f in range(8):
@@ -346,7 +347,7 @@ class MoveList:
         # self.bestMove = None
 
     def add(self, start, target,  piece, promoted, capture, doublePush, enpassant, castling):
-        cdef unsigned long long encodedMove = menc.encode(start, target,  piece, promoted, capture, doublePush, enpassant, castling)  
+        cdef ULL encodedMove = menc.encode(start, target,  piece, promoted, capture, doublePush, enpassant, castling)  
         self.moves.append(encodedMove)
         self.moveCount += 1
 
@@ -598,30 +599,30 @@ class Board:
     def isFieldAttacked(self, fieldIndex, side):
         
         # black is attacked by white pawn, if there's a pawn on the black pawn attack fields (damn)
-        isAttackingBlackPawn = atk.getPawnAttack(black, fieldIndex) & self.pieceMaps[P]
+        isAttackingBlackPawn = atk.getPawnAttackMap(black, fieldIndex) & self.pieceMaps[P]
         if side == white and isAttackingBlackPawn: return True
 
-        isAttackingWhitePawn = atk.getPawnAttack(white, fieldIndex) & self.pieceMaps[p]
+        isAttackingWhitePawn = atk.getPawnAttackMap(white, fieldIndex) & self.pieceMaps[p]
         if side == black and isAttackingWhitePawn: return True
         
         rooksMap = self.pieceMaps[R] if side == white else self.pieceMaps[r]
         # if atk.getRookAttack_otf(fieldIndex) & rooksMap: return True
-        if atk.getRookAttack_magic(fieldIndex, self.board_union) & rooksMap: return True
+        if atk.getRookAttackMap(fieldIndex, self.board_union) & rooksMap: return True
 
         # a field is attacked by knights, if there are nights around the field in the shape of night attacks (oof)
         knightsMap = self.pieceMaps[N] if side == white else self.pieceMaps[n]
-        if atk.getKnightAttack(fieldIndex) & knightsMap: return True
+        if atk.getKnightAttackMap(fieldIndex) & knightsMap: return True
 
         bishopsMap = self.pieceMaps[B] if side == white else self.pieceMaps[b]
         # if atk.getBishopAttack_otf(fieldIndex) & bishopsMap: return True
-        if atk.getBishopAttack_magic(fieldIndex, self.board_union) & bishopsMap: return True
+        if atk.getBishopAttackMap(fieldIndex, self.board_union) & bishopsMap: return True
 
         queensMap = self.pieceMaps[Q] if side == white else self.pieceMaps[q]
         # if atk.getQueenAttack_otf(fieldIndex) & queensMap: return True
-        if atk.getQueenAttack_magic(fieldIndex, self.board_union) & queensMap: return True
+        if atk.getQueenAttackMap(fieldIndex, self.board_union) & queensMap: return True
 
         kingsMap = self.pieceMaps[K] if side == white else self.pieceMaps[k]
-        if atk.getKingAttack(fieldIndex) & kingsMap: return True
+        if atk.getKingAttackMap(fieldIndex) & kingsMap: return True
 
         return False
 
@@ -709,7 +710,7 @@ class Board:
             
             reverseSideBoardUnion = ~self.white_board_union if self.turn == white else ~self.black_board_union
             # pieceAttackMoves = atk.getAllPieceAttacks_otf(piece)[start] & reverseSideBoardUnion
-            pieceAttackMoves = atk.getPieceAttack_magic(piece, start, self.board_union) & reverseSideBoardUnion
+            pieceAttackMoves = atk.getPieceAttackMap(piece, start, self.board_union) & reverseSideBoardUnion
 
             while pieceAttackMoves:
                 target = bit.getLsbIndex(pieceAttackMoves)   
@@ -766,7 +767,7 @@ class Board:
                                     
 
                         # create capturing moves
-                        whiteCaptureMoves = atk.getPawnAttack(white, start) & self.black_board_union
+                        whiteCaptureMoves = atk.getPawnAttackMap(white, start) & self.black_board_union
 
                         while whiteCaptureMoves:
                             captureTarget = bit.getLsbIndex(whiteCaptureMoves)
@@ -785,7 +786,7 @@ class Board:
 
                         # enpassant captures
                         if self.enpassant != noSquare:
-                            enpassantAttacks = atk.getPawnAttack(white, start) & (bit.ONEULL() << self.enpassant)
+                            enpassantAttacks = atk.getPawnAttackMap(white, start) & (bit.ONEULL() << self.enpassant)
 
                             if enpassantAttacks:
                                 targetEnpassant = bit.getLsbIndex(enpassantAttacks)
@@ -847,7 +848,7 @@ class Board:
                                     MoveList.add(start, target + 8, piece, 0, 0, 1, 0, 0)
 
                         # create capturing moves
-                        blackCaptureMoves = atk.getPawnAttack(black, start) & self.white_board_union
+                        blackCaptureMoves = atk.getPawnAttackMap(black, start) & self.white_board_union
 
                         while blackCaptureMoves:
                             target = bit.getLsbIndex(blackCaptureMoves)
@@ -866,7 +867,7 @@ class Board:
 
                         # generate enpassant caputes
                         if self.enpassant != noSquare:
-                            enpassantAttacks = atk.getPawnAttack(black, start) & (bit.ONEULL() << self.enpassant)
+                            enpassantAttacks = atk.getPawnAttackMap(black, start) & (bit.ONEULL() << self.enpassant)
 
                             if enpassantAttacks:
                                 targetEnpassant = bit.getLsbIndex(enpassantAttacks)
@@ -1089,7 +1090,7 @@ class Board:
 
     # gets a potential capture move from the movelist and returns piece index (P,p .. K,k) of captured piece
     def getCapturedPiece(self, target):
-        cdef unsigned long long attackBit = 1 << target
+        cdef ULL attackBit = 1 << target
 
         # TODO: could be improved by just checking one side 
         for index, pieceMap in enumerate(self.pieceMaps):
@@ -1194,8 +1195,8 @@ class Board:
                     if((self.pieceMaps[P] | self.pieceMaps[p]) & fileMasks[fieldIndex] == 0):
                         score -= openScore
                         #print(f"White penalty Open King: {-openScore}")
-                    score += kingSafetyScore * bit.countBits(atk.getPawnAttack(white, fieldIndex) & self.white_board_union) # TODO fine tuning
-                    #print(f"White King Safety: {kingSafetyScore * bit.countBits(atk.getPawnAttack(white, fieldIndex) & self.white_board_union)}")
+                    score += kingSafetyScore * bit.countBits(atk.getPawnAttackMap(white, fieldIndex) & self.white_board_union) # TODO fine tuning
+                    #print(f"White King Safety: {kingSafetyScore * bit.countBits(atk.getPawnAttackMap(white, fieldIndex) & self.white_board_union)}")
 
                 if(piece == r):
                     if(self.pieceMaps[p] & fileMasks[fieldIndex] == 0):
@@ -1212,29 +1213,29 @@ class Board:
                     if((self.pieceMaps[P] | self.pieceMaps[p]) & fileMasks[fieldIndex] == 0):
                         score += openScore
                         #print(f"Black penalty Open King: {-openScore}")
-                    score -= kingSafetyScore * bit.countBits(atk.getPawnAttack(black, fieldIndex) & self.black_board_union) # TODO fine tuning
-                    #print(f"Black King Safety: {kingSafetyScore * bit.countBits(atk.getPawnAttack(black, fieldIndex) & self.black_board_union)}")
+                    score -= kingSafetyScore * bit.countBits(atk.getPawnAttackMap(black, fieldIndex) & self.black_board_union) # TODO fine tuning
+                    #print(f"Black King Safety: {kingSafetyScore * bit.countBits(atk.getPawnAttackMap(black, fieldIndex) & self.black_board_union)}")
 
                 # mobility bonus (bishop)
                 if(piece == B):
                     # score += bit.countBits(atk.getBishopAttack_otf(fieldIndex) & ~self.board_union) 
-                    score += bit.countBits(atk.getBishopAttack_magic(fieldIndex, self.board_union) & ~self.board_union) 
+                    score += bit.countBits(atk.getBishopAttackMap(fieldIndex, self.board_union) & ~self.board_union) 
                     #print(f"White Bishop mobility: {bit.countBits(atk.getBishopAttack_otf(fieldIndex) & ~self.board_union)}")
 
                 if(piece == b):
                     # score -= bit.countBits(atk.getBishopAttack_otf(fieldIndex) & ~self.board_union) 
-                    score -= bit.countBits(atk.getBishopAttack_magic(fieldIndex, self.board_union) & ~self.board_union) 
+                    score -= bit.countBits(atk.getBishopAttackMap(fieldIndex, self.board_union) & ~self.board_union) 
                     #print(f"Black Bishop mobility: {bit.countBits(atk.getBishopAttack_otf(fieldIndex) & ~self.board_union)}")
 
                 # mobility bonus (queen)
                 if(piece == Q):
                     # score += bit.countBits(atk.getQueenAttack_otf(fieldIndex) & ~self.board_union) 
-                    score += bit.countBits(atk.getQueenAttack_magic(fieldIndex, self.board_union) & ~self.board_union) 
+                    score += bit.countBits(atk.getQueenAttackMap(fieldIndex, self.board_union) & ~self.board_union) 
                     #print(f"White Queen mobility: {bit.countBits(atk.getBishopAttack_otf(fieldIndex) & ~self.board_union)}")
 
                 if(piece == q):
                     # score -= bit.countBits(atk.getQueenAttack_otf(fieldIndex) & ~self.board_union) 
-                    score -= bit.countBits(atk.getQueenAttack_magic(fieldIndex, self.board_union) & ~self.board_union) 
+                    score -= bit.countBits(atk.getQueenAttackMap(fieldIndex, self.board_union) & ~self.board_union) 
                     #print(f"Black Queen mobility: {bit.countBits(atk.getBishopAttack_otf(fieldIndex) & ~self.board_union)}")
 
                 pieceMap = bit.popBit(pieceMap, fieldIndex)
@@ -1442,7 +1443,7 @@ class Board:
         if depth == 0: return self.quiescenceSearch(alpha, beta)
         self.nodeCount += 1 
 
-        cdef unsigned long long betterMove
+        cdef ULL betterMove
         cdef int legalMovesCount = 0
         cdef int prevAlpha = alpha
 
@@ -1505,7 +1506,7 @@ class Board:
         if depth == 0: return self.evaluateScore()
         self.nodeCount += 1 
 
-        cdef unsigned long long betterMove
+        cdef ULL betterMove
         cdef int legalMovesCount = 0
         cdef int prevAlpha = alpha
 
@@ -1567,7 +1568,7 @@ class Board:
         if depth == 0:
             return self.evaluateScore()	
 
-        cdef unsigned long long betterMove
+        cdef ULL betterMove
 
         # update the movelist 
         newMoveList = MoveList()
