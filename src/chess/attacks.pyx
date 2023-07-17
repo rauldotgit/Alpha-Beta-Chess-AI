@@ -644,6 +644,9 @@ def getAllPieceAttacks_otf(piece):
         elif piece == K or piece == k: return kingAttacks
         else: return None
 
+def updateAttackMaps_otf(blockMap):
+    generateSliderAttacks_otf(blockMap)
+
 def generateAttackMaps_otf(blockMap):
     generateLeaperAttacks()
     generateSliderAttacks_otf(blockMap)
