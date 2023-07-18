@@ -2,6 +2,8 @@
 .vscode/
 build/
 legacy/
+chessserver/
+kothserver/
 __pycache__/
 videos/
 *.pyd
