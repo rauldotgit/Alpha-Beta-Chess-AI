@@ -15,11 +15,11 @@ import src.chess.move_encoding as menc
 # TODO: make sure storing self.bestMove in the board isn't dumb
 # TODO: Entertain the thought of using a linked list for the movelist 
     # Makes sense with the scoring, where we can sort the movelist immediately when creating it in generateMoves
+# TODO: Check if encoding the moves offers speed improvements
+# TODO: Write a function to log the node tree traversed
 
 # TODO: define functions as cdef functions after testing and make sure to have static typing
 # TODO: use libc.stdlib low level functions wherever applicable to speed up stuff
-
-ctypedef unsigned long long ULL
 
 cdef int noSquare = 64
 
@@ -164,11 +164,11 @@ cdef int[64] kingScores =  [
 ]
 
 ### For pawn structure evaluation ###
-cdef ULL[64] fileMasks 
-cdef ULL[64] rankMasks 
-cdef ULL[64] whitePassedPawnMasks
-cdef ULL[64] blackPassedPawnMasks
-cdef ULL[64] isolatedPawnMasks 
+cdef unsigned long long[64] fileMasks 
+cdef unsigned long long[64] rankMasks 
+cdef unsigned long long[64] whitePassedPawnMasks
+cdef unsigned long long[64] blackPassedPawnMasks
+cdef unsigned long long[64] isolatedPawnMasks 
 
 cdef int[64] getRank = [
     7, 7, 7, 7, 7, 7, 7, 7,
@@ -185,7 +185,7 @@ cdef int doublePawnPenalty = -10
 cdef int isolatedPawnPenalty = -10
 cdef int[8] passedPawnBonus = [0, 10, 30, 50, 75, 100, 150, 200]
 
-cdef ULL setFileRankMasks(int file_, int rank_):
+def setFileRankMasks(file_, rank_):
     mask = 0
 
     for r in range(8):
@@ -201,7 +201,7 @@ cdef ULL setFileRankMasks(int file_, int rank_):
     return mask
 
 def initEvaluationMasks():
-    #cdef ULL mask = setFileRankMasks(0, 0)
+    #cdef unsigned long long mask = setFileRankMasks(0, 0)
 
     for r in range(8):
         for f in range(8):
@@ -347,7 +347,7 @@ class MoveList:
         # self.bestMove = None
 
     def add(self, start, target,  piece, promoted, capture, doublePush, enpassant, castling):
-        cdef ULL encodedMove = menc.encode(start, target,  piece, promoted, capture, doublePush, enpassant, castling)  
+        cdef unsigned long long encodedMove = menc.encode(start, target,  piece, promoted, capture, doublePush, enpassant, castling)  
         self.moves.append(encodedMove)
         self.moveCount += 1
 
@@ -424,6 +424,8 @@ class Board:
         self.white_board_union = 0
         self.black_board_union = 0
 
+        self.moveList = []
+        self.moveIndex = -1
         self.bestMove = None
 
         self.nodeCount = 0
@@ -432,6 +434,9 @@ class Board:
         self.time = []
 
         self.resetBoard()
+    
+    # def __init__(self):
+    #     self.resetBoard()
 
     def createChild(self, move):
         child = Board()
@@ -458,7 +463,7 @@ class Board:
             self.turn,
             self.enpassant,
             self.castling,
-            # self.halfMoves,
+            self.halfMoves,
             self.fullMoves,
 
             self.pieceMaps[P],
@@ -478,35 +483,35 @@ class Board:
             self.white_board_union,
             self.black_board_union,
         
-            # self.time
+            self.time
         ]
     
     def loadSaveState(self, saveState):
         self.turn = saveState[0]
         self.enpassant = saveState[1]
         self.castling = saveState[2]
-        # self.halfMoves = saveState[3]
-        self.fullMoves = saveState[3]
+        self.halfMoves = saveState[3]
+        self.fullMoves = saveState[4]
 
-        self.pieceMaps[P] = saveState[4]
-        self.pieceMaps[R] = saveState[5]
-        self.pieceMaps[N] = saveState[6]
-        self.pieceMaps[B] = saveState[7]
-        self.pieceMaps[Q] = saveState[8]
-        self.pieceMaps[K] = saveState[9]
+        self.pieceMaps[P] = saveState[5]
+        self.pieceMaps[R] = saveState[6]
+        self.pieceMaps[N] = saveState[7]
+        self.pieceMaps[B] = saveState[8]
+        self.pieceMaps[Q] = saveState[9]
+        self.pieceMaps[K] = saveState[10]
 
-        self.pieceMaps[p] = saveState[10]
-        self.pieceMaps[r] = saveState[11]
-        self.pieceMaps[n] = saveState[12]
-        self.pieceMaps[b] = saveState[13]
-        self.pieceMaps[q] = saveState[14]
-        self.pieceMaps[k] = saveState[15]
+        self.pieceMaps[p] = saveState[11]
+        self.pieceMaps[r] = saveState[12]
+        self.pieceMaps[n] = saveState[13]
+        self.pieceMaps[b] = saveState[14]
+        self.pieceMaps[q] = saveState[15]
+        self.pieceMaps[k] = saveState[16]
 
-        self.board_union = saveState[16]
-        self.white_board_union = saveState[17]
-        self.black_board_union = saveState[18]
+        self.board_union = saveState[17]
+        self.white_board_union = saveState[18]
+        self.black_board_union = saveState[19]
 
-        # self.time = saveState[20]
+        self.time = saveState[20]
 
     def setPieces(self):
         self.pieceMaps[P] = maps.WHITE_PAWNS_MAP
@@ -543,6 +548,7 @@ class Board:
 
         self.setBoardUnion()
         self.setSideUnions()
+        # self.updateSliderAttacks_otf()
 
         self.time = [3000, 3000]
 
@@ -564,8 +570,8 @@ class Board:
 
         return newDuration
 
-    def updateSliderAttacks_otf(self):
-        atk.generateSliderAttacks_otf(self.board_union)
+    # def updateSliderAttacks_otf(self):
+    #     atk.generateSliderAttacks_otf(self.board_union)
     
     def fenGameSetup(self, fenString):
         pieceMaps, turn, castle, enpassant, halfMoves, fullMoves = fenToBoardInfo(fenString)
@@ -592,9 +598,10 @@ class Board:
 
         self.setBoardUnion()
         self.setSideUnions()
-
+        # self.updateSliderAttacks_otf()
         # self.generateMoves()
 
+    # TODO: copy with magic pieceMaps when implemented
     # side refers to the attacking side (side == white, get if field is attacked by white)
     def isFieldAttacked(self, fieldIndex, side):
         
@@ -606,7 +613,6 @@ class Board:
         if side == black and isAttackingWhitePawn: return True
         
         rooksMap = self.pieceMaps[R] if side == white else self.pieceMaps[r]
-        # if atk.getRookAttack_otf(fieldIndex) & rooksMap: return True
         if atk.getRookAttackMap(fieldIndex, self.board_union) & rooksMap: return True
 
         # a field is attacked by knights, if there are nights around the field in the shape of night attacks (oof)
@@ -614,11 +620,9 @@ class Board:
         if atk.getKnightAttackMap(fieldIndex) & knightsMap: return True
 
         bishopsMap = self.pieceMaps[B] if side == white else self.pieceMaps[b]
-        # if atk.getBishopAttack_otf(fieldIndex) & bishopsMap: return True
         if atk.getBishopAttackMap(fieldIndex, self.board_union) & bishopsMap: return True
 
         queensMap = self.pieceMaps[Q] if side == white else self.pieceMaps[q]
-        # if atk.getQueenAttack_otf(fieldIndex) & queensMap: return True
         if atk.getQueenAttackMap(fieldIndex, self.board_union) & queensMap: return True
 
         kingsMap = self.pieceMaps[K] if side == white else self.pieceMaps[k]
@@ -639,79 +643,27 @@ class Board:
 
     # Deprecated
     def printMoveList(self, MoveList):
-        if len(MoveList) == 0:
+        if self.moveIndex == -1:
             print('Movelist is empty.')
             return
 
         print(f's->t p  + - d e c')
-        for index, move in enumerate(MoveList):
+        for index, move in enumerate(MoveList.moves):
             start, target, piece, promoted, capture, doublePush, enpassant, castling = menc.decode(move)
             print(
                 f'{fieldStr(start)}{fieldStr(target)} {roleUnicode(piece)}  {promoted} {capture} {doublePush} {enpassant} {castling}'
             )
         
-        print(f'Number of moves: {len(MoveList)}')
-
-    # def testCastle(self):
-    #     # check which castle is available in string
-    #     # make sure the pieces are in the right place
-
-    #     #check for bq castle
-    #     if self.castling & CASTLE_OBJ['q']:
-            
-    #         if self.pieceMaps[k] & 1 >> e8:
-    #             print("Castling black: No king.")
-    #             return
-
-    #         if self.pieceMaps[r] & 1 >> a8:
-    #             print("Castling black: No rook on queen side.")
-    #             return
+        print(f'Number of moves: {self.moveIndex+1}')
 
 
-    #     #check for bk castle
-    #     if self.castling & CASTLE_OBJ['k']:
-            
-    #         if self.pieceMaps[k] & (1 >> e8):
-    #             print("Castling black: No king.")
-    #             return
-
-    #         if self.pieceMaps[r] & (1 >> h8):
-    #             print("Castling black: No rook on king side.")
-    #             return
-
-
-    #     #check for wq castle
-    #     if self.castling & CASTLE_OBJ['Q']:
-            
-    #         if self.pieceMaps[K] & (1 >> e1):
-    #             print("Castling white: No king.")
-    #             return
-
-    #         if self.pieceMaps[R] & (1 >> a1):
-    #             print("Castling white: No rook on queen side.")
-    #             return
-
-    #     #check for bq castle
-    #     if self.castling & CASTLE_OBJ['K']:
-            
-    #         if self.pieceMaps[K] & (1 >> e1):
-    #             print("Castling white: No king.")
-    #             return
-
-    #         if self.pieceMaps[R] & (1 >> h1):
-    #             print("Castling white: No rook on king side.")
-    #             return
-
-
-
-    def generateNonPawnMoves(self, pieceMap, piece, MoveList):
+    def generateNonPawnMoves(self, pieceMap,  piece, MoveList):
         while pieceMap:
             start = bit.getLsbIndex(pieceMap)
             
             reverseSideBoardUnion = ~self.white_board_union if self.turn == white else ~self.black_board_union
-            # pieceAttackMoves = atk.getAllPieceAttacks_otf(piece)[start] & reverseSideBoardUnion
             pieceAttackMoves = atk.getPieceAttackMap(piece, start, self.board_union) & reverseSideBoardUnion
-
+            
             while pieceAttackMoves:
                 target = bit.getLsbIndex(pieceAttackMoves)   
                 
@@ -831,6 +783,7 @@ class Board:
                         startString = fieldStr(start)
                         targetString = fieldStr(target)
 
+                        # print(bit.getBit(board_union, target))
                         # check if move foward is empty
                         if not (target > h1) and not bit.getBit(self.board_union, target):
                             #promotion
@@ -873,6 +826,7 @@ class Board:
                                 targetEnpassant = bit.getLsbIndex(enpassantAttacks)
                                 MoveList.add(start, targetEnpassant, piece, 0, 1, 0, 1, 0)
 
+                        # pop the pawn, as we have calculated everything we need
                         pieceMap = bit.popBit(pieceMap, start)
 
                 ###################################  CASTLE ###################################
@@ -929,8 +883,11 @@ class Board:
 
         if flag == 0:
             
+            # make sure this does what it should
             start, target, piece, promoted, capture, double, enpassant, castle = menc.decode(move)
+            # self.saveCurrentState()
             saveState = self.getSaveState()
+            # print(self.pieceMaps[piece])
             # return
 
             self.pieceMaps[piece] = bit.popBit(self.pieceMaps[piece], start)
@@ -998,6 +955,7 @@ class Board:
 
             self.setBoardUnion()
             self.setSideUnions()
+            # self.updateSliderAttacks_otf()
 
             self.nextTurn()
             # self.generateMoves()
@@ -1008,11 +966,10 @@ class Board:
                 self.loadSaveState(saveState)
                 return 0
             else:
-                # if self.isKOTH(kingFieldIndex):
-                #     return 2
-                # else:
-                #     return 1
-                return 1
+                if self.isKOTH(kingFieldIndex):
+                    return 2
+                else:
+                    return 1
 
         else:
             capture = menc.getCapture(move)
@@ -1050,6 +1007,9 @@ class Board:
                 return 0
 
 
+        # print(f'Start: {startString} Target: {targetString} Promotion: {promoString}')
+
+        # TODO: make sure moves are generated ahead of time
         self.generateMoves(newMoveList)
 
         for move in newMoveList.moves:
@@ -1090,7 +1050,7 @@ class Board:
 
     # gets a potential capture move from the movelist and returns piece index (P,p .. K,k) of captured piece
     def getCapturedPiece(self, target):
-        cdef ULL attackBit = 1 << target
+        cdef unsigned long long attackBit = 1 << target
 
         # TODO: could be improved by just checking one side 
         for index, pieceMap in enumerate(self.pieceMaps):
@@ -1218,25 +1178,21 @@ class Board:
 
                 # mobility bonus (bishop)
                 if(piece == B):
-                    # score += bit.countBits(atk.getBishopAttack_otf(fieldIndex) & ~self.board_union) 
                     score += bit.countBits(atk.getBishopAttackMap(fieldIndex, self.board_union) & ~self.board_union) 
-                    #print(f"White Bishop mobility: {bit.countBits(atk.getBishopAttack_otf(fieldIndex) & ~self.board_union)}")
+                    #print(f"White Bishop mobility: {bit.countBits(atk.getBishopAttackMap(fieldIndex, self.board_union) & ~self.board_union)}")
 
                 if(piece == b):
-                    # score -= bit.countBits(atk.getBishopAttack_otf(fieldIndex) & ~self.board_union) 
                     score -= bit.countBits(atk.getBishopAttackMap(fieldIndex, self.board_union) & ~self.board_union) 
-                    #print(f"Black Bishop mobility: {bit.countBits(atk.getBishopAttack_otf(fieldIndex) & ~self.board_union)}")
+                    #print(f"Black Bishop mobility: {bit.countBits(atk.getBishopAttackMap(fieldIndex, self.board_union) & ~self.board_union)}")
 
                 # mobility bonus (queen)
                 if(piece == Q):
-                    # score += bit.countBits(atk.getQueenAttack_otf(fieldIndex) & ~self.board_union) 
                     score += bit.countBits(atk.getQueenAttackMap(fieldIndex, self.board_union) & ~self.board_union) 
-                    #print(f"White Queen mobility: {bit.countBits(atk.getBishopAttack_otf(fieldIndex) & ~self.board_union)}")
+                    #print(f"White Queen mobility: {bit.countBits(atk.getBishopAttackMap(fieldIndex, self.board_union) & ~self.board_union)}")
 
                 if(piece == q):
-                    # score -= bit.countBits(atk.getQueenAttack_otf(fieldIndex) & ~self.board_union) 
                     score -= bit.countBits(atk.getQueenAttackMap(fieldIndex, self.board_union) & ~self.board_union) 
-                    #print(f"Black Queen mobility: {bit.countBits(atk.getBishopAttack_otf(fieldIndex) & ~self.board_union)}")
+                    #print(f"Black Queen mobility: {bit.countBits(atk.getBishopAttackMap(fieldIndex, self.board_union) & ~self.board_union)}")
 
                 pieceMap = bit.popBit(pieceMap, fieldIndex)
         #print(f"old score: {oldScore}") if self.turn == white else print(f"old score: {-oldScore}")
@@ -1392,7 +1348,7 @@ class Board:
         MoveList.moves.sort(key=self.evaluateMove, reverse=True)
 
     def printMoveList_withScores(self, MoveList):
-        if MoveList.moveCount == 0:
+        if self.moveIndex == -1:
             print('Movelist is empty.')
             return
 
@@ -1405,7 +1361,7 @@ class Board:
                 f'{fieldStr(start)}{fieldStr(target)} {roleUnicode(piece)}  {promoted} {capture} {doublePush} {enpassant} {castling} {captureValue}'
             )
         
-        print(f'Number of moves: {MoveList.moveCount}')
+        print(f'Number of moves: {self.moveIndex+1}')
 
     # basically negamax but only on capture moves to avoid event horizon problem
     def quiescenceSearch(self, alpha, beta):
@@ -1443,7 +1399,7 @@ class Board:
         if depth == 0: return self.quiescenceSearch(alpha, beta)
         self.nodeCount += 1 
 
-        cdef ULL betterMove
+        cdef unsigned long long betterMove
         cdef int legalMovesCount = 0
         cdef int prevAlpha = alpha
 
@@ -1459,17 +1415,14 @@ class Board:
         self.generateMoves(newMoveList)
         self.sortMoveList(newMoveList)
 
-        for move in newMoveList.moves:
-            # [ ] Check if this takes all the arguments necessary
+        for i, move in enumerate(newMoveList.moves):
             saveState = self.getSaveState()
-            self.halfMoves += 1 
 
             success = self.makeMove(move, 0)
-            if not success: 
-                self.halfMoves -= 1
-                continue
-
-            legalMovesCount += 1
+            if success: 
+                self.halfMoves += 1 
+                legalMovesCount += 1
+            else: continue
 
             score = -self.negamax(-beta, -alpha, depth-1)
 
@@ -1488,7 +1441,7 @@ class Board:
                 if self.halfMoves == 0:
                     betterMove = move
 
-        if legalMovesCount == 0:
+        if not legalMovesCount:
 
             if isCheck:
                 return -49000 + self.halfMoves
@@ -1506,7 +1459,7 @@ class Board:
         if depth == 0: return self.evaluateScore()
         self.nodeCount += 1 
 
-        cdef ULL betterMove
+        cdef unsigned long long betterMove
         cdef int legalMovesCount = 0
         cdef int prevAlpha = alpha
 
@@ -1568,7 +1521,7 @@ class Board:
         if depth == 0:
             return self.evaluateScore()	
 
-        cdef ULL betterMove
+        cdef unsigned long long betterMove
 
         # update the movelist 
         newMoveList = MoveList()
@@ -1597,10 +1550,16 @@ class Board:
         self.bestMove = betterMove
         return best
 
+    def doSearch(self):
+        newMoveList = MoveList()
+        self.generateMoves(newMoveList)
+        self.sortMoveList(newMoveList)
+
+        return newMoveList.moves[0]
 
     # search position for the best move
     # iterative deepening added
-    def searchPosition(self, depth, timeInSec=60):
+    def searchPosition(self, depth, timeInSec=10):
         cdef int score = -1
         startTime = time.time()
 
@@ -1611,7 +1570,7 @@ class Board:
         prevTimeFactor = 2
         timeFactorList = []
 
-        for iterDepth in range(0, depth):
+        for iterDepth in range(1, depth + 1):
             estimatedTime = prevTime * prevTimeFactor
 
             if estimatedTime >= timeInSec:
