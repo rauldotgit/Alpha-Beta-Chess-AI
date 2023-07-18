@@ -4,22 +4,23 @@ import time
 
 # def test_QS_1():
 #     print("\n")
-#     test_fen = "r2qk2r/p1ppn1pp/bpnb1p2/4p3/4P3/2NPBN2/PPP1BPPP/R2Q1RK1 w Qkq - - -"
+#     test_fen = "r1bqk2r/ppp2ppp/2nb4/3np3/2B5/3PBN2/PPP2PPP/RN1QK2R w - - 1 10"
 #     newBoard = board.Board()
 #     newBoard.fenGameSetup(test_fen)
+#     newBoard.printBoard()
 
 #     newBoard2 = board.Board()
 #     newBoard2.fenGameSetup(test_fen)
 
 #     start_time = time.time()
-#     newBoard.negamax(-50000, 50000, 5)
+#     newBoard.negamax(-50000, 50000, 4)
 #     best_move_With = newBoard.getParsedMove(newBoard.bestMove)
 #     print("QS_1, with QS best move: ", best_move_With)
 #     print("Nodes searched: ", newBoard.nodeCount)
 #     print("Time: ", (time.time()-start_time))
 
 #     start_time = time.time()
-#     newBoard2.negamaxWithoutQS(-50000, 50000, 5)
+#     newBoard2.negamaxWithoutQS(-50000, 50000, 4)
 #     best_move_Without = newBoard2.getParsedMove(newBoard2.bestMove)
 #     print("QS_1, without QS best move: ", best_move_Without)
 #     print("Nodes searched: ", newBoard2.nodeCount)
@@ -27,61 +28,52 @@ import time
 
 # def test_QS_2():
 #     print("\n")
-#     test_fen = "3r3k/pQ2R2p/6p1/3Pbp2/8/1Pq3P1/P4P1P/6K1 w - - 0 31"
+#     test_fen = "1qr2rk1/pp1bppbp/2np1np1/3N4/2PN4/1P4P1/PB2PPBP/2RQ1RK1 w - - 0 1"
 #     newBoard = board.Board()
 #     newBoard.fenGameSetup(test_fen)
+#     newBoard.printBoard()
 
-def test_group_AD_1():
-    test_fen = "r2q1rk1/ppp2ppp/2n5/2b1PbN1/8/4p3/PPP3PP/RNBQR1K1 w - - 0 1"
-    test_move = "c6d8"
-    newBoard = board.Board()
-    newBoard.fenGameSetup(test_fen)
+#     newBoard2 = board.Board()
+#     newBoard2.fenGameSetup(test_fen)
 
-    newBoard2 = board.Board()
-    newBoard2.fenGameSetup(test_fen)
+#     start_time = time.time()
+#     newBoard.negamax(-50000, 50000, 3)
+#     best_move_With = newBoard.getParsedMove(newBoard.bestMove)
+#     print("QS_2, with QS best move: ", best_move_With)
+#     print("Nodes searched: ", newBoard.nodeCount)
+#     print("Time: ", (time.time()-start_time))
 
-    newBoard3 = board.Board()
-    newBoard3.fenGameSetup(test_fen)
+#     start_time = time.time()
+#     newBoard2.negamaxWithoutQS(-50000, 50000, 3)
+#     best_move_Without = newBoard2.getParsedMove(newBoard2.bestMove)
+#     print("QS_2, without QS best move: ", best_move_Without)
+#     print("Nodes searched: ", newBoard2.nodeCount)
+#     print("Time: ", (time.time()-start_time))
 
-    newBoard4 = board.Board()
-    newBoard.fenGameSetup(test_fen)
+# def test_QS_3():
+#     print("\n")
+#     test_fen = "r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R b KQkq - 0 1"
+#     newBoard = board.Board()
+#     newBoard.fenGameSetup(test_fen)
+#     newBoard.printBoard()
 
-    newBoard.printBoard()
+#     newBoard2 = board.Board()
+#     newBoard2.fenGameSetup(test_fen)
 
-    start_time = time.time()
-    newBoard4.minimax(2)
-    best_move = newBoard4.getParsedMove(newBoard4.bestMove)
-    print("\n MINIMAX")
-    print("Best move: ", best_move)
-    print("Nodes searched: ", newBoard4.nodeCount)
-    print("Time: ", (time.time()-start_time))
-    print("Depth: ", 3)
+#     start_time = time.time()
+#     newBoard.negamax(-50000, 50000, 2)
+#     best_move_With = newBoard.getParsedMove(newBoard.bestMove)
+#     print("QS_3, with QS best move: ", best_move_With)
+#     print("Nodes searched: ", newBoard.nodeCount)
+#     print("Time: ", (time.time()-start_time))
 
-    start_time = time.time()
-    newBoard.negamax(-50000, 50000, 3)
-    best_move_With = newBoard.getParsedMove(newBoard.bestMove)
-    print("\n ALPHA BETA WITH QUIESCENCE")
-    print("Best move: ", best_move_With)
-    print("Nodes searched: ", newBoard.nodeCount)
-    print("Time: ", (time.time()-start_time))
-    print("Depth: ", 3)
+#     start_time = time.time()
+#     newBoard2.negamaxWithoutQS(-50000, 50000, 2)
+#     best_move_Without = newBoard2.getParsedMove(newBoard2.bestMove)
+#     print("QS_3, without QS best move: ", best_move_Without)
+#     print("Nodes searched: ", newBoard2.nodeCount)
+#     print("Time: ", (time.time()-start_time))
 
-    start_time = time.time()
-    newBoard2.negamaxWithoutQS(-50000, 50000, 3)
-    best_move_Without = newBoard2.getParsedMove(newBoard2.bestMove)
-    print("\n ALPHA BETA WITHOUT QUIESCENCE")
-    print("Best move: ", best_move_Without)
-    print("Nodes searched: ", newBoard2.nodeCount)
-    print("Time: ", (time.time()-start_time))
-    print("Depth: ", 3)
-    
-    start_time = time.time()
-    newBoard3.MCTS_UCT(10000, 16, 60)
-    best_move = newBoard3.getParsedMove(newBoard3.bestMove)
-    print("\n MONTE CARLO")
-    print("Best move: ", best_move)
-    print("Time: ", (time.time()-start_time))
-    print("Depth reached: ", 5)
 
 # def test_group_N_1():
 #     test_fen = maps.FEN_START
