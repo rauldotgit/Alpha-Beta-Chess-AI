@@ -78,20 +78,34 @@ CASTLING_ARRAY = [
 	13, 15, 15, 15, 12, 15, 15, 14,
 ]
 
-# TODO: change bishop and knight weight
 #based on role array
 SCORE_ARRAY = [
 	100,
-	300,
-	350,
 	500,
-	1000,
+	300,
+	300,
+	900,
 	10000,
 	-100,
-	-300,
-	-350,
 	-500,
-	-1000,
+	-300,
+	-300,
+	-900,
+	-10000,
+]
+
+SCORE_ARRAY_ENDGAME = [
+	150,
+	800,
+	450,
+	500,
+	1500,
+	10000,
+	-150,
+	-800,
+	-450,
+	-500,
+	-1500,
 	-10000,
 ]
 
@@ -106,6 +120,18 @@ cdef int[64] pawnScores =  [
     5, 10, 10,-20,-20, 10, 10,  5,
     0,  0,  0,  0,  0,  0,  0,  0
 ]
+
+cdef int[64] pawnScoresEndGame =  [
+    0,  0,  0,  0,  0,  0,  0,  0,
+    70, 70, 70, 70, 70, 70, 70, 70,
+    30, 30, 30, 40, 40, 30, 30, 30,
+    20, 20, 20, 25, 25, 20, 20, 20,
+    10, 10, 10, 20, 20, 10, 10, 10,
+    0,  0,  0,  0,  0,  0,  0,  0,
+    -10,-10,-10,-10,-10,-10,-10,-10,
+    0,  0,  0,  0,  0,  0,  0,  0
+]
+
 cdef int[64] rookScores = [
      0,  0,  0,  0,  0,  0,  0,  0,
      5, 10, 10, 10, 10, 10, 10,  5,
@@ -114,7 +140,7 @@ cdef int[64] rookScores = [
     -5,  0,  0,  0,  0,  0,  0, -5,
     -5,  0,  0,  0,  0,  0,  0, -5,
     -5,  0,  0,  0,  0,  0,  0, -5,
-     0,  0,  0,  5,  5,  0,  0,  0
+     0,  0,  0,  7,  7,  5,  0,  0
 ]
 
 cdef int[64] knightScores =  [
@@ -160,7 +186,18 @@ cdef int[64] kingScores =  [
     -30,-10, 30, 1001, 1001, 30,-10,-30,
     -30,-10, 20, 30, 30, 20,-10,-30,
     -30,-30,  0,  0,  0,  0,-30,-30,
-    -50,-30,-30,-30,-30,-30,-30,-50
+    -50,-30,  0,-30,-30,-30,  0,-50
+]
+
+cdef int[64] kingScoresEndGame =  [
+    -50,-40,-30,-20,-20,-30,-40,-50,
+    -30,-20,-10,  0,  0,-10,-20,-30,
+    -30,-10, 40, 60, 60, 40,-10,-30,
+    -30,-10, 60, 1001, 1001, 60,-10,-30,
+    -30,-10, 60, 1001, 1001, 60,-10,-30,
+    -30, 10, 40, 60, 60, 40, 10,-30,
+    -30,-10, 20, 20, 20, 20,-10,-30,
+    -50,-10,  0,  0,  0,  0,-10,-50
 ]
 
 ### For pawn structure evaluation ###
@@ -184,6 +221,8 @@ cdef int[64] getRank = [
 cdef int doublePawnPenalty = -10
 cdef int isolatedPawnPenalty = -10
 cdef int[8] passedPawnBonus = [0, 10, 30, 50, 75, 100, 150, 200]
+cdef int[8] passedPawnBonusEndgame = [0, 13, 40, 65, 100, 130, 190, 250]
+cdef int backwardsPawnPenalty = -10
 
 def setFileRankMasks(file_, rank_):
     mask = 0
@@ -232,7 +271,7 @@ def initEvaluationMasks():
 cdef int semiOpenScore = 9
 cdef int openScore = 15
 
-cdef int kingSafetyScore = 5
+cdef int kingSafetyScore = 8
 
 cdef int[6][6] MVV_LVA_ARRAY = [
     [105, 205, 305, 405, 505, 605],
@@ -243,6 +282,39 @@ cdef int[6][6] MVV_LVA_ARRAY = [
     [100, 200, 300, 400, 500, 600]
 ]
 
+### For PVS ###
+cdef int max_ply = 64
+cdef int[2][64] killer_moves
+cdef int[12][64] history_moves
+cdef int[64] pv_length
+cdef int[64][64] pv_table
+
+cdef bint follow_pv = 0
+cdef bint score_pv = 0
+cdef int ply = 0
+
+def enablePVScoring(moveList):
+    # disable following PV
+    cdef int follow_pv = 0
+    
+    # loop over the moves within a move list
+    for move in moveList:
+
+        # make sure we hit PV move
+        if (pv_table[0][ply] == move): # TODO maybe needs parsing
+            # enable move scoring
+            score_pv = 1
+            
+            # enable following PV
+            follow_pv = 1
+
+def reset_cython_array(arr, dim1, dim2):
+    for i in range(dim1):
+        for j in range(dim2):
+            if(dim2 > 1):
+                arr[i][j] = 0
+            else:
+                arr[i] = 0
 
 FIELD_OBJ = {
 		'a8':  0, 'b8':  1, 'c8':  2, 'd8':  3, 'e8':  4, 'f8':  5, 'g8':  6, 'h8':  7,
@@ -391,6 +463,7 @@ class Board:
     def __init__(self):
         
         self.turn = white
+        self.isEndGame = 0
         self.enpassant = noSquare
         self.castling = 0
         self.halfMoves = 0
@@ -641,6 +714,10 @@ class Board:
         start, target = menc.decode(move)[:2]
         return fieldStr(start)+fieldStr(target)
 
+    def printSavedMoves(self, arr, dim1):
+        for move in arr[dim1]:
+            self.printMove(move)
+
     # Deprecated
     def printMoveList(self, MoveList):
         if self.moveIndex == -1:
@@ -883,12 +960,9 @@ class Board:
 
         if flag == 0:
             
-            # make sure this does what it should
-            start, target, piece, promoted, capture, double, enpassant, castle = menc.decode(move)
-            # self.saveCurrentState()
+
+            start, target, piece, promoted, capture, double_, enpassant, castle = menc.decode(move)
             saveState = self.getSaveState()
-            # print(self.pieceMaps[piece])
-            # return
 
             self.pieceMaps[piece] = bit.popBit(self.pieceMaps[piece], start)
             self.pieceMaps[piece] = bit.setBit(self.pieceMaps[piece], target)
@@ -928,7 +1002,7 @@ class Board:
                 
             self.enpassant = noSquare
 
-            if double:
+            if double_:
 
                 if self.turn == white:
                     self.enpassant = target + 8
@@ -1068,20 +1142,34 @@ class Board:
         pieceScore = 0
         mirrorFieldIndex = MIRROR_FIELD_ARRAY[fieldIndex]
 
-        if   piece == P: pieceScore = pawnScores[fieldIndex] 
+        if piece == P: 
+            if self.isEndGame:
+                pieceScore = pawnScoresEndGame[fieldIndex]
+            else:
+                pieceScore = pawnScores[fieldIndex] 
         elif piece == R: pieceScore = rookScores[fieldIndex] 
         elif piece == N: pieceScore = knightScores[fieldIndex] 
         elif piece == B: pieceScore = bishopScores[fieldIndex] 
         elif piece == Q: pieceScore = queenScores[fieldIndex] 
-        elif piece == K: pieceScore = kingScores[fieldIndex] 
-
-        elif piece == p: pieceScore = -1 * pawnScores[mirrorFieldIndex] 
+        elif piece == K: 
+            if self.isEndGame:
+                pieceScore = kingScoresEndGame[fieldIndex] 
+            else:
+                pieceScore = kingScores[fieldIndex] 
+        elif piece == p:  
+            if self.isEndGame:
+                pieceScore = -1 * pawnScoresEndGame[mirrorFieldIndex]
+            else:
+                pieceScore = -1 * pawnScores[mirrorFieldIndex]
         elif piece == r: pieceScore = -1 * rookScores[mirrorFieldIndex] 
         elif piece == n: pieceScore = -1 * knightScores[mirrorFieldIndex] 
         elif piece == b: pieceScore = -1 * bishopScores[mirrorFieldIndex] 
         elif piece == q: pieceScore = -1 * queenScores[mirrorFieldIndex] 
-        elif piece == k: pieceScore = -1 * kingScores[mirrorFieldIndex] 
-
+        elif piece == k: 
+            if self.isEndGame:
+                pieceScore = -1 * kingScoresEndGame[mirrorFieldIndex] 
+            else:
+                pieceScore = -1 * kingScores[mirrorFieldIndex] 
         return pieceScore
 
     def evaluateScore(self):
@@ -1095,20 +1183,47 @@ class Board:
             return 50000 if self.turn == white else -50000 
 
         initEvaluationMasks() 
-        oldScore = 0
         score = 0
-
+        total_material = 0
         doublePawns = 0
+
+        ## backwards pawns ##
+        white_pawn_atk = 0
+        copy_white = self.pieceMaps[P]
+        while copy_white:
+            white_pawn = bit.getLsbIndex(copy_white)
+            white_pawn_atk |= atk.getPawnAttack(white, white_pawn)
+            copy_white = bit.popBit(copy_white, white_pawn)
+        black_pawn_atk = 0
+        copy_black = self.pieceMaps[p]
+        while copy_black:
+            black_pawn = bit.getLsbIndex(copy_black)
+            black_pawn_atk |= atk.getPawnAttack(black, black_pawn)
+            copy_black = bit.popBit(copy_black, black_pawn)
+
+        white_stops = self.pieceMaps[P] >> 8
+        white_backwards_pawns = (white_stops & black_pawn_atk & ~white_pawn_atk ) << 8
+        # if(bit.countBits(white_backwards_pawns) > 0):
+        #     print("Found white backwards pawn")
+        score += bit.countBits(white_backwards_pawns)*backwardsPawnPenalty
+
+        black_stops = self.pieceMaps[p] << 8    
+        black_backwards_pawns = (black_stops & white_pawn_atk & ~black_pawn_atk ) >> 8
+        # if(bit.countBits(black_backwards_pawns) > 0):
+        #     print("Found black backwards pawn")
+        score -= bit.countBits(black_backwards_pawns)*backwardsPawnPenalty
+        
 
         for piece, pieceMap in enumerate(self.pieceMaps):
             while not pieceMap == 0:
                 fieldIndex = bit.getLsbIndex(pieceMap)
 
-                score += SCORE_ARRAY[piece]
+                if self.isEndGame: # if endgame give extra value to pieces
+                    score += SCORE_ARRAY_ENDGAME[piece]
+                else:
+                    score += SCORE_ARRAY[piece]
+                    total_material += abs(SCORE_ARRAY[piece])
                 score += self.getFieldValue(piece, fieldIndex)
-
-                oldScore += SCORE_ARRAY[piece]
-                oldScore += self.getFieldValue(piece, fieldIndex)
 
                 # pawn penalties and bonuses
                 if(piece == P):
@@ -1196,6 +1311,8 @@ class Board:
 
                 pieceMap = bit.popBit(pieceMap, fieldIndex)
         #print(f"old score: {oldScore}") if self.turn == white else print(f"old score: {-oldScore}")
+        if total_material < 2300:
+            self.isEndGame = 1
         return score if self.turn == white else -score
 
 
@@ -1335,13 +1452,41 @@ class Board:
 
     # score moves
     def evaluateMove(self, move):
+
+        global score_pv, ply, killer_moves, history_moves
+
         target, piece, capture, enpassant = menc.getTarget(move), menc.getPiece(move), menc.getCapture(move), menc.getEnpassant(move)
+
+        # PV move scoring is allowed
+        if (score_pv):
+            # make sure we are dealing with PV move
+            if (pv_table[0][ply] == move): 
+                # disable score PV flag
+                score_pv = 0
+                
+                # give PV move the highest score to search it first
+                return 20000
         
+        # score capture
         if capture: 
             captureValue = self.getCaptureValue(target, piece, enpassant)
             return captureValue
 
-        return 0
+        # score 1st killer move
+        if (killer_moves[0][ply] == move): 
+        
+            return 9000
+        
+        # score 2nd killer move
+        elif (killer_moves[1][ply] == move): 
+        
+            return 8000
+        
+        # score history move
+        else:
+            return history_moves[piece][target]
+
+        #return 0
 
     # sort moves in descending order score
     def sortMoveList(self, MoveList): 
@@ -1444,8 +1589,10 @@ class Board:
         if not legalMovesCount:
 
             if isCheck:
+                print("Checkmate!")
                 return -49000 + self.halfMoves
             else:
+                print("Stalemate!")
                 return 0
 
         if prevAlpha != alpha:
@@ -1550,12 +1697,111 @@ class Board:
         self.bestMove = betterMove
         return best
 
-    def doSearch(self):
+    ### PVS from Bruce Moreland ###
+    # https://web.archive.org/web/20071030220825/http://www.brucemo.com/compchess/programming/pvs.htm
+
+    def principalVariationSearch(self, alpha, beta, depth):
+        cdef bint foundPv = 0
+        cdef int legalMovesCount = 0
+
+        global ply, max_ply, pv_length, pv_table, history_moves, killer_moves, score_pv 
+
+        pv_length[ply] = ply
+
+        if (depth == 0):
+            return self.quiescenceSearch(alpha, beta)
+
+        if (ply > max_ply - 1) :
+            return self.evaluateScore()
+
+        self.nodeCount += 1
+
+        kingFieldIndex = bit.getLsbIndex(self.pieceMaps[K]) if self.turn == white else bit.getLsbIndex(self.pieceMaps[k])
+        cdef bint isCheck = self.isCheck(kingFieldIndex) 
+        if isCheck: 
+            #depth+=1
+            self.nodeCount+=1
+            #print("depth is: ", depth, "king in check on field: ", kingFieldIndex)
+
         newMoveList = MoveList()
         self.generateMoves(newMoveList)
+
+        if follow_pv:
+            enablePVScoring()
+
         self.sortMoveList(newMoveList)
 
-        return newMoveList.moves[0]
+        for next_move in newMoveList.moves:
+            target, piece, capture = menc.getTarget(next_move), menc.getPiece(next_move), menc.getCapture(next_move)
+            saveState = self.getSaveState()
+
+            ply += 1
+            success = self.makeMove(next_move, 0)
+
+            if success == 0: 
+                ply -= 1 
+                continue
+            legalMovesCount += 1
+
+            score = 0
+            if (foundPv):
+                score = -self.principalVariationSearch(-alpha - 1, -alpha, depth - 1)
+                if ((score > alpha) and (score < beta)): # Check for failure.
+                    score = -self.principalVariationSearch(-beta, -alpha, depth - 1)
+
+            else:
+                score = -self.principalVariationSearch(-beta, -alpha, depth - 1)
+
+            ply -= 1
+
+            self.loadSaveState(saveState)
+
+            if (score >= beta):
+
+                if not capture:
+                    killer_moves[1][ply] = killer_moves[0][ply]
+                    killer_moves[0][ply] = next_move
+
+                return beta
+
+            if (score > alpha):
+
+                if not capture: 
+                    history_moves[piece][target] += depth
+
+                alpha = score
+                foundPv = 1
+                pv_table[ply][ply] = next_move 
+
+                # loop over next ply
+                for next_ply in range(ply + 1, pv_length[ply + 1]):
+                    # copy move from deeper ply into a current ply's line
+                    pv_table[ply][next_ply] = pv_table[ply + 1][next_ply]
+
+                pv_length[ply] = pv_length[ply + 1]
+
+        if not legalMovesCount:
+            if isCheck:
+                return -49000 + ply
+            else:
+                return 0
+
+        if depth >= 5:
+            print("\n Move Order After \n")
+            self.printMoveList_withScores(newMoveList)
+
+        if depth >= 5:
+            print("\n Move Order After \n")
+            self.printMoveList_withScores(newMoveList)
+            print("\n PV table \n")
+            self.printSavedMoves(pv_table, 0)
+            print("\n Killer 1")
+            self.printSavedMoves(killer_moves, 0)
+            print("\n Killer 2")
+            self.printSavedMoves(killer_moves, 1)
+
+        return alpha
+
 
     # search position for the best move
     # iterative deepening added
@@ -1603,6 +1849,53 @@ class Board:
                 foundMove = self.bestMove
 
         print(f'Overall best move: ')
+        self.printMove(foundMove)
+        print(f'With score {foundScore}')
+
+
+    def searchPositionPVS(self, depth, timeInSec=10):
+        cdef int score = -1
+        global follow_pv, score_pv, killer_moves, history_moves, pv_table, pv_length
+        follow_pv = 0
+        score_pv = 0
+        reset_cython_array(killer_moves, 2, 64)
+        reset_cython_array(history_moves, 12, 64)
+        reset_cython_array(pv_table, 64, 64)
+        reset_cython_array(pv_length, 64, 1)
+
+        startTime = time.time()
+
+        foundScore = -1
+
+        prevTime = -1
+        prevTimeFactor = 2
+        timeFactorList = []
+
+        for iterDepth in range(1, depth + 1):
+            estimatedTime = prevTime * prevTimeFactor
+
+            if estimatedTime >= timeInSec:
+                print(f'Time out - est. next duration: {round(estimatedTime, 2)}s')
+                break
+
+            self.nodeCount = 0  
+            score = self.principalVariationSearch(-50000, 50000, iterDepth)
+
+            currTime = time.time() - startTime
+            # involving last iterations factor
+            if iterDepth != 1: 
+                currTimeFactor = currTime / prevTime
+                timeFactorList.append(currTimeFactor)
+                prevTimeFactor = sum(timeFactorList) / len(timeFactorList)
+
+            prevTime = currTime
+
+            print(f'Duration {currTime}')
+            print(f'Time Factor: {prevTimeFactor}')
+            print('\n')
+
+        print(f'Overall best move: ')
+        foundMove = pv_table[0][0]
         self.printMove(foundMove)
         print(f'With score {foundScore}')
 
